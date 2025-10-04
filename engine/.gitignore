@@ -4,7 +4,7 @@
 /common-javadoc
 /src/battlecode-server.iml
 *.rms
-*.jar
+# *.jar
 *.swp
 *.DS_Store
 /testreport
