@@ -1005,7 +1005,7 @@ public class GameWorld {
     // *********************************
 
     public int spawnRobot(int ID, UnitType type, MapLocation location, Team team){
-        InternalRobot robot = new InternalRobot(this, ID, team, type, location);
+        InternalRobot robot = new InternalRobot(this, ID, team, type, location, Direction.CENTER);
         addRobot(location, robot);
         objectInfo.createRobot(robot);
         controlProvider.robotSpawned(robot);

@@ -282,6 +282,10 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.location = loc;
     }
 
+    public void setInternalLocationOnly(MapLocation loc) {
+        this.location = loc;
+    }
+
     /**
      * Upgrades the level of a tower.
      * 
