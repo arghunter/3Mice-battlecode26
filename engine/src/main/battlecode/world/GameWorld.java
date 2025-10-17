@@ -1054,8 +1054,9 @@ public class GameWorld {
                 case LEVEL_THREE_DEFENSE_TOWER: this.currentDamageIncreases[robot.getTeam().ordinal()] -= GameConstants.EXTRA_DAMAGE_FROM_DEFENSE_TOWER + 2 * GameConstants.EXTRA_TOWER_DAMAGE_LEVEL_INCREASE; break;
                 default: break;
             }
-
-            removeRobot(loc);
+            for (MapLocation robotLoc: robot.getAllPartLocations()){
+                removeRobot(robotLoc);
+            }
         }
 
         controlProvider.robotKilled(robot);

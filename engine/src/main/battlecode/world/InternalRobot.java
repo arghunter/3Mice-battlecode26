@@ -348,10 +348,11 @@ public class InternalRobot implements Comparable<InternalRobot> {
      * @param healthAmount the amount to change health by (can be negative)
      */
     public void addHealth(int healthAmount) {
-        this.health += healthAmount;
-        this.health = Math.min(this.health, this.type.health);
-        if (this.health <= 0) {
-            this.gameWorld.destroyRobot(this.ID, false, true);
+        InternalRobot centerRobot = this.getCenterRobot();
+        centerRobot.health += healthAmount;
+        centerRobot.health = Math.min(this.health, this.type.health);
+        if (centerRobot.health <= 0) {
+            this.gameWorld.destroyRobot(centerRobot.ID, false, true);
         }
     }
 
