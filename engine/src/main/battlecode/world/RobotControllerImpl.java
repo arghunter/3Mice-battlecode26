@@ -83,7 +83,7 @@ public final class RobotControllerImpl implements RobotController {
             markType = PaintType.ALLY_PRIMARY;
         else if (mark == 2)
             markType = PaintType.ALLY_SECONDARY;
-        MapInfo currentLocInfo = new MapInfo(loc, gw.isPassable(loc), gw.getWall(loc), gw.getPaintType(getTeam(), loc), markType, gw.hasRuin(loc), gw.hasResourcePatternCenter(loc, getTeam()));
+        MapInfo currentLocInfo = new MapInfo(loc, gw.isPassable(loc), gw.getWall(loc), gw.getDirt(loc), gw.getPaintType(getTeam(), loc), markType, gw.hasRuin(loc), gw.hasResourcePatternCenter(loc, getTeam()));
         return currentLocInfo;
     }
 

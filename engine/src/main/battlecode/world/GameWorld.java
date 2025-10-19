@@ -30,6 +30,7 @@ public class GameWorld {
     protected final GameStats gameStats;
 
     private boolean[] walls;
+    private boolean[] dirt;
     private int[] markersA;
     private int[] markersB;
     private int[] colorLocations; // No color = 0, Team A color 1 = 1, Team A color 2 = 2, Team B color 1 = 3, Team B color 2 = 4
@@ -70,6 +71,7 @@ public class GameWorld {
         int numSquares = width * height;
         int numWalls = 0;
         this.walls = gm.getWallArray();
+        this.dirt = gm.getDirtArray();
         this.markersA = new int[numSquares];
         this.markersB = new int[numSquares];
         this.robots = new InternalRobot[width][height]; // if represented in cartesian, should be height-width, but this should allow us to index x-y
@@ -430,6 +432,10 @@ public class GameWorld {
         return this.walls[locationToIndex(loc)];
     }
 
+    public boolean getDirt(MapLocation loc) {
+        return this.dirt[locationToIndex(loc)];
+    }
+
     public void setPaint(MapLocation loc, int paint) {
         if (!isPaintable(loc)) return;
         if (teamFromPaint(this.colorLocations[locationToIndex(loc)]) != Team.NEUTRAL){
@@ -465,6 +471,39 @@ public class GameWorld {
             this.matchMaker.addMarkAction(loc, !isPrimaryPaint(marker));
         }
         this.getmarkersArray(team)[locationToIndex(loc)] = marker;
+    }
+
+    /**
+     * Allows a robot to add or remove dirt (add = true, remove = false)
+     * to a location on the map
+     * 
+     * @param loc, the location in MapLocation to add/remove dirt
+     * @param val, true if adding dirt, false if removing dirt
+     * 
+     * @returns void, modifies GameWorld's dirt array in place
+     * 
+     * @author: Augusto Schwanz
+     */
+    public void setDirt(MapLocation loc, boolean val) {
+        if (loc == null) return;
+
+        int mapIndex = locationToIndex(loc);
+
+        if (walls[mapIndex]) return; // can't place dirt on wall
+
+        // have to check that no robots are occupying this space
+        // when placing dirt
+        // TODO: also check that cheese isn't occupying space once
+        // cheese is implemented
+        if (val && this.robots[loc.x][loc.y] != null) {
+            return;
+        }
+
+        // note that this doesn't explicitly stop robots from placing
+        // dirt on a location that already has dirt, or removing dirt
+        // from a place that doesn't have dirt. 
+        this.dirt[mapIndex] = val; 
+        
     }
 
     public void markPattern(int pattern, Team team, MapLocation center, int rotationAngle, boolean reflect, boolean isTowerPattern) {
@@ -612,7 +651,9 @@ public class GameWorld {
     }
 
     public boolean isPassable(MapLocation loc) {
-        return !(this.walls[locationToIndex(loc)] || this.hasRuin(loc));
+        return !(this.walls[locationToIndex(loc)]
+        || this.hasRuin(loc)
+        || this.dirt[locationToIndex(loc)]);
     }
 
     public boolean isPaintable(MapLocation loc){
