@@ -56,36 +56,24 @@ var GameMap = /** @class */ (function () {
         var offset = this.bb.__offset(this.bb_pos, 14);
         return offset ? new Int8Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
     };
-    GameMap.prototype.paint = function (index) {
+    GameMap.prototype.dirt = function (index) {
         var offset = this.bb.__offset(this.bb_pos, 16);
-        return offset ? this.bb.readInt8(this.bb.__vector(this.bb_pos + offset) + index) : 0;
+        return offset ? !!this.bb.readInt8(this.bb.__vector(this.bb_pos + offset) + index) : false;
     };
-    GameMap.prototype.paintLength = function () {
+    GameMap.prototype.dirtLength = function () {
         var offset = this.bb.__offset(this.bb_pos, 16);
         return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
     };
-    GameMap.prototype.paintArray = function () {
+    GameMap.prototype.dirtArray = function () {
         var offset = this.bb.__offset(this.bb_pos, 16);
         return offset ? new Int8Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
     };
-    GameMap.prototype.ruins = function (obj) {
+    GameMap.prototype.cheeseMines = function (obj) {
         var offset = this.bb.__offset(this.bb_pos, 18);
         return offset ? (obj || new vec_table_1.VecTable()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
     };
-    GameMap.prototype.paintPatterns = function (index) {
-        var offset = this.bb.__offset(this.bb_pos, 20);
-        return offset ? this.bb.readInt32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
-    };
-    GameMap.prototype.paintPatternsLength = function () {
-        var offset = this.bb.__offset(this.bb_pos, 20);
-        return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
-    };
-    GameMap.prototype.paintPatternsArray = function () {
-        var offset = this.bb.__offset(this.bb_pos, 20);
-        return offset ? new Int32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
-    };
     GameMap.startGameMap = function (builder) {
-        builder.startObject(9);
+        builder.startObject(8);
     };
     GameMap.addName = function (builder, nameOffset) {
         builder.addFieldOffset(0, nameOffset, 0);
@@ -115,34 +103,21 @@ var GameMap = /** @class */ (function () {
     GameMap.startWallsVector = function (builder, numElems) {
         builder.startVector(1, numElems, 1);
     };
-    GameMap.addPaint = function (builder, paintOffset) {
-        builder.addFieldOffset(6, paintOffset, 0);
+    GameMap.addDirt = function (builder, dirtOffset) {
+        builder.addFieldOffset(6, dirtOffset, 0);
     };
-    GameMap.createPaintVector = function (builder, data) {
+    GameMap.createDirtVector = function (builder, data) {
         builder.startVector(1, data.length, 1);
         for (var i = data.length - 1; i >= 0; i--) {
-            builder.addInt8(data[i]);
+            builder.addInt8(+data[i]);
         }
         return builder.endVector();
     };
-    GameMap.startPaintVector = function (builder, numElems) {
+    GameMap.startDirtVector = function (builder, numElems) {
         builder.startVector(1, numElems, 1);
     };
-    GameMap.addRuins = function (builder, ruinsOffset) {
-        builder.addFieldOffset(7, ruinsOffset, 0);
-    };
-    GameMap.addPaintPatterns = function (builder, paintPatternsOffset) {
-        builder.addFieldOffset(8, paintPatternsOffset, 0);
-    };
-    GameMap.createPaintPatternsVector = function (builder, data) {
-        builder.startVector(4, data.length, 4);
-        for (var i = data.length - 1; i >= 0; i--) {
-            builder.addInt32(data[i]);
-        }
-        return builder.endVector();
-    };
-    GameMap.startPaintPatternsVector = function (builder, numElems) {
-        builder.startVector(4, numElems, 4);
+    GameMap.addCheeseMines = function (builder, cheeseMinesOffset) {
+        builder.addFieldOffset(7, cheeseMinesOffset, 0);
     };
     GameMap.endGameMap = function (builder) {
         var offset = builder.endObject();

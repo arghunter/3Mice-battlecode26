@@ -5,6 +5,9 @@ exports.InitialBodyTable = void 0;
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 var flatbuffers = require("flatbuffers");
 var spawn_action_1 = require("../../battlecode/schema/spawn-action");
+/**
+ * A list of initial bodies to be placed on the map.
+ */
 var InitialBodyTable = /** @class */ (function () {
     function InitialBodyTable() {
         this.bb = null;

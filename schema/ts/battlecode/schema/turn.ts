@@ -35,7 +35,7 @@ health():number {
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-paint():number {
+cheese():number {
   const offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
@@ -102,8 +102,8 @@ static addHealth(builder:flatbuffers.Builder, health:number) {
   builder.addFieldInt32(1, health, 0);
 }
 
-static addPaint(builder:flatbuffers.Builder, paint:number) {
-  builder.addFieldInt32(2, paint, 0);
+static addCheese(builder:flatbuffers.Builder, cheese:number) {
+  builder.addFieldInt32(2, cheese, 0);
 }
 
 static addMoveCooldown(builder:flatbuffers.Builder, moveCooldown:number) {
@@ -163,11 +163,11 @@ static endTurn(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createTurn(builder:flatbuffers.Builder, robotId:number, health:number, paint:number, moveCooldown:number, actionCooldown:number, bytecodesUsed:number, x:number, y:number, actionsTypeOffset:flatbuffers.Offset, actionsOffset:flatbuffers.Offset):flatbuffers.Offset {
+static createTurn(builder:flatbuffers.Builder, robotId:number, health:number, cheese:number, moveCooldown:number, actionCooldown:number, bytecodesUsed:number, x:number, y:number, actionsTypeOffset:flatbuffers.Offset, actionsOffset:flatbuffers.Offset):flatbuffers.Offset {
   Turn.startTurn(builder);
   Turn.addRobotId(builder, robotId);
   Turn.addHealth(builder, health);
-  Turn.addPaint(builder, paint);
+  Turn.addCheese(builder, cheese);
   Turn.addMoveCooldown(builder, moveCooldown);
   Turn.addActionCooldown(builder, actionCooldown);
   Turn.addBytecodesUsed(builder, bytecodesUsed);

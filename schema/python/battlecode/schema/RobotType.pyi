@@ -10,10 +10,7 @@ uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
 class RobotType(object):
   NONE: int
-  PAINT_TOWER: int
-  MONEY_TOWER: int
-  DEFENSE_TOWER: int
-  SOLDIER: int
-  SPLASHER: int
-  MOPPER: int
+  RAT: int
+  RAT_KING: int
+  CAT: int
 

@@ -6,12 +6,9 @@ exports.WinType = void 0;
 var WinType;
 (function (WinType) {
     WinType[WinType["RESIGNATION"] = 0] = "RESIGNATION";
-    WinType[WinType["MAJORITY_PAINTED"] = 1] = "MAJORITY_PAINTED";
-    WinType[WinType["ALL_UNITS_DESTROYED"] = 2] = "ALL_UNITS_DESTROYED";
-    WinType[WinType["AREA_PAINTED"] = 3] = "AREA_PAINTED";
-    WinType[WinType["MORE_TOWERS"] = 4] = "MORE_TOWERS";
-    WinType[WinType["MORE_MONEY"] = 5] = "MORE_MONEY";
-    WinType[WinType["MORE_STORED_PAINT"] = 6] = "MORE_STORED_PAINT";
-    WinType[WinType["MORE_ROBOTS"] = 7] = "MORE_ROBOTS";
-    WinType[WinType["COIN_FLIP"] = 8] = "COIN_FLIP";
+    WinType[WinType["RATKING_DESTROYED"] = 1] = "RATKING_DESTROYED";
+    WinType[WinType["BACKSTAB_RATKING_DESTROYED"] = 2] = "BACKSTAB_RATKING_DESTROYED";
+    WinType[WinType["MORE_POINTS"] = 3] = "MORE_POINTS";
+    WinType[WinType["TIE"] = 4] = "TIE";
+    WinType[WinType["COIN_FLIP"] = 5] = "COIN_FLIP";
 })(WinType || (exports.WinType = WinType = {}));

@@ -16,23 +16,11 @@ export declare class Round {
     teamIdsLength(): number;
     teamIdsArray(): Int32Array | null;
     /**
-     * The total amount of resource this round per team
+     * The total amount of cheese this round per team
      */
-    teamResourceAmounts(index: number): number | null;
-    teamResourceAmountsLength(): number;
-    teamResourceAmountsArray(): Int32Array | null;
-    /**
-     * The total paint coverage percent per team, mult by 10 (i.e. 70.5% is 705)
-     */
-    teamCoverageAmounts(index: number): number | null;
-    teamCoverageAmountsLength(): number;
-    teamCoverageAmountsArray(): Int32Array | null;
-    /**
-     * The total number of active resource patterns per team
-     */
-    teamResourcePatternAmounts(index: number): number | null;
-    teamResourcePatternAmountsLength(): number;
-    teamResourcePatternAmountsArray(): Int32Array | null;
+    teamCheeseAmounts(index: number): number | null;
+    teamCheeseAmountsLength(): number;
+    teamCheeseAmountsArray(): Int32Array | null;
     /**
      * Ordered turn data for each robot during the round
      */
@@ -58,27 +46,13 @@ export declare class Round {
      */
     static createTeamIdsVector(builder: flatbuffers.Builder, data: number[] | Uint8Array): flatbuffers.Offset;
     static startTeamIdsVector(builder: flatbuffers.Builder, numElems: number): void;
-    static addTeamResourceAmounts(builder: flatbuffers.Builder, teamResourceAmountsOffset: flatbuffers.Offset): void;
-    static createTeamResourceAmountsVector(builder: flatbuffers.Builder, data: number[] | Int32Array): flatbuffers.Offset;
+    static addTeamCheeseAmounts(builder: flatbuffers.Builder, teamCheeseAmountsOffset: flatbuffers.Offset): void;
+    static createTeamCheeseAmountsVector(builder: flatbuffers.Builder, data: number[] | Int32Array): flatbuffers.Offset;
     /**
      * @deprecated This Uint8Array overload will be removed in the future.
      */
-    static createTeamResourceAmountsVector(builder: flatbuffers.Builder, data: number[] | Uint8Array): flatbuffers.Offset;
-    static startTeamResourceAmountsVector(builder: flatbuffers.Builder, numElems: number): void;
-    static addTeamCoverageAmounts(builder: flatbuffers.Builder, teamCoverageAmountsOffset: flatbuffers.Offset): void;
-    static createTeamCoverageAmountsVector(builder: flatbuffers.Builder, data: number[] | Int32Array): flatbuffers.Offset;
-    /**
-     * @deprecated This Uint8Array overload will be removed in the future.
-     */
-    static createTeamCoverageAmountsVector(builder: flatbuffers.Builder, data: number[] | Uint8Array): flatbuffers.Offset;
-    static startTeamCoverageAmountsVector(builder: flatbuffers.Builder, numElems: number): void;
-    static addTeamResourcePatternAmounts(builder: flatbuffers.Builder, teamResourcePatternAmountsOffset: flatbuffers.Offset): void;
-    static createTeamResourcePatternAmountsVector(builder: flatbuffers.Builder, data: number[] | Int32Array): flatbuffers.Offset;
-    /**
-     * @deprecated This Uint8Array overload will be removed in the future.
-     */
-    static createTeamResourcePatternAmountsVector(builder: flatbuffers.Builder, data: number[] | Uint8Array): flatbuffers.Offset;
-    static startTeamResourcePatternAmountsVector(builder: flatbuffers.Builder, numElems: number): void;
+    static createTeamCheeseAmountsVector(builder: flatbuffers.Builder, data: number[] | Uint8Array): flatbuffers.Offset;
+    static startTeamCheeseAmountsVector(builder: flatbuffers.Builder, numElems: number): void;
     static addTurns(builder: flatbuffers.Builder, turnsOffset: flatbuffers.Offset): void;
     static createTurnsVector(builder: flatbuffers.Builder, data: flatbuffers.Offset[]): flatbuffers.Offset;
     static startTurnsVector(builder: flatbuffers.Builder, numElems: number): void;
@@ -91,5 +65,5 @@ export declare class Round {
     static startDiedIdsVector(builder: flatbuffers.Builder, numElems: number): void;
     static addRoundId(builder: flatbuffers.Builder, roundId: number): void;
     static endRound(builder: flatbuffers.Builder): flatbuffers.Offset;
-    static createRound(builder: flatbuffers.Builder, teamIdsOffset: flatbuffers.Offset, teamResourceAmountsOffset: flatbuffers.Offset, teamCoverageAmountsOffset: flatbuffers.Offset, teamResourcePatternAmountsOffset: flatbuffers.Offset, turnsOffset: flatbuffers.Offset, diedIdsOffset: flatbuffers.Offset, roundId: number): flatbuffers.Offset;
+    static createRound(builder: flatbuffers.Builder, teamIdsOffset: flatbuffers.Offset, teamCheeseAmountsOffset: flatbuffers.Offset, turnsOffset: flatbuffers.Offset, diedIdsOffset: flatbuffers.Offset, roundId: number): flatbuffers.Offset;
 }

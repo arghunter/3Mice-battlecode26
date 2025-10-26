@@ -40,7 +40,7 @@ class Turn(object):
         return 0
 
     # Turn
-    def Paint(self):
+    def Cheese(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
@@ -151,11 +151,11 @@ def TurnAddHealth(builder: flatbuffers.Builder, health: int):
 def AddHealth(builder: flatbuffers.Builder, health: int):
     TurnAddHealth(builder, health)
 
-def TurnAddPaint(builder: flatbuffers.Builder, paint: int):
-    builder.PrependInt32Slot(2, paint, 0)
+def TurnAddCheese(builder: flatbuffers.Builder, cheese: int):
+    builder.PrependInt32Slot(2, cheese, 0)
 
-def AddPaint(builder: flatbuffers.Builder, paint: int):
-    TurnAddPaint(builder, paint)
+def AddCheese(builder: flatbuffers.Builder, cheese: int):
+    TurnAddCheese(builder, cheese)
 
 def TurnAddMoveCooldown(builder: flatbuffers.Builder, moveCooldown: int):
     builder.PrependInt32Slot(3, moveCooldown, 0)

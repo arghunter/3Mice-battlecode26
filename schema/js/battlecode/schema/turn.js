@@ -29,7 +29,7 @@ var Turn = /** @class */ (function () {
         var offset = this.bb.__offset(this.bb_pos, 6);
         return offset ? this.bb.readInt32(this.bb_pos + offset) : 0;
     };
-    Turn.prototype.paint = function () {
+    Turn.prototype.cheese = function () {
         var offset = this.bb.__offset(this.bb_pos, 8);
         return offset ? this.bb.readInt32(this.bb_pos + offset) : 0;
     };
@@ -82,8 +82,8 @@ var Turn = /** @class */ (function () {
     Turn.addHealth = function (builder, health) {
         builder.addFieldInt32(1, health, 0);
     };
-    Turn.addPaint = function (builder, paint) {
-        builder.addFieldInt32(2, paint, 0);
+    Turn.addCheese = function (builder, cheese) {
+        builder.addFieldInt32(2, cheese, 0);
     };
     Turn.addMoveCooldown = function (builder, moveCooldown) {
         builder.addFieldInt32(3, moveCooldown, 0);
@@ -130,11 +130,11 @@ var Turn = /** @class */ (function () {
         var offset = builder.endObject();
         return offset;
     };
-    Turn.createTurn = function (builder, robotId, health, paint, moveCooldown, actionCooldown, bytecodesUsed, x, y, actionsTypeOffset, actionsOffset) {
+    Turn.createTurn = function (builder, robotId, health, cheese, moveCooldown, actionCooldown, bytecodesUsed, x, y, actionsTypeOffset, actionsOffset) {
         Turn.startTurn(builder);
         Turn.addRobotId(builder, robotId);
         Turn.addHealth(builder, health);
-        Turn.addPaint(builder, paint);
+        Turn.addCheese(builder, cheese);
         Turn.addMoveCooldown(builder, moveCooldown);
         Turn.addActionCooldown(builder, actionCooldown);
         Turn.addBytecodesUsed(builder, bytecodesUsed);
