@@ -42,6 +42,11 @@ public class LiveMap {
     private boolean[] wallArray;
 
     /**
+     * Whether each square is dirt
+     */
+    private boolean[] dirtArray;
+
+    /**
      * What kind of paint is on the square.
      */
     private byte[] paintArray;
@@ -113,6 +118,7 @@ public class LiveMap {
                    String mapName,
                    MapSymmetry symmetry,
                    boolean[] wallArray,
+                   boolean[] dirtArray,
                    byte[] paintArray,
                    boolean[] ruinArray,
                    int[] patternArray,
@@ -128,6 +134,9 @@ public class LiveMap {
         this.wallArray = new boolean[wallArray.length];
         for (int i = 0; i < wallArray.length; i++) {
             this.wallArray[i] = wallArray[i];
+        }
+        for (int i = 0; i < dirtArray.length; i++) {
+            this.dirtArray[i] = dirtArray[i];
         }
         this.paintArray = new byte[paintArray.length];
         for (int i = 0; i < paintArray.length; i++){
@@ -152,7 +161,7 @@ public class LiveMap {
      */
     public LiveMap(LiveMap gm) {
         this(gm.width, gm.height, gm.origin, gm.seed, gm.rounds, gm.mapName, gm.symmetry,
-         gm.wallArray, gm.paintArray, gm.ruinArray, gm.patternArray, gm.initialBodies);
+         gm.wallArray, gm.dirtArray, gm.paintArray, gm.ruinArray, gm.patternArray, gm.initialBodies);
     }
 
     @Override
@@ -314,6 +323,14 @@ public class LiveMap {
      */
     public boolean[] getWallArray() {
         return wallArray;
+    }
+
+    /**
+     * 
+     * @return the dirt array of the map
+     */
+    public boolean[] getDirtArray() {
+        return dirtArray;
     }
 
     /**

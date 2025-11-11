@@ -386,20 +386,6 @@ public interface RobotController {
     MapInfo[] senseNearbyMapInfos(MapLocation center, int radiusSquared) throws GameActionException;
 
     /**
-     * Returns the location of all nearby ruins that are visible to the robot.
-     * If radiusSquared is greater than the robot's vision radius, uses the robot's
-     * vision radius instead.
-     * 
-     * @param radiusSquared squared radius of all locations to be returned, -1 for
-     *                      max radius
-     * @return all locations containing ruins
-     * @throws GameActionException if a radius less than -1 is provided
-     * 
-     * @battlecode.doc.costlymethod
-     **/
-    MapLocation[] senseNearbyRuins(int radiusSquared) throws GameActionException;
-
-    /**
      * Returns the location adjacent to current location in the given direction.
      *
      * @param dir the given direction
@@ -681,6 +667,24 @@ public interface RobotController {
      */
     void completeResourcePattern(MapLocation loc) throws GameActionException;
 
+    /**
+     * Tests whether this robot can place dirt at the given location.
+     * @param loc
+     * @throws GameActionException
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public boolean canPlaceDirt(MapLocation loc);
+
+     /**
+     * Tests whether this robot can place dirt at the given location.
+     * @param loc
+     * @throws GameActionException
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public boolean canRemoveDirt(MapLocation loc);
+
     // ****************************
     // ***** ATTACK / HEAL ********
     // ****************************
@@ -706,18 +710,6 @@ public interface RobotController {
      * @battlecode.doc.costlymethod
      */
     boolean canAttack(MapLocation loc);
-
-    /** 
-     * Performs the specific attack for this robot type.
-     *
-     * @param loc the target location to attack (for splashers, the center location)
-     *      Note: for a tower, leaving loc null represents an area attack
-     * @param useSecondaryColor whether or not the attack should use a secondary color
-     * @throws GameActionException if conditions for attacking are not satisfied
-     *
-     * @battlecode.doc.costlymethod
-     */
-    void attack(MapLocation loc, boolean useSecondaryColor) throws GameActionException;
     
     /** 
      * Performs the specific attack for this robot type, defaulting to the
