@@ -223,6 +223,7 @@ export class Body {
     public dead: boolean = false
     public hp: number = 0
     public maxHp: number = 1
+    public direction: number = 0 // in degrees
     public level: number = 1 // For towers
     public moveCooldown: number = 0
     public actionCooldown: number = 0
@@ -330,6 +331,41 @@ export class Body {
             }
         }
 
+        return coords
+    }
+
+    private getAllLocationsWithinFOVAndRadiusSquared(
+        match: Match, 
+        location: Vector, 
+        radius: number, 
+        direction: number, 
+        fov: number
+    ) {
+        const ceiledRadius = Math.ceil(Math.sqrt(radius)) + 1
+        const minX = Math.max(location.x - ceiledRadius, 0)
+        const minY = Math.max(location.y - ceiledRadius, 0)
+        const maxX = Math.min(location.x + ceiledRadius, match.map.width - 1)
+        const maxY = Math.min(location.y + ceiledRadius, match.map.height - 1)
+
+        const coords: Vector[] = []
+        const halfFOV = fov / 2
+        const directionRad = (direction * Math.PI) / 180
+
+        for (let x = minX; x <= maxX; x++) {
+            for (let y = minY; y <= maxY; y++) {
+                const dx = x - location.x
+                const dy = y - location.y
+                if (dx * dx + dy * dy <= radius) {
+                    const angleToPoint = Math.atan2(dy, dx)
+                    let angleDiff = angleToPoint - directionRad
+                    angleDiff = ((angleDiff + Math.PI) % (2 * Math.PI)) - Math.PI //normalize angle difference
+                    if (Math.abs(angleDiff) <= (halfFOV * Math.PI) / 180) {
+                        coords.push({ x, y })
+                    }
+                }
+            }
+        }
+        
         return coords
     }
 
