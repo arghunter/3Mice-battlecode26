@@ -83,7 +83,7 @@ public final class RobotControllerImpl implements RobotController {
             markType = PaintType.ALLY_PRIMARY;
         else if (mark == 2)
             markType = PaintType.ALLY_SECONDARY;
-        MapInfo currentLocInfo = new MapInfo(loc, gw.isPassable(loc), gw.getWall(loc), gw.getPaintType(getTeam(), loc), markType, gw.hasRuin(loc), gw.hasResourcePatternCenter(loc, getTeam()));
+        MapInfo currentLocInfo = new MapInfo(loc, gw.isPassable(loc), gw.getWall(loc), gw.getDirt(loc), gw.getPaintType(getTeam(), loc), markType, gw.hasResourcePatternCenter(loc, getTeam()));
         return currentLocInfo;
     }
 
@@ -198,6 +198,49 @@ public final class RobotControllerImpl implements RobotController {
                     "Target location is not on the map");
     }
 
+    
+    private void assertCanPlaceDirt(MapLocation loc) throws GameActionException {
+        assertIsRobotType(this.robot.getType());
+        // Use unit action radius as the allowed range for the action
+        assertCanActLocation(loc, this.robot.getType().actionRadiusSquared);
+
+        // state checks :
+        if (this.gameWorld.getWall(loc))
+            throw new GameActionException(CANT_DO_THAT, "Can't place dirt on a wall!");
+        if (this.gameWorld.getRobot(loc) != null)
+            throw new GameActionException(CANT_DO_THAT, "Can't place dirt on an occupied tile!");
+        if (this.gameWorld.getDirt(loc))
+            throw new GameActionException(CANT_DO_THAT, "Tile already has dirt!");
+    }
+
+    private void assertCanRemoveDirt(MapLocation loc) throws GameActionException {
+        assertIsRobotType(this.robot.getType());
+        assertCanActLocation(loc, this.robot.getType().actionRadiusSquared);
+
+        if (!this.gameWorld.getDirt(loc))
+            throw new GameActionException(CANT_DO_THAT, "No dirt to remove at that location!");
+    }
+
+    @Override
+    public boolean canPlaceDirt(MapLocation loc) {
+        try {
+            assertCanPlaceDirt(loc);
+            return true;
+        } catch (GameActionException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean canRemoveDirt(MapLocation loc) {
+        try {
+            assertCanRemoveDirt(loc);
+            return true;
+        } catch (GameActionException e) {
+            return false;
+        }
+    }
+
     @Override
     public boolean canSenseLocation(MapLocation loc) {
         try {
@@ -300,13 +343,6 @@ public final class RobotControllerImpl implements RobotController {
         return this.gameWorld.isPassable(loc);
     }
 
-    @Override
-    public MapLocation[] senseNearbyRuins(int radiusSquared) throws GameActionException {
-        assertRadiusNonNegative(radiusSquared);
-        int actualRadiusSquared = radiusSquared == -1 ? GameConstants.VISION_RADIUS_SQUARED
-                : Math.min(radiusSquared, GameConstants.VISION_RADIUS_SQUARED);
-        return this.gameWorld.getAllRuinsWithinRadiusSquared(getLocation(), actualRadiusSquared);
-    }
 
     @Override
     public MapInfo senseMapInfo(MapLocation loc) throws GameActionException {
@@ -432,18 +468,24 @@ public final class RobotControllerImpl implements RobotController {
     private void assertCanMove(Direction dir) throws GameActionException {
         assertNotNull(dir);
         assertIsMovementReady();
-        MapLocation loc = adjacentLocation(dir);
-        if (!onTheMap(loc))
-            throw new GameActionException(OUT_OF_RANGE,
-                    "Can only move to locations on the map; " + loc + " is not on the map.");
-        if (isLocationOccupied(loc))
-            throw new GameActionException(CANT_MOVE_THERE,
-                    "Cannot move to an occupied location; " + loc + " is occupied.");
-        if (!this.gameWorld.isPassable(loc))
-            throw new GameActionException(CANT_MOVE_THERE,
-                    "Cannot move to an impassable location; " + loc + " is impassable.");
-        if (this.getType().isTowerType())
-            throw new GameActionException(CANT_DO_THAT, "Towers cannot move!");
+        MapLocation[] curLocs = robot.getAllPartLocations();
+        MapLocation[] newLocs = new MapLocation[curLocs.length];
+        for (int i = 0; i < newLocs.length; i++){
+            newLocs[i] = curLocs[i].add(dir);
+        }
+        for (MapLocation loc : newLocs){
+            if (!onTheMap(loc))
+                throw new GameActionException(OUT_OF_RANGE,
+                        "Can only move to locations on the map; " + loc + " is not on the map.");
+            if (isLocationOccupied(loc) && this.gameWorld.getRobot(loc).getID() != robot.getID())
+                throw new GameActionException(CANT_MOVE_THERE,
+                        "Cannot move to an occupied location; " + loc + " is occupied by a different robot.");
+            if (!this.gameWorld.isPassable(loc))
+                throw new GameActionException(CANT_MOVE_THERE,
+                        "Cannot move to an impassable location; " + loc + " is impassable.");
+            if (this.getType().isTowerType())
+                throw new GameActionException(CANT_DO_THAT, "Towers cannot move!");
+        }
     }
 
     @Override
@@ -459,8 +501,21 @@ public final class RobotControllerImpl implements RobotController {
     @Override
     public void move(Direction dir) throws GameActionException {
         assertCanMove(dir);
-        MapLocation nextLoc = adjacentLocation(dir);
-        this.robot.setLocation(nextLoc);
+        
+        // calculate set of next map locations 
+        MapLocation[] curLocs = robot.getAllPartLocations();
+        MapLocation[] newLocs = new MapLocation[curLocs.length];
+        for (int i = 0; i < newLocs.length; i++){
+            MapLocation curLoc = curLocs[i];
+            newLocs[i] = curLoc.add(dir);
+            this.gameWorld.removeRobot(curLoc);
+        }
+        this.robot.setLocation(this.getLocation().add(dir)); 
+        for (int i = 0; i < newLocs.length; i++){
+            MapLocation newLoc = newLocs[i];
+            this.gameWorld.addRobot(newLoc, this.robot);
+        }
+
         this.robot.addMovementCooldownTurns();
     }
 
@@ -578,12 +633,6 @@ public final class RobotControllerImpl implements RobotController {
         assertIsRobotType(this.robot.getType());
         assertIsTowerType(type);
         assertCanActLocation(loc, GameConstants.BUILD_TOWER_RADIUS_SQUARED);
-
-        if (!this.gameWorld.hasRuin(loc)) {
-            throw new GameActionException(CANT_DO_THAT,
-                    "Cannot mark tower pattern centered at (" + loc.x + ", " + loc.y
-                            + ") because the center is not a ruin");
-        }
 
         if (!this.gameWorld.isValidPatternCenter(loc, true)) {
             throw new GameActionException(CANT_DO_THAT,
@@ -725,12 +774,6 @@ public final class RobotControllerImpl implements RobotController {
             throw new GameActionException(CANT_DO_THAT,
                     "Cannot complete tower pattern centered at (" + loc.x + ", " + loc.y
                         + ") because the center already contains a tower");
-        }
-
-        if (!this.gameWorld.hasRuin(loc)) {
-            throw new GameActionException(CANT_DO_THAT,
-                    "Cannot complete tower pattern centered at (" + loc.x + ", " + loc.y
-                            + ") because the center is not a ruin");
         }
 
         if (getMoney() < type.moneyCost){

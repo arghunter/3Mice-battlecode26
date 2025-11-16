@@ -30,6 +30,7 @@ public class GameWorld {
     protected final GameStats gameStats;
 
     private boolean[] walls;
+    private boolean[] dirt;
     private int[] markersA;
     private int[] markersB;
     private int[] colorLocations; // No color = 0, Team A color 1 = 1, Team A color 2 = 2, Team B color 1 = 3,
@@ -55,11 +56,6 @@ public class GameWorld {
     private int[] currentDamageIncreases = { 0, 0 };
     private int[] currentNumberUnits = { 0, 0 };
 
-    // List of all ruins, not indexed by location
-    private ArrayList<MapLocation> allRuins;
-    // Whether there is a ruin on each tile, indexed by location
-    private boolean[] allRuinsByLoc;
-
     private Map<Team, ProfilerCollection> profilerCollections;
 
     private final RobotControlProvider controlProvider;
@@ -74,6 +70,7 @@ public class GameWorld {
         int numSquares = width * height;
         int numWalls = 0;
         this.walls = gm.getWallArray();
+        this.dirt = gm.getDirtArray();
         this.markersA = new int[numSquares];
         this.markersB = new int[numSquares];
         this.robots = new InternalRobot[width][height]; // if represented in cartesian, should be height-width, but this
@@ -107,14 +104,6 @@ public class GameWorld {
         // Write match header at beginning of match
         this.matchMaker.makeMatchHeader(this.gameMap);
 
-        this.allRuinsByLoc = gm.getRuinArray();
-        this.allRuins = new ArrayList<MapLocation>();
-        for (int i = 0; i < numSquares; i++) {
-            if (this.allRuinsByLoc[i]) {
-                this.allRuins.add(indexToLocation(i));
-            }
-        }
-
         // ignore patterns passed in with map and use hardcoded values
         // this.patternArray = gm.getPatternArray();
         this.resourcePatternCenters = new ArrayList<MapLocation>();
@@ -138,8 +127,6 @@ public class GameWorld {
             spawnRobot(robotInfo.ID, robotInfo.type, newLocation, robotInfo.team);
             this.towerLocations.add(newLocation);
             towersByLoc[locationToIndex(newLocation)] = robotInfo.team;
-            this.allRuinsByLoc[locationToIndex(newLocation)] = true;
-            this.allRuins.add(newLocation);
 
             // Start initial towers at level 2. Defer upgrade action until the tower's first
             // turn since client only supports actions this way
@@ -431,6 +418,10 @@ public class GameWorld {
         return this.walls[locationToIndex(loc)];
     }
 
+    public boolean getDirt(MapLocation loc) {
+        return this.dirt[locationToIndex(loc)];
+    }
+
     public void setPaint(MapLocation loc, int paint) {
         if (!isPaintable(loc))
             return;
@@ -469,8 +460,25 @@ public class GameWorld {
         this.getmarkersArray(team)[locationToIndex(loc)] = marker;
     }
 
-    public void markPattern(int pattern, Team team, MapLocation center, int rotationAngle, boolean reflect,
-            boolean isTowerPattern) {
+    /**
+     * Allows a robot to add or remove dirt (add = true, remove = false)
+     * to a location on the map
+     * 
+     * @param loc, the location in MapLocation to add/remove dirt
+     * @param val, true if adding dirt, false if removing dirt
+     * 
+     * @returns void, modifies GameWorld's dirt array in place
+     * 
+     * @author: Augusto Schwanz
+     */
+    public void setDirt(MapLocation loc, boolean val) {
+        if (loc == null) return;
+        int mapIndex = locationToIndex(loc);
+        this.dirt[mapIndex] = val; 
+        
+    }
+
+    public void markPattern(int pattern, Team team, MapLocation center, int rotationAngle, boolean reflect, boolean isTowerPattern) {
         for (int dx = -GameConstants.PATTERN_SIZE / 2; dx < (GameConstants.PATTERN_SIZE + 1) / 2; dx++) {
             for (int dy = -GameConstants.PATTERN_SIZE / 2; dy < (GameConstants.PATTERN_SIZE + 1) / 2; dy++) {
                 // int symmetry = 4 * (reflect ? 1 : 0) + rotationAngle;
@@ -621,20 +629,14 @@ public class GameWorld {
     }
 
     public boolean isPassable(MapLocation loc) {
-        return !(this.walls[locationToIndex(loc)] || this.hasRuin(loc));
+        return !(this.walls[locationToIndex(loc)]
+        || this.dirt[locationToIndex(loc)]);
     }
 
     public boolean isPaintable(MapLocation loc) {
         return isPassable(loc);
     }
 
-    public ArrayList<MapLocation> getRuinArray() {
-        return allRuins;
-    }
-
-    public boolean hasRuin(MapLocation loc) {
-        return allRuinsByLoc[locationToIndex(loc)];
-    }
 
     public boolean hasResourcePatternCenter(MapLocation loc, Team team) {
         return resourcePatternCentersByLoc[locationToIndex(loc)] == team;
@@ -835,22 +837,6 @@ public class GameWorld {
                 q.add(new MapLocation(cur.x + dx[i], cur.y + dy[i]));
         }
         return false;
-    }
-
-    public MapLocation[] getAllRuins() {
-        return this.allRuins.toArray(new MapLocation[this.allRuins.size()]);
-    }
-
-    public MapLocation[] getAllRuinsWithinRadiusSquared(MapLocation center, int radiusSquared) {
-        ArrayList<MapLocation> returnRuins = new ArrayList<MapLocation>();
-
-        for (MapLocation newLocation : getAllLocationsWithinRadiusSquared(center, radiusSquared)) {
-            if (hasRuin(newLocation)) {
-                returnRuins.add(newLocation);
-            }
-        }
-
-        return returnRuins.toArray(new MapLocation[returnRuins.size()]);
     }
 
     public MapLocation[] getAllLocationsWithinRadiusSquared(MapLocation center, int radiusSquared) {
@@ -1068,26 +1054,15 @@ public class GameWorld {
             running = false;
     }
 
-    private void confirmRuinPlacements(ArrayList<MapLocation> ruins) {
-        boolean validPlacements = true;
-
-        for (MapLocation a : ruins) {
-            for (MapLocation b : ruins) {
-                if (a.distanceSquaredTo(b) < GameConstants.MIN_RUIN_SPACING_SQUARED) {
-                    validPlacements = false;
-                    break;
-                }
-            }
-        }
-    }
-
     // *********************************
     // ****** SPAWNING *****************
     // *********************************
 
     public int spawnRobot(int ID, UnitType type, MapLocation location, Team team) {
         InternalRobot robot = new InternalRobot(this, ID, team, type, location);
-        addRobot(location, robot);
+        for (MapLocation loc : type.getAllLocations(location)){
+            addRobot(loc, robot);
+        }
         objectInfo.createRobot(robot);
         controlProvider.robotSpawned(robot);
         if (type.isTowerType()) {
@@ -1145,8 +1120,9 @@ public class GameWorld {
                 default:
                     break;
             }
-
-            removeRobot(loc);
+            for (MapLocation robotLoc: robot.getAllPartLocations()){
+                removeRobot(robotLoc);
+            }
         }
 
         controlProvider.robotKilled(robot);
