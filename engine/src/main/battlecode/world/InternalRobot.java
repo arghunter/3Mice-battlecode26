@@ -20,7 +20,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
     private final RobotControllerImpl controller;
     protected final GameWorld gameWorld;
 
-    private int paintAmount;
+    private int cheeseAmount;
     private UnitType type;
 
     private final int ID;
@@ -74,7 +74,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.incomingMessages = new LinkedList<>();
         this.towerHasSingleAttacked = this.towerHasAreaAttacked = false;
 
-        this.paintAmount = 0;
+        this.cheeseAmount = 0;
 
         this.controlBits = 0;
         this.currentBytecodeLimit = type.isRobotType() ? GameConstants.ROBOT_BYTECODE_LIMIT
@@ -140,19 +140,12 @@ public class InternalRobot implements Comparable<InternalRobot> {
         return health;
     }
 
-    public int getPaint() {
-        return paintAmount;
+    public int getCheese() {
+        return cheeseAmount;
     }
 
-    public void addPaint(int amount) {
-        int newPaintAmount = this.paintAmount + amount;
-        if (newPaintAmount > this.type.paintCapacity) {
-            this.paintAmount = this.type.paintCapacity;
-        } else if (newPaintAmount < 0) {
-            this.paintAmount = 0;
-        } else {
-            this.paintAmount = newPaintAmount;
-        }
+    public void addCheese(int amount) {
+        this.cheeseAmount += amount;
     }
 
     public boolean hasTowerSingleAttacked() {
@@ -195,12 +188,12 @@ public class InternalRobot implements Comparable<InternalRobot> {
                 && cachedRobotInfo.ID == ID
                 && cachedRobotInfo.team == team
                 && cachedRobotInfo.health == health
-                && cachedRobotInfo.paintAmount == paintAmount
+                && cachedRobotInfo.cheeseAmount == cheeseAmount
                 && cachedRobotInfo.location.equals(location)) {
             return cachedRobotInfo;
         }
 
-        this.cachedRobotInfo = new RobotInfo(ID, team, type, health, location, paintAmount);
+        this.cachedRobotInfo = new RobotInfo(ID, team, type, health, location, cheeseAmount);
         return this.cachedRobotInfo;
     }
 
@@ -247,6 +240,17 @@ public class InternalRobot implements Comparable<InternalRobot> {
         return radiusSquared <= getVisionRadiusSquared();
     }
 
+    /**
+     * Returns whether this robot can build a trap on this block
+     * 
+     * @param build
+     * @return boolean: can trap be built here by this robot
+     */
+    public boolean canBuildTrap(MapLocation build, TrapType trapType) {
+        return canSenseLocation(build) && canActCooldown()
+                && (this.gameWorld.getTeamInfo().getCheese(this.team) + this.getCheese()) >= trapType.buildCost;
+    }
+
     // ******************************************
     // ****** UPDATE METHODS ********************
     // ******************************************
@@ -290,7 +294,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
      * Resets the action cooldown.
      */
     public void addActionCooldownTurns(int numActionCooldownToAdd) {
-        int paintPercentage = (int) Math.round(this.paintAmount * 100.0 / this.type.paintCapacity);
+        int paintPercentage = (int) Math.round(this.cheeseAmount * 100.0 / this.type.paintCapacity);
         if (paintPercentage < GameConstants.INCREASED_COOLDOWN_THRESHOLD && type.isRobotType()) {
             numActionCooldownToAdd += (int) Math.round(numActionCooldownToAdd
                     * (GameConstants.INCREASED_COOLDOWN_INTERCEPT
@@ -305,7 +309,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
      */
     public void addMovementCooldownTurns() {
         int movementCooldown = GameConstants.MOVEMENT_COOLDOWN;
-        int paintPercentage = (int) Math.round(this.paintAmount * 100.0 / this.type.paintCapacity);
+        int paintPercentage = (int) Math.round(this.cheeseAmount * 100.0 / this.type.paintCapacity);
         if (paintPercentage < GameConstants.INCREASED_COOLDOWN_THRESHOLD && type.isRobotType()) {
             movementCooldown += (int) Math.round(movementCooldown
                     * (GameConstants.INCREASED_COOLDOWN_INTERCEPT
@@ -710,11 +714,11 @@ public class InternalRobot implements Comparable<InternalRobot> {
             }
         }
 
-        if (this.paintAmount == 0 && type.isRobotType()) {
+        if (this.cheeseAmount == 0 && type.isRobotType()) {
             this.addHealth(-GameConstants.NO_PAINT_DAMAGE);
         }
 
-        this.gameWorld.getMatchMaker().endTurn(this.ID, this.health, this.paintAmount, this.movementCooldownTurns,
+        this.gameWorld.getMatchMaker().endTurn(this.ID, this.health, this.cheeseAmount, this.movementCooldownTurns,
                 this.actionCooldownTurns, this.bytecodesUsed, this.location);
         this.roundsAlive++;
     }

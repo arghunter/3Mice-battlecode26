@@ -106,6 +106,15 @@ public class GameConstants {
     /** The amount of health the ratking loses by not eating cheese. */
     public static final int RATKING_HEALTH_LOSS = 10;
 
+    /** Probability parameter for cheese spawn at a mine. **/
+    public static final float CHEESE_MINE_SPAWN_PROBABILITY = 0.15f;
+
+    /** Cheese will spawn within a [-radius, radius] square of the cheese mine **/
+    public static final int SQ_CHEESE_SPAWN_RADIUS = 5;
+
+    /** How much cheese each mine spawns at once */
+    public static final int CHEESE_SPAWN_AMOUNT = 2;
+
     /** The number of towers a player starts with. */
     public static final int NUMBER_INITIAL_TOWERS = 2;
 

@@ -14,11 +14,12 @@ public class MapInfo {
 
     private PaintType mark;
 
-    private boolean hasRuin;
+    private boolean hasCheeseMine;
 
     private boolean isResourcePatternCenter;
 
-    public MapInfo(MapLocation loc, boolean isPassable, boolean isWall, boolean isDirt, PaintType paint, PaintType mark, boolean isResourcePatternCenter){
+    public MapInfo(MapLocation loc, boolean isPassable, boolean isWall, boolean isDirt, PaintType paint, PaintType mark,
+            boolean isResourcePatternCenter) {
         this.loc = loc;
         this.isPassable = isPassable;
         this.isWall = isWall;
@@ -62,14 +63,14 @@ public class MapInfo {
     }
 
     /**
-     * Returns if this square has a ruin.
+     * Returns if this square has a cheese mine.
      * 
-     * @return whether this square has a ruin
+     * @return whether this square has a cheese mine
      * 
      * @battlecode.doc.costlymethod
      */
-    public boolean hasRuin() {
-        return hasRuin;
+    public boolean hasCheeseMine() {
+        return hasCheeseMine;
     }
 
     /**
@@ -106,7 +107,8 @@ public class MapInfo {
     }
 
     /**
-     * Returns whether this tile is at the center of an ally resource pattern (regardless of whether the pattern is active yet)
+     * Returns whether this tile is at the center of an ally resource pattern
+     * (regardless of whether the pattern is active yet)
      * 
      * @return Whether this is a resource pattern center
      */
@@ -114,12 +116,12 @@ public class MapInfo {
         return isResourcePatternCenter;
     }
 
-    public String toString(){
+    public String toString() {
         return "Location{" +
                 "loc=" + loc.toString() +
                 (isWall ? ", wall" : "") +
                 (isDirt ? ", dirt" : "") +
-                (hasRuin ? ", with ruin" : "") +
+                (hasCheeseMine ? ", with cheese mine" : "") +
                 ", paint=" + paint.toString() +
                 ", mark=" + mark.toString() +
                 "}";
