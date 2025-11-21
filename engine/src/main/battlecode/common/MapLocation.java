@@ -119,6 +119,40 @@ public final class MapLocation implements Serializable, Comparable<MapLocation> 
     public final boolean isWithinDistanceSquared(MapLocation location, int distanceSquared) {
         return this.distanceSquaredTo(location) <= distanceSquared;
     }
+    
+    /**
+     * Determines whether this location is within a specified distance and cone degree
+     * from target location.
+     *
+     * @param location the location to test
+     * @param distanceSquared the distance squared for the location to be within
+     * @param facingDir the direction robot is facing
+     * @param halfTheta half the degree of the vision cone (i.e. degree from robot's facing direction to either edge of cone)
+     * @return true if the given location is within distanceSquared to this one; false otherwise
+     *
+     * @battlecode.doc.costlymethod
+     */
+    public final boolean isWithinDistanceSquared(MapLocation location, int distanceSquared, Direction facingDir, double halfTheta) {
+        // prevent division by 0 error
+        if (this.equals(location)){
+            return true;
+        }
+
+        double adjustment = 1e-3; 
+        // TODO: may have to fix this; also maybe there's a better way to do this whole function given that all looking directions and all cones are all in 45 degree intervals???
+
+        boolean isValidDistance = this.distanceSquaredTo(location) <= distanceSquared;
+        
+        // calculate angle between facingDir and direction to location
+        int dx = location.x - this.x;
+        int dy = location.y - this.y;
+        
+        double cosSim = (facingDir.dx * dx + facingDir.dy * dy)/(Math.sqrt((dx*dx + dy*dy) * (facingDir.dx*facingDir.dx + facingDir.dy*facingDir.dy)));
+        double halfAngle = Math.abs(Math.acos(cosSim));
+        boolean isValidAngle = halfAngle-adjustment <= halfTheta;
+        
+        return isValidDistance && isValidAngle;
+    }
 
     /**
      * Determines whether this location is adjacent to a given location.

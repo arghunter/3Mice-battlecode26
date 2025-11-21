@@ -77,9 +77,6 @@ public class GameConstants {
     /** The number of rat kings a player starts with. */
     public static final int NUMBER_INITIAL_RAT_KINGS = 1;
 
-    /** The maximum distance from a robot where information can be sensed */
-    public static final int VISION_RADIUS_SQUARED = 20;
-
     /** The maximum distance for marking a map location or removing a marker */
     public static final int MARK_RADIUS_SQUARED = 2;
 

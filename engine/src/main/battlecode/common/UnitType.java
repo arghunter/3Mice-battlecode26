@@ -2,9 +2,9 @@ package battlecode.common;
 
 public enum UnitType {
     // health, size, speed, visionRadius, actionCooldown
-    RAT(10, 1, 5, 250, 0),
-    RAT_KING(50, 3, 1, 150, -1),
-    CAT(500,2,10,0,0);
+    RAT(10, 1, 5, 250, 90, 0),
+    RAT_KING(50, 3, 1, 150, 360, -1),
+    CAT(500,2,10,0,180, 0);
 
     // amount of health robot initially starts with
     public final int health;
@@ -16,7 +16,10 @@ public enum UnitType {
     public final int speed;
 
     // robot's vision radius
-    public final int visionRadius;
+    public final int visionConeRadius;
+
+    // robot's vision cone angle (in degrees)
+    public final int visionConeAngle;
 
     // number of turns before unit can act again
     public final int actionCooldown;
@@ -49,11 +52,12 @@ public enum UnitType {
         return locs;
     }
   
-    UnitType(int health, int size, int speed, int visionRadius, int actionCooldown) {
+    UnitType(int health, int size, int speed, int visionConeRadius, int visionConeAngle, int actionCooldown) {
         this.health = health;
         this.size = size;
         this.speed = speed;
-        this.visionRadius = visionRadius;
+        this.visionConeRadius = visionConeRadius;
+        this.visionConeAngle = visionConeAngle;
         this.actionCooldown = actionCooldown;
     }
 
@@ -63,6 +67,7 @@ public enum UnitType {
     public int getHealth() { return health; }
     public int getSize() { return size; }
     public int getSpeed() { return speed; }
-    public int getVisionRadius() { return visionRadius; }
+    public int getVisionRadius() { return visionConeRadius; }
+    public int getVisionAngle() { return visionConeAngle; }
     public int getActionCooldown() { return actionCooldown; }
 }

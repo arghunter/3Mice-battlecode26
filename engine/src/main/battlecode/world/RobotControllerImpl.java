@@ -177,9 +177,9 @@ public final class RobotControllerImpl implements RobotController {
                     "Target location not within vision range");
     }
 
-    private void assertCanActLocation(MapLocation loc, int maxRadiusSquared) throws GameActionException {
+    private void assertCanActLocation(MapLocation loc, int maxRadiusSquared, int maxHalfTheta) throws GameActionException {
         assertNotNull(loc);
-        if (getLocation().distanceSquaredTo(loc) > maxRadiusSquared)
+        if (!getLocation().isWithinDistanceSquared(loc, maxRadiusSquared, this.robot.getDirection(), maxHalfTheta))
             throw new GameActionException(OUT_OF_RANGE,
                     "Target location not within action range");
         if (!this.gameWorld.getGameMap().onTheMap(loc))
