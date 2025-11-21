@@ -233,7 +233,13 @@ public class GameConstants {
     /** The amount added to the action cooldown counter after attacking (as a mopper for the swing attack) */
     public static final int ATTACK_MOPPER_SWING_COOLDOWN = 20;
 
-    /** THe amount added to the action cooldown counter after transferring paint */
+    /** The amount added to the action cooldown counter after transferring paint */
     public static final int PAINT_TRANSFER_COOLDOWN = 10;
+
+    /** The total time a rat can travel for while thrown (rats are stunned while thrown) */
+    public static final int THROW_DURATION = 40;
+
+    /** The total time a rat is stunned after hitting the ground or a target */
+    public static final int THROW_STUN_DURATION = 30;
 
 }

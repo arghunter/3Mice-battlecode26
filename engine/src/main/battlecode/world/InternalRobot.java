@@ -1,13 +1,16 @@
 package battlecode.world;
 
-import battlecode.common.*;
-import battlecode.schema.Action;
-
 import java.util.ArrayList;
-import java.util.Queue;
 import java.util.LinkedList;
+import java.util.Queue;
 
-import org.apache.commons.lang3.NotImplementedException;
+import battlecode.common.Direction;
+import battlecode.common.GameConstants;
+import battlecode.common.MapLocation;
+import battlecode.common.Message;
+import battlecode.common.RobotInfo;
+import battlecode.common.Team;
+import battlecode.common.UnitType;
 
 /**
  * The representation of a robot used by the server.
@@ -37,9 +40,10 @@ public class InternalRobot implements Comparable<InternalRobot> {
     private int actionCooldownTurns;
     private int movementCooldownTurns;
 
+    private InternalRobot carryingRobot; // robot being carried by this robot, if any
+    private InternalRobot grabbedByRobot; // robot that is carrying this robot, if any
+
     private Queue<Message> incomingMessages;
-    private boolean towerHasSingleAttacked;
-    private boolean towerHasAreaAttacked;
 
     // the number of messages this robot/tower has sent this turn
     private int sentMessagesCount;
@@ -70,7 +74,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.diedLocation = null;
         this.health = type.health;
         this.incomingMessages = new LinkedList<>();
-        this.towerHasSingleAttacked = this.towerHasAreaAttacked = false;
 
         this.paintAmount = 0;
 
@@ -81,6 +84,9 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.roundsAlive = 0;
         this.actionCooldownTurns = type.actionCooldown;
         this.movementCooldownTurns = GameConstants.COOLDOWN_LIMIT;
+
+        this.carryingRobot = null;
+        this.grabbedByRobot = null;
 
         this.indicatorString = "";
 
@@ -138,14 +144,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
         }
     }
 
-    public boolean hasTowerSingleAttacked() {
-        return this.towerHasSingleAttacked;
-    }
-
-    public boolean hasTowerAreaAttacked() {
-        return this.towerHasAreaAttacked;
-    }
-
     public long getControlBits() {
         return controlBits;
     }
@@ -166,6 +164,14 @@ public class InternalRobot implements Comparable<InternalRobot> {
         return movementCooldownTurns;
     }
 
+    public InternalRobot getCarryingRobot() {
+        return carryingRobot;
+    }
+
+    public InternalRobot getGrabbedByRobot() {
+        return grabbedByRobot;
+    }
+
     public RobotInfo getRobotInfo() {
         if (cachedRobotInfo != null
                 && cachedRobotInfo.ID == ID
@@ -176,7 +182,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
             return cachedRobotInfo;
         }
 
-        this.cachedRobotInfo = new RobotInfo(ID, team, type, health, location, paintAmount);
+        this.cachedRobotInfo = new RobotInfo(ID, team, type, health, location, paintAmount, carryingRobot != null ? carryingRobot.getRobotInfo() : null);
         return this.cachedRobotInfo;
     }
 
@@ -196,6 +202,20 @@ public class InternalRobot implements Comparable<InternalRobot> {
      */
     public boolean canMoveCooldown() {
         return this.movementCooldownTurns < GameConstants.COOLDOWN_LIMIT;
+    }
+
+    /**
+     * Returns whether the robot is currently carrying another robot.
+     */
+    public boolean isCarryingRobot() {
+        return this.carryingRobot != null;
+    }
+
+    /**
+     * Returns whether the robot is currently carrying another robot.
+     */
+    public boolean isGrabbedByRobot() {
+        return this.grabbedByRobot != null;
     }
 
     /**
@@ -428,7 +448,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
         boolean hitRobot = false;
         if(loc == null) { // area attack
-            this.towerHasAreaAttacked = true;
             int aoeDamage = this.type.aoeAttackStrength + (int) Math.round(this.gameWorld.getDefenseTowerDamageIncrease(team) * GameConstants.DEFENSE_ATTACK_BUFF_AOE_EFFECTIVENESS/100.0);
 
             MapLocation[] allLocs = this.gameWorld.getAllLocationsWithinRadiusSquared(this.getLocation(), this.type.actionRadiusSquared);
@@ -446,7 +465,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
                 }
             }
         } else { // single attack
-            this.towerHasSingleAttacked = true;
             if(this.gameWorld.getRobot(loc) != null) {
                 InternalRobot unit = this.gameWorld.getRobot(loc);
                 if(this.team != unit.getTeam()){
@@ -461,6 +479,46 @@ public class InternalRobot implements Comparable<InternalRobot> {
         if(hitRobot) {
             this.gameWorld.getTeamInfo().addMoney(this.team, this.type.attackMoneyBonus);
         }
+    }
+
+    public void grabRobot(MapLocation loc) {
+        if(!this.type.isThrowingType()) {
+            throw new RuntimeException("Unit must be a rat to grab other rats");
+        }else if(!loc.isAdjacentTo(this.getLocation())) {
+            throw new RuntimeException("Can only grab adjacent robots");
+        }else if (false) { // TODO
+            throw new RuntimeException("Can only grab robots in front of us");
+        }else if(this.isCarryingRobot()) {
+            throw new RuntimeException("Already carrying a robot");
+        }else if(this.isGrabbedByRobot()) {
+            throw new RuntimeException("Cannot grab while being carried");
+        }
+
+        if(this.gameWorld.getRobot(loc) != null && this.gameWorld.getRobot(loc).getType().isThrowableType()) {
+            boolean canGrab = false;
+            if(false) { // TODO replace with checking if the enemy robot is facing away from us
+                canGrab = true; // We can always grab robots facing away from us
+            }else if(this.team == this.gameWorld.getRobot(loc).getTeam()) {
+                canGrab = true; // We can always grab allied robots
+            }else if(this.gameWorld.getRobot(loc).getHealth() < health) {
+                canGrab = true; // We can grab enemy robots with lower strength than us
+            }
+
+            if (canGrab) {
+                this.carryingRobot = this.gameWorld.getRobot(loc);
+                this.carryingRobot.getGrabbed(this); // Notify the grabbed robot that it has been picked up
+                 this.gameWorld.getMatchMaker().addGrabAction(this.carryingRobot.getID());
+            } else {
+                throw new RuntimeException("Cannot grab that robot");
+            }
+        }
+    }
+
+    private void getGrabbed(InternalRobot grabber) {
+        this.grabbedByRobot = grabber;
+        this.movementCooldownTurns = GameConstants.THROW_DURATION + GameConstants.THROW_STUN_DURATION;
+        this.actionCooldownTurns = GameConstants.THROW_DURATION + GameConstants.THROW_STUN_DURATION;
+        this.gameWorld.removeRobot(getLocation());
     }
 
     /**
@@ -606,9 +664,10 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
     public void processBeginningOfTurn() {
         this.sentMessagesCount = 0;
-        this.towerHasSingleAttacked = this.towerHasAreaAttacked = false;
-        this.actionCooldownTurns = Math.max(0, this.actionCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
-        this.movementCooldownTurns = Math.max(0, this.movementCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
+        if (!this.isGrabbedByRobot()) {
+            this.actionCooldownTurns = Math.max(0, this.actionCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
+            this.movementCooldownTurns = Math.max(0, this.movementCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
+        }
         this.currentBytecodeLimit = this.type.isRobotType() ? GameConstants.ROBOT_BYTECODE_LIMIT : GameConstants.TOWER_BYTECODE_LIMIT;
         this.gameWorld.getMatchMaker().startTurn(this.ID);
     }
@@ -617,30 +676,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
         // indicator strings!
         if (!indicatorString.equals("")) {
             this.gameWorld.getMatchMaker().addIndicatorString(this.ID, this.indicatorString);
-        }
-
-        if (this.getType().isRobotType()){
-            Team owningTeam = this.gameWorld.teamFromPaint(this.gameWorld.getPaint(this.location));
-            int mopperMultiplier = this.getType() == UnitType.MOPPER ? GameConstants.MOPPER_PAINT_PENALTY_MULTIPLIER : 1;
-            int allyRobotCount = 0;
-            for (InternalRobot robot : this.gameWorld.getAllRobotsWithinRadiusSquared(this.location, 2, this.team)){
-                if (robot.ID != this.ID)
-                    allyRobotCount++;
-            }
-
-            if (owningTeam == Team.NEUTRAL) {
-                this.addPaint(-GameConstants.PENALTY_NEUTRAL_TERRITORY * mopperMultiplier);
-                this.addPaint(-allyRobotCount);
-            } else if (owningTeam == this.getTeam().opponent()) {
-                this.addPaint(-GameConstants.PENALTY_ENEMY_TERRITORY * mopperMultiplier);
-                this.addPaint(-2 * allyRobotCount);
-            } else {
-                this.addPaint(-allyRobotCount);
-            }
-        }
-
-        if (this.paintAmount == 0 && type.isRobotType()){
-            this.addHealth(-GameConstants.NO_PAINT_DAMAGE);
         }
 
         this.gameWorld.getMatchMaker().endTurn(this.ID, this.health, this.paintAmount, this.movementCooldownTurns, this.actionCooldownTurns, this.bytecodesUsed, this.location);

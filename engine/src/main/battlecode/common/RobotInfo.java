@@ -37,7 +37,12 @@ public class RobotInfo {
      */
     public final int paintAmount;
 
-    public RobotInfo(int ID, Team team, UnitType type, int health, MapLocation location, int paintAmount) {
+    /**
+     * The current robot being carried by this robot, or null if not carrying any robots.
+     */
+    public final RobotInfo carryingRobot;
+
+    public RobotInfo(int ID, Team team, UnitType type, int health, MapLocation location, int paintAmount, RobotInfo carryingRobot) {
         super();
         this.ID = ID;
         this.team = team;
@@ -45,6 +50,7 @@ public class RobotInfo {
         this.health = health;
         this.location = location;
         this.paintAmount = paintAmount;
+        this.carryingRobot = carryingRobot;
     }
 
     /**
@@ -101,6 +107,15 @@ public class RobotInfo {
         return this.paintAmount;
     }
 
+    /**
+     * Returns the robot this robot is carrying, or null if not carrying a robot. 
+     * 
+     * @return the robot the robot is carrying, or null if not carrying a robot
+     */
+    public RobotInfo getCarryingRobot() {
+        return this.carryingRobot;
+    }
+
 
     @Override
     public boolean equals(Object o) {
@@ -133,6 +148,7 @@ public class RobotInfo {
                 ", health=" + health +
                 ", location=" + location +
                 ", paint amount=" + paintAmount +
+                ", carrying=" + carryingRobot +
                 '}';
     }
 }

@@ -516,6 +516,13 @@ public class GameMaker {
             });
         }
 
+        public void addGrabAction(int grabbedRobotID){
+            applyToBuilders((builder) -> {
+                int action = GrabAction.createGrabAction(builder, grabbedRobotID);
+                builder.addAction(action, Action.GrabAction);
+            });
+        }
+
         // Moppers send damage actions when removing paint for per turn visualization
         public void addRemovePaintAction(int affectedRobotID, int amountRemoved){
             applyToBuilders((builder) -> {
