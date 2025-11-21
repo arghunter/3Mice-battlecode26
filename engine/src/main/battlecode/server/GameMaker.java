@@ -516,10 +516,19 @@ public class GameMaker {
             });
         }
 
+        // TODO someone who knows what they're doing please implement
         public void addGrabAction(int grabbedRobotID){
             applyToBuilders((builder) -> {
                 int action = GrabAction.createGrabAction(builder, grabbedRobotID);
                 builder.addAction(action, Action.GrabAction);
+            });
+        }
+
+        // TODO someone who knows what they're doing please implement
+        public void addThrowAction(int thrownRobotID, int throwDirLocation){
+            applyToBuilders((builder) -> {
+                int action = ThrowAction.createGrabAction(builder, thrownRobotID, throwDirLocation);
+                builder.addAction(action, Action.ThrowAction);
             });
         }
 

@@ -42,6 +42,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
     private InternalRobot carryingRobot; // robot being carried by this robot, if any
     private InternalRobot grabbedByRobot; // robot that is carrying this robot, if any
+    private boolean beingThrown;
 
     private Queue<Message> incomingMessages;
 
@@ -87,6 +88,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
         this.carryingRobot = null;
         this.grabbedByRobot = null;
+        this.beingThrown = false;
 
         this.indicatorString = "";
 
@@ -170,6 +172,10 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
     public InternalRobot getGrabbedByRobot() {
         return grabbedByRobot;
+    }
+
+    public boolean isBeingThrown() {
+        return beingThrown;
     }
 
     public RobotInfo getRobotInfo() {
@@ -490,7 +496,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
             throw new RuntimeException("Can only grab robots in front of us");
         }else if(this.isCarryingRobot()) {
             throw new RuntimeException("Already carrying a robot");
-        }else if(this.isGrabbedByRobot()) {
+        }else if(this.isGrabbedByRobot()) { // This should never occur, since grabbed robots are on action cooldown
             throw new RuntimeException("Cannot grab while being carried");
         }
 
@@ -519,6 +525,44 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.movementCooldownTurns = GameConstants.THROW_DURATION + GameConstants.THROW_STUN_DURATION;
         this.actionCooldownTurns = GameConstants.THROW_DURATION + GameConstants.THROW_STUN_DURATION;
         this.gameWorld.removeRobot(getLocation());
+    }
+
+    public void throwRobot(Direction dir) {
+        if(!this.type.isThrowingType()) {
+            throw new RuntimeException("Unit must be a rat to throw other rats");
+        }else if(!this.isCarryingRobot()) {
+            throw new RuntimeException("Not carrying a robot to throw");
+        }
+        if(!this.gameWorld.getGameMap().onTheMap(this.getLocation().add(dir))) {
+            throw new RuntimeException("Cannot throw outside of map");
+        }
+
+        // Throw the robot
+        this.carryingRobot.getThrown(dir);
+        this.gameWorld.getMatchMaker().addThrowAction(this.carryingRobot.getID(), locationToInt(this.getLocation().add(dir)));
+        this.carryingRobot = null;
+    }
+
+    private void getThrown(Direction dir) {
+        this.grabbedByRobot = null;
+        this.beingThrown = true;
+        this.setLocation(this.getLocation().add(dir));
+        this.gameWorld.addRobot(this.getLocation(), this);
+        this.beingThrown = false;
+    }
+
+    public void hitGround() {
+        this.beingThrown = false;
+        this.addHealth(-GameConstants.THROW_DAMAGE-GameConstants.THROW_DAMAGE_PER_TURN * (this.actionCooldownTurns - GameConstants.THROW_STUN_DURATION) / GameConstants.COOLDOWNS_PER_TURN);
+        this.movementCooldownTurns = GameConstants.THROW_STUN_DURATION;
+        this.actionCooldownTurns = GameConstants.THROW_STUN_DURATION;
+    }
+
+    public void travelFlying() {
+        // TODO Move in the same direction as before
+        // Check if we hit a wall or rat
+        // If we hit a wall, call hitGround() (also damage the rat)
+        // Otherwise, move forward one tile
     }
 
     /**
@@ -667,6 +711,13 @@ public class InternalRobot implements Comparable<InternalRobot> {
         if (!this.isGrabbedByRobot()) {
             this.actionCooldownTurns = Math.max(0, this.actionCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
             this.movementCooldownTurns = Math.max(0, this.movementCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
+            if (this.beingThrown) {
+                if (this.actionCooldownTurns <= GameConstants.THROW_STUN_DURATION) {
+                    this.hitGround();
+                } else {
+                    this.travelFlying(); // This will call hitGround if we hit something
+                }
+            }
         }
         this.currentBytecodeLimit = this.type.isRobotType() ? GameConstants.ROBOT_BYTECODE_LIMIT : GameConstants.TOWER_BYTECODE_LIMIT;
         this.gameWorld.getMatchMaker().startTurn(this.ID);
