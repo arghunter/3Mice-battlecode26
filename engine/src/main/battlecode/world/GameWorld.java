@@ -67,6 +67,13 @@ public class GameWorld {
     private final GameMaker.MatchMaker matchMaker;
     private int areaWithoutWalls;
 
+    // List of all ruins, not indexed by location
+    private ArrayList<MapLocation> allCheeseMines;
+    // Whether there is a ruin on each tile, indexed by location
+    private boolean[] allCheeseMinesByLoc;
+    // list of all cheese mines
+    private ArrayList<CheeseMine> CheeseMines;
+
     @SuppressWarnings("unchecked")
     public GameWorld(LiveMap gm, RobotControlProvider cp, GameMaker.MatchMaker matchMaker) {
         int width = gm.getWidth();
@@ -110,6 +117,14 @@ public class GameWorld {
         // Write match header at beginning of match
         this.matchMaker.makeMatchHeader(this.gameMap);
 
+        this.allCheeseMinesByLoc = gm.getCheeseMineArray();
+        this.allCheeseMines = new ArrayList<MapLocation>();
+        for (int i = 0; i < numSquares; i++) {
+            if (this.allCheeseMinesByLoc[i]) {
+                this.allCheeseMines.add(indexToLocation(i));
+            }
+        }
+
         // ignore patterns passed in with map and use hardcoded values
         // this.patternArray = gm.getPatternArray();
         this.resourcePatternCenters = new ArrayList<MapLocation>();
@@ -133,13 +148,6 @@ public class GameWorld {
             spawnRobot(robotInfo.ID, robotInfo.type, newLocation, robotInfo.team);
             this.towerLocations.add(newLocation);
             towersByLoc[locationToIndex(newLocation)] = robotInfo.team;
-
-            // Start initial towers at level 2. Defer upgrade action until the tower's first
-            // turn since client only supports actions this way
-            InternalRobot robot = getRobot(newLocation);
-            UnitType newType = robot.getType().getNextLevel();
-            robot.upgradeTower(newType);
-            upgradeTower(newType, robot.getTeam());
         }
     }
 
@@ -214,10 +222,6 @@ public class GameWorld {
         return getPatternBit(this.patternArray[RESOURCE_INDEX], dx, dy);
     }
 
-    public int getTowerPatternBit(int dx, int dy, UnitType towerType) {
-        return getPatternBit(this.patternArray[towerTypeToPatternIndex(towerType)], dx, dy);
-    }
-
     public int getAreaWithoutWalls() {
         return this.areaWithoutWalls;
     }
@@ -241,10 +245,6 @@ public class GameWorld {
 
     public boolean checkResourcePattern(Team team, MapLocation center) {
         return checkPattern(this.patternArray[RESOURCE_INDEX], team, center, false);
-    }
-
-    public boolean checkTowerPattern(Team team, MapLocation center, UnitType towerType) {
-        return checkPattern(this.patternArray[towerTypeToPatternIndex(towerType)], team, center, true);
     }
 
     public boolean checkPattern(int pattern, Team team, MapLocation center, boolean isTowerPattern) {
@@ -1000,8 +1000,9 @@ public class GameWorld {
     }
 
     public void processEndOfRound() {
-        for (CheeseMine mine : cheeseMines) {
-            spawnCheese(mine);
+        for (MapLocation mineLocation : this.allCheeseMines) {
+            //TODO: get cheese mine given location
+            spawnCheese(mineLocation);
         }
 
         int teamACoverage = (int) Math

@@ -458,14 +458,14 @@ public class LiveMap {
             }
         }
 
-        ArrayList<MapLocation> ruinLocs = new ArrayList<>();
+        ArrayList<MapLocation> cheeseMineLocs = new ArrayList<>();
         int numWalls = 0;
         for (int i = 0; i < this.width * this.height; i++) {
             if (this.wallArray[i] && this.cheeseMineArray[i]) {
                 throw new RuntimeException("Walls can't be on the same square as cheese mines!");
             }
             if (this.cheeseMineArray[i])
-                ruinLocs.add(indexToLocation(i));
+                cheeseMineLocs.add(indexToLocation(i));
             if (this.wallArray[i])
                 numWalls += 1;
         }
@@ -473,21 +473,21 @@ public class LiveMap {
             throw new RuntimeException("Too much of the area of the map is composed of walls!");
         }
 
-        for (int i = 0; i < ruinLocs.size(); i++) {
-            MapLocation curRuin = ruinLocs.get(i);
-            for (int j = i + 1; j < ruinLocs.size(); j++) {
-                MapLocation otherRuin = ruinLocs.get(j);
-                if (curRuin.distanceSquaredTo(otherRuin) < GameConstants.MIN_RUIN_SPACING_SQUARED)
-                    throw new RuntimeException("Ruins at location " + curRuin.toString() + " and location "
-                            + otherRuin.toString() + " are too close to each other!");
+        for (int i = 0; i < cheeseMineLocs.size(); i++) {
+            MapLocation curcheeseMine = cheeseMineLocs.get(i);
+            for (int j = i + 1; j < cheeseMineLocs.size(); j++) {
+                MapLocation othercheeseMine = cheeseMineLocs.get(j);
+                if (curcheeseMine.distanceSquaredTo(othercheeseMine) < GameConstants.MIN_CHEESE_MINE_SPACING_SQUARED)
+                    throw new RuntimeException("Cheese mines at location " + curcheeseMine.toString() + " and location "
+                            + othercheeseMine.toString() + " are too close to each other!");
             }
         }
         for (int i = 0; i < this.width * this.height; i++) {
             if (this.wallArray[i]) {
-                for (MapLocation ruin : ruinLocs) {
-                    if (ruin.distanceSquaredTo(indexToLocation(i)) <= 8) // 2^2 + 2^2
+                for (MapLocation cheeseMine : cheeseMineLocs) {
+                    if (cheeseMine.distanceSquaredTo(indexToLocation(i)) <= 8) // 2^2 + 2^2
                         throw new RuntimeException("Wall appears at location " + indexToLocation(i).toString()
-                                + " which is too close to ruin " + ruin.toString());
+                                + " which is too close to cheese mine " + cheeseMine.toString());
                 }
             }
         }

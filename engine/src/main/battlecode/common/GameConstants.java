@@ -27,8 +27,8 @@ public class GameConstants {
     /** The maximum possible map width. */
     public static final int MAP_MAX_WIDTH = 60;
 
-    /** The minimum distance between ruins on the map */
-    public static final int MIN_RUIN_SPACING_SQUARED = 25;
+    /** The minimum distance between cheese mines on the map */
+    public static final int MIN_CHEESE_MINE_SPACING_SQUARED = 25;
 
     /** The maximum percentage of the map that can be walls */
     public static final int MAX_WALL_PERCENTAGE = 20;
