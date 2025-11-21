@@ -41,6 +41,7 @@ public class GameWorld {
     private InternalRobot[][] robots;
     private ArrayList<Trap>[] trapTriggers;
     private Trap[] trapLocations;
+    private CheeseMine[] cheeseMines;
     private int trapId;
     private final LiveMap gameMap;
     private final TeamInfo teamInfo;
@@ -999,6 +1000,10 @@ public class GameWorld {
     }
 
     public void processEndOfRound() {
+        for (CheeseMine mine : cheeseMines) {
+            spawnCheese(mine);
+        }
+
         int teamACoverage = (int) Math
                 .round(this.teamInfo.getNumberOfPaintedSquares(Team.A) * 1000.0 / this.areaWithoutWalls);
         this.matchMaker.addTeamInfo(Team.A, this.teamInfo.getMoney(Team.A), teamACoverage,
