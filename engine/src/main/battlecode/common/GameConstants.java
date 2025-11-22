@@ -92,6 +92,9 @@ public class GameConstants {
     /** The maximum distance from a rat king for building robots */
     public static final int BUILD_ROBOT_RADIUS_SQUARED = 4;
 
+    /** The maximum distance from a robot for building traps or dirt */
+    public static final int BUILD_DISTANCE_SQUARED = 9;
+
     /** The maximum amount of bytes that can be encoded in a message */
     public static final int MAX_MESSAGE_BYTES = 4; // TODO need to spec messages as a whole!
 
