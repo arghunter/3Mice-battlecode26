@@ -27,7 +27,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
     private Team team;
     private MapLocation location;
-    private Direction offsetToCenter;
     private Direction dir;
     private MapLocation diedLocation;
     private int health;
@@ -62,7 +61,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
      * @param loc  the location of the robot
      * @param team the team of the robot
      */
-    public InternalRobot(GameWorld gw, int id, Team team, UnitType type, MapLocation loc, Direction dir, Direction offsetToCenter) {
+    public InternalRobot(GameWorld gw, int id, Team team, UnitType type, MapLocation loc, Direction dir) {
         this.gameWorld = gw;
 
         this.ID = id;
@@ -71,7 +70,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.type = type;
 
         this.location = loc;
-        this.offsetToCenter = offsetToCenter;
         this.dir = dir;
         this.diedLocation = null;
         this.health = type.health;
@@ -135,10 +133,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
     
     public Direction getDirection() {
         return dir;
-    }
-
-    public Direction getOffsetToCenter(){
-        return offsetToCenter;
     }
 
     public MapLocation[] getAllPartLocations(){ 
