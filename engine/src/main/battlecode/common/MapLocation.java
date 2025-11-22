@@ -127,12 +127,13 @@ public final class MapLocation implements Serializable, Comparable<MapLocation> 
      * @param location the location to test
      * @param distanceSquared the distance squared for the location to be within
      * @param facingDir the direction robot is facing
-     * @param halfTheta half the degree of the vision cone (i.e. degree from robot's facing direction to either edge of cone)
+     * @param theta the angle of the vision cone
      * @return true if the given location is within distanceSquared to this one; false otherwise
      *
      * @battlecode.doc.costlymethod
      */
-    public final boolean isWithinDistanceSquared(MapLocation location, int distanceSquared, Direction facingDir, double halfTheta) {
+    public final boolean isWithinDistanceSquared(MapLocation location, int distanceSquared, Direction facingDir, double theta) {
+
         // prevent division by 0 error
         if (this.equals(location)){
             return true;
@@ -149,7 +150,7 @@ public final class MapLocation implements Serializable, Comparable<MapLocation> 
         
         double cosSim = (facingDir.dx * dx + facingDir.dy * dy)/(Math.sqrt((dx*dx + dy*dy) * (facingDir.dx*facingDir.dx + facingDir.dy*facingDir.dy)));
         double halfAngle = Math.abs(Math.acos(cosSim));
-        boolean isValidAngle = halfAngle-adjustment <= halfTheta;
+        boolean isValidAngle = halfAngle-adjustment <= theta/2;
         
         return isValidDistance && isValidAngle;
     }

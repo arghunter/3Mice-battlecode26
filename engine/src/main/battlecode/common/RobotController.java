@@ -375,7 +375,7 @@ public interface RobotController {
     MapLocation adjacentLocation(Direction dir);
 
     /**
-     * Returns a list of all locations within the given radiusSquared of a location.
+     * Returns a list of all locations within the given vision cone of a location.
      * If radiusSquared is larger than the robot's vision radius, uses the robot's
      * vision radius instead.
      *
@@ -565,6 +565,15 @@ public interface RobotController {
      */
     public boolean canPlaceDirt(MapLocation loc);
 
+    /**
+     * Places dirt at the given location.
+     * 
+     * @param loc the location to place the dirt
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    void placeDirt(MapLocation loc) throws GameActionException;
+
      /**
      * Tests whether this robot can place dirt at the given location.
      * @param loc
@@ -573,6 +582,15 @@ public interface RobotController {
      * @battlecode.doc.costlymethod
      */
     public boolean canRemoveDirt(MapLocation loc);
+
+    /**
+     * Removes dirt from the given location.
+     * 
+     * @param loc the location to remove dirt from
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    void removeDirt(MapLocation loc) throws GameActionException;
 
     // ****************************
     // ***** ATTACK / HEAL ********

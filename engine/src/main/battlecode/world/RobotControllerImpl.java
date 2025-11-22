@@ -177,9 +177,9 @@ public final class RobotControllerImpl implements RobotController {
                     "Target location not within vision range");
     }
 
-    private void assertCanActLocation(MapLocation loc, int maxRadiusSquared, int maxHalfTheta) throws GameActionException {
+    private void assertCanActLocation(MapLocation loc, int maxRadiusSquared, int maxAngle) throws GameActionException {
         assertNotNull(loc);
-        if (!getLocation().isWithinDistanceSquared(loc, maxRadiusSquared, this.robot.getDirection(), maxHalfTheta))
+        if (!getLocation().isWithinDistanceSquared(loc, maxRadiusSquared, this.robot.getDirection(), maxAngle))
             throw new GameActionException(OUT_OF_RANGE,
                     "Target location not within action range");
         if (!this.gameWorld.getGameMap().onTheMap(loc))
@@ -307,8 +307,8 @@ public final class RobotControllerImpl implements RobotController {
     public RobotInfo[] senseNearbyRobots(MapLocation center, int radiusSquared, Team team) throws GameActionException {
         assertNotNull(center);
         assertRadiusNonNegative(radiusSquared);
-        int actualRadiusSquared = radiusSquared == -1 ? GameConstants.VISION_RADIUS_SQUARED
-                : Math.min(radiusSquared, GameConstants.VISION_RADIUS_SQUARED);
+        int actualRadiusSquared = radiusSquared == -1 ? this.robot.getVisionRadiusSquared()
+                : Math.min(radiusSquared, this.robot.getVisionRadiusSquared());
         InternalRobot[] allSensedRobots = gameWorld.getAllRobotsWithinRadiusSquared(center, actualRadiusSquared, team);
         List<RobotInfo> validSensedRobots = new ArrayList<>();
         for (InternalRobot sensedRobot : allSensedRobots) {
@@ -390,9 +390,9 @@ public final class RobotControllerImpl implements RobotController {
             throws GameActionException {
         assertNotNull(center);
         assertRadiusNonNegative(radiusSquared);
-        int actualRadiusSquared = radiusSquared == -1 ? GameConstants.VISION_RADIUS_SQUARED
-                : Math.min(radiusSquared, GameConstants.VISION_RADIUS_SQUARED);
-        MapLocation[] possibleLocs = this.gameWorld.getAllLocationsWithinRadiusSquared(center, actualRadiusSquared);
+        int actualRadiusSquared = radiusSquared == -1 ? this.robot.getVisionRadiusSquared()
+                : Math.min(radiusSquared, this.robot.getVisionRadiusSquared());
+        MapLocation[] possibleLocs = this.gameWorld.getAllLocationsWithinConeRadiusSquared(center, this.robot.getDirection(), this.robot.getVisionConeAngle(), actualRadiusSquared);
         List<MapLocation> visibleLocs = Arrays.asList(possibleLocs).stream().filter(x -> canSenseLocation(x))
                 .collect(Collectors.toList());
         return visibleLocs.toArray(new MapLocation[visibleLocs.size()]);

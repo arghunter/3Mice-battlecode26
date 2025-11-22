@@ -766,7 +766,7 @@ public class GameWorld {
                                                                             int width, int height,
                                                                             MapLocation center,
                                                                             Direction lookDirection,
-                                                                            double halfTheta, int radiusSquared) {
+                                                                            double angle, int radiusSquared) {
         ArrayList<MapLocation> returnLocations = new ArrayList<MapLocation>();
         int ceiledRadius = (int) Math.ceil(Math.sqrt(radiusSquared)) + 1; // add +1 just to be safe
         int minX = Math.max(center.x - ceiledRadius, origin.x);
@@ -776,7 +776,7 @@ public class GameWorld {
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 MapLocation newLocation = new MapLocation(x, y);
-                if (center.isWithinDistanceSquared(newLocation, radiusSquared, lookDirection, halfTheta))
+                if (center.isWithinDistanceSquared(newLocation, radiusSquared, lookDirection, angle))
                     returnLocations.add(newLocation);
             }
         }
