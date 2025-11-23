@@ -93,11 +93,11 @@ public class RobotInfo {
     }
 
     /**
-     * Returns the paint amount of this robot.
+     * Returns the cheese amount of this robot.
      * 
-     * @return the paint amount of the robot
+     * @return the cheese amount of the robot
      */
-    public int getCheeseAmount() {
+    public int getRawCheeseAmount() {
         return this.cheeseAmount;
     }
 

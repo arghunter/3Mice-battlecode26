@@ -132,8 +132,18 @@ public final class RobotControllerImpl implements RobotController {
     }
 
     @Override
-    public int getPaint() {
-        return this.robot.getPaint();
+    public int getRawCheese() {
+        return this.robot.getCheese();
+    }
+
+    @Override
+    public int getGlobalCheese() {
+        return this.gameWorld.getTeamInfo().getCheese(getTeam());
+    }
+
+    @Override
+    public int getAllCheese() {
+        return getRawCheese() + getGlobalCheese();
     }
 
     @Override
@@ -148,7 +158,7 @@ public final class RobotControllerImpl implements RobotController {
 
     @Override
     public int getMoney() {
-        return this.gameWorld.getTeamInfo().getMoney(getTeam());
+        return this.gameWorld.getTeamInfo().getCheese(getTeam());
     }
 
     @Override

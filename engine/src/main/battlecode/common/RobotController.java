@@ -48,18 +48,23 @@ public interface RobotController {
 
     /**
      * Returns the 5x5 resource pattern.
-     * @return a boolean array of arrays, where entry [i][j] is true 
-     * if the i'th row and j'th column of the pattern should use the secondary color
+     * 
+     * @return a boolean array of arrays, where entry [i][j] is true
+     *         if the i'th row and j'th column of the pattern should use the
+     *         secondary color
      * 
      * @battlecode.doc.costlymethod
      */
     boolean[][] getResourcePattern();
 
     /**
-     * Returns the 5x5 pattern needed to be drawn to build a tower of the specified type.
+     * Returns the 5x5 pattern needed to be drawn to build a tower of the specified
+     * type.
+     * 
      * @param type the type of tower to build. Must be a tower type.
-     * @return a boolean array of arrays, where entry [i][j] is true 
-     * if the i'th row and j'th column of the pattern should use the secondary color
+     * @return a boolean array of arrays, where entry [i][j] is true
+     *         if the i'th row and j'th column of the pattern should use the
+     *         secondary color
      * 
      * @battlecode.doc.costlymethod
      */
@@ -106,13 +111,31 @@ public interface RobotController {
     int getHealth();
 
     /**
-     * Returns this robot's current paint amount.
+     * Returns the amount of cheese the robot is currently holding.
      *
-     * @return this robot's current paint amount
+     * @return the amount of cheese the robot is currently holding.
      *
      * @battlecode.doc.costlymethod
      */
-    int getPaint();
+    int getRawCheese();
+
+    /**
+     * Returns the amount of global cheese available.
+     *
+     * @return the amount of global cheese available.
+     *
+     * @battlecode.doc.costlymethod
+     */
+    public int getGlobalCheese();
+
+    /**
+     * Returns the amount of cheese the robot has access to.
+     *
+     * @return the amount of cheese the robot has access to.
+     *
+     * @battlecode.doc.costlymethod
+     */
+    public int getAllCheese();
 
     /**
      * Returns the amount of money that this robot's team has.
@@ -133,7 +156,7 @@ public interface RobotController {
     int getChips();
 
     /**
-     * Returns what UnitType this robot is. 
+     * Returns what UnitType this robot is.
      * 
      * @return the UnitType of this robot
      * 
@@ -308,7 +331,8 @@ public interface RobotController {
     RobotInfo[] senseNearbyRobots(MapLocation center, int radiusSquared, Team team) throws GameActionException;
 
     /**
-     * Given a senseable location, returns whether that location is passable (a wall).
+     * Given a senseable location, returns whether that location is passable (a
+     * wall).
      * 
      * @param loc the given location
      * @return whether that location is passable
@@ -533,7 +557,7 @@ public interface RobotController {
     /**
      * Adds a mark at the given location.
      * 
-     * @param loc the location to mark
+     * @param loc       the location to mark
      * @param secondary whether the secondary color should be used
      * 
      * @battlecode.doc.costlymethod
@@ -583,7 +607,8 @@ public interface RobotController {
     void markTowerPattern(UnitType type, MapLocation loc) throws GameActionException;
 
     /**
-     * Checks if a tower can be upgraded by verifying conditions on the location, team, 
+     * Checks if a tower can be upgraded by verifying conditions on the location,
+     * team,
      * tower level, and cost.
      * 
      * @param loc the location to upgrade the tower at
@@ -593,7 +618,8 @@ public interface RobotController {
     boolean canUpgradeTower(MapLocation loc);
 
     /**
-     * Upgrades a tower if possible; subtracts the corresponding amount of money from the team.
+     * Upgrades a tower if possible; subtracts the corresponding amount of money
+     * from the team.
      * 
      * @param loc the location to upgrade the tower at
      * 
@@ -647,7 +673,8 @@ public interface RobotController {
     void completeTowerPattern(UnitType type, MapLocation loc) throws GameActionException;
 
     /**
-     * Checks if the robot can complete a 5x5 special resource pattern centered at the
+     * Checks if the robot can complete a 5x5 special resource pattern centered at
+     * the
      * given location. This requires the 5x5 region to be painted correctly.
      * 
      * @param loc the center of the resource pattern
@@ -669,6 +696,7 @@ public interface RobotController {
 
     /**
      * Tests whether this robot can place dirt at the given location.
+     * 
      * @param loc
      * @throws GameActionException
      * 
@@ -676,8 +704,9 @@ public interface RobotController {
      */
     public boolean canPlaceDirt(MapLocation loc);
 
-     /**
+    /**
      * Tests whether this robot can place dirt at the given location.
+     * 
      * @param loc
      * @throws GameActionException
      * 
@@ -690,10 +719,10 @@ public interface RobotController {
     // ****************************
 
     /**
-     * Tests whether this robot can paint the given location. 
+     * Tests whether this robot can paint the given location.
      * 
      * @param loc target location to paint
-     * @return true if rc.attack(loc) will paint the given location 
+     * @return true if rc.attack(loc) will paint the given location
      * 
      * @battlecode.doc.costlymethod
      */
@@ -702,7 +731,7 @@ public interface RobotController {
     /**
      * Tests whether this robot can attack the given location. Types of
      * attacks for specific units determine whether or not towers, other
-     * robots, or empty tiles can be attacked. 
+     * robots, or empty tiles can be attacked.
      *
      * @param loc target location to attack
      * @return whether it is possible to attack the given location
@@ -710,13 +739,13 @@ public interface RobotController {
      * @battlecode.doc.costlymethod
      */
     boolean canAttack(MapLocation loc);
-    
-    /** 
+
+    /**
      * Performs the specific attack for this robot type, defaulting to the
      * primary color
      *
      * @param loc the target location to attack (for splashers, the center location)
-     *      Note: for a tower, leaving loc null represents an area attack
+     *            Note: for a tower, leaving loc null represents an area attack
      * @throws GameActionException if conditions for attacking are not satisfied
      *
      * @battlecode.doc.costlymethod
@@ -766,9 +795,9 @@ public interface RobotController {
      * if it is within a specific distance and connected by paint,
      * and only if one unit is a robot and the other is a tower.
      * 
-     * @param loc the location to send the message to
+     * @param loc            the location to send the message to
      * @param messageContent the contents of the message.
-     * Does not affect whether or not the message can be sent.
+     *                       Does not affect whether or not the message can be sent.
      * 
      * @battlecode.doc.costlymethod
      */
@@ -778,40 +807,51 @@ public interface RobotController {
      * Sends a message (contained in an int, so 4 bytes) to a specific
      * unit at a location on the map, if it is possible
      * 
-     * @param loc the location to send the message to
+     * @param loc            the location to send the message to
      * @param messageContent an int representing the content of the
-     * message (up to 4 bytes)
-     * @throws GameActionException if conditions for messaging are not 
-     * satisfied
+     *                       message (up to 4 bytes)
+     * @throws GameActionException if conditions for messaging are not
+     *                             satisfied
      * 
      * @battlecode.doc.costlymethod
      */
     void sendMessage(MapLocation loc, int messageContent) throws GameActionException;
 
     /**
-     * Returns true if this tower can broadcast a message. You can broadcast a message
-     * if this robot is a tower and the tower has not yet sent the maximum number of messages
-     * this round (broadcasting a message to other towers counts as one message sent, even
+     * Returns true if this tower can broadcast a message. You can broadcast a
+     * message
+     * if this robot is a tower and the tower has not yet sent the maximum number of
+     * messages
+     * this round (broadcasting a message to other towers counts as one message
+     * sent, even
      * if multiple towers receive the message).
+     * 
      * @return Whether this robot can broadcast a message
      */
     boolean canBroadcastMessage();
 
     /**
-     * Broadcasts a message to all friendly towers within the broadcasting radius. This works the same
-     * as sendMessage, but it can only be performed by towers and sends the message to all friendly
-     * towers within range simultaneously. The towers need not be connected by paint to receive the message.
+     * Broadcasts a message to all friendly towers within the broadcasting radius.
+     * This works the same
+     * as sendMessage, but it can only be performed by towers and sends the message
+     * to all friendly
+     * towers within range simultaneously. The towers need not be connected by paint
+     * to receive the message.
+     * 
      * @param messageContent The message to broadcast.
      * @throws GameActionException If the message can't be sent
      */
     void broadcastMessage(int messageContent) throws GameActionException;
 
     /**
-     * Reads all messages sent to this unit within the past 5 rounds if roundNum = -1, or only
+     * Reads all messages sent to this unit within the past 5 rounds if roundNum =
+     * -1, or only
      * messages sent from the specified round otherwise
      * 
-     * @param roundNum the round number to read messages from, or -1 to read all messages in the queue
-     * @return All messages of the specified round, or all messages from the past 5 round.
+     * @param roundNum the round number to read messages from, or -1 to read all
+     *                 messages in the queue
+     * @return All messages of the specified round, or all messages from the past 5
+     *         round.
      * 
      * @battlecode.doc.costlymethod
      */
@@ -824,7 +864,8 @@ public interface RobotController {
     /**
      * Tests whether you can transfer paint to a given robot/tower.
      * 
-     * You can give paint to an allied robot/tower if you are a mopper and can act at the
+     * You can give paint to an allied robot/tower if you are a mopper and can act
+     * at the
      * given location.
      * You can take paint from allied towers regardless of type, if you can act
      * at the location. Pass in a negative number to take paint.
@@ -851,10 +892,10 @@ public interface RobotController {
     void transferPaint(MapLocation loc, int amount) throws GameActionException;
 
     /**
-     * Destroys the robot. 
+     * Destroys the robot.
      *
      * @battlecode.doc.costlymethod
-    **/
+     **/
     void disintegrate();
 
     /**
@@ -904,18 +945,19 @@ public interface RobotController {
      *
      * @battlecode.doc.costlymethod
      */
-    void setIndicatorLine(MapLocation startLoc, MapLocation endLoc, int red, int green, int blue) throws GameActionException;
+    void setIndicatorLine(MapLocation startLoc, MapLocation endLoc, int red, int green, int blue)
+            throws GameActionException;
 
     /**
-     * Adds a marker to the timeline at the current 
+     * Adds a marker to the timeline at the current
      * round for debugging purposes.
      * Only the first
      * {@link GameConstants#TIMELINE_LABEL_MAX_LENGTH} characters are used.
      * 
      * @param label the label for the timeline marker
-     * @param red the red component of the marker's color
+     * @param red   the red component of the marker's color
      * @param green the green component of the marker's color
-     * @param blue the blue component of the marker's color
+     * @param blue  the blue component of the marker's color
      * 
      * @battlecode.doc.costlymethod
      */
