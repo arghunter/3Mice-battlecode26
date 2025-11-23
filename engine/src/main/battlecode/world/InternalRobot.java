@@ -535,7 +535,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
             incomingMessages.remove();
     }
 
-    private void addMessage(Message message) {
+    public void addMessage(Message message) {
         incomingMessages.add(message);
     }
 

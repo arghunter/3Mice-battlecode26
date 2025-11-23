@@ -635,73 +635,25 @@ public interface RobotController {
     // ***********************************
 
     /**
-     * Returns true if the unit can send a message to a specific
-     * location, false otherwise. We can send a message to a location
-     * if it is within a specific distance and connected by paint,
-     * and only if one unit is a robot and the other is a tower.
+     * Sends a message (contained in an int, so 4 bytes) to all locations within squeaking range.
      * 
-     * @param loc the location to send the message to
-     * 
-     * @battlecode.doc.costlymethod
-     */
-    boolean canSendMessage(MapLocation loc);
-
-    /**
-     * Returns true if the unit can send a message to a specific
-     * location, false otherwise. We can send a message to a location
-     * if it is within a specific distance and connected by paint,
-     * and only if one unit is a robot and the other is a tower.
-     * 
-     * @param loc the location to send the message to
-     * @param messageContent the contents of the message.
-     * Does not affect whether or not the message can be sent.
-     * 
-     * @battlecode.doc.costlymethod
-     */
-    boolean canSendMessage(MapLocation loc, int messageContent);
-
-    /**
-     * Sends a message (contained in an int, so 4 bytes) to a specific
-     * unit at a location on the map, if it is possible
-     * 
-     * @param loc the location to send the message to
      * @param messageContent an int representing the content of the
      * message (up to 4 bytes)
-     * @throws GameActionException if conditions for messaging are not 
-     * satisfied
      * 
      * @battlecode.doc.costlymethod
      */
-    void sendMessage(MapLocation loc, int messageContent) throws GameActionException;
+    void squeak(int messageContent);
 
     /**
-     * Returns true if this tower can broadcast a message. You can broadcast a message
-     * if this robot is a tower and the tower has not yet sent the maximum number of messages
-     * this round (broadcasting a message to other towers counts as one message sent, even
-     * if multiple towers receive the message).
-     * @return Whether this robot can broadcast a message
-     */
-    boolean canBroadcastMessage();
-
-    /**
-     * Broadcasts a message to all friendly towers within the broadcasting radius. This works the same
-     * as sendMessage, but it can only be performed by towers and sends the message to all friendly
-     * towers within range simultaneously. The towers need not be connected by paint to receive the message.
-     * @param messageContent The message to broadcast.
-     * @throws GameActionException If the message can't be sent
-     */
-    void broadcastMessage(int messageContent) throws GameActionException;
-
-    /**
-     * Reads all messages sent to this unit within the past 5 rounds if roundNum = -1, or only
-     * messages sent from the specified round otherwise
+     * Reads all squeaks sent to this unit within the past 5 rounds if roundNum = -1, or only
+     * squeaks sent from the specified round otherwise
      * 
      * @param roundNum the round number to read messages from, or -1 to read all messages in the queue
      * @return All messages of the specified round, or all messages from the past 5 round.
      * 
      * @battlecode.doc.costlymethod
      */
-    Message[] readMessages(int roundNum);
+    Message[] readSqueaks(int roundNum);
 
     // ***********************************
     // ****** OTHER ACTION METHODS *******

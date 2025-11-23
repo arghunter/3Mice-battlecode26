@@ -811,70 +811,15 @@ public final class RobotControllerImpl implements RobotController {
     // ****** COMMUNICATION METHODS ******
     // ***********************************
 
-    private void assertCanSendMessage(MapLocation loc, Message message) throws GameActionException {
-        assertNotNull(loc);
-        assertCanActLocation(loc, GameConstants.MESSAGE_RADIUS_SQUARED);
-        assertNotNull(this.gameWorld.getRobot(loc));
-        if (getTeam() != this.gameWorld.getRobot(loc).getTeam()){
-            throw new GameActionException(CANT_DO_THAT, "Cannot send messages to robots of the enemy team!");
-        }
-        assertNotNull(message);
-
-        // we also need them to be different (i.e. only robot to tower or vice versa)
-        if (this.robot.getType().isRobotType() == this.gameWorld.getRobot(loc).getType().isRobotType()){
-            throw new GameActionException(CANT_DO_THAT, "Only (robot <-> tower) communication is allowed!");
-        }
-        if (this.robot.getType().isRobotType()) {
-            if (this.robot.getSentMessagesCount() >= GameConstants.MAX_MESSAGES_SENT_ROBOT){
-                throw new GameActionException(CANT_DO_THAT, "Robot has already sent too many messages this round!");
-            }
-        } else {
-            if (this.robot.getSentMessagesCount() >= GameConstants.MAX_MESSAGES_SENT_TOWER){
-                throw new GameActionException(CANT_DO_THAT, "Tower has already sent too many messages this round!");
-            }
-        }
-        
-        // make sure the other unit is within the right distance and connected by paint
-        if (this.robot.getLocation().distanceSquaredTo(loc) > GameConstants.MESSAGE_RADIUS_SQUARED){
-            throw new GameActionException(CANT_DO_THAT, "Location specified is not within the message radius!");
-        }
-
-        MapLocation robotLoc = this.robot.getType().isTowerType() ? loc : this.robot.getLocation();
-        MapLocation towerLoc = this.robot.getType().isTowerType() ? this.robot.getLocation() : loc;
-        if (!this.gameWorld.connectedByPaint(this.robot.getTeam(), robotLoc, towerLoc)){
-            throw new GameActionException(CANT_DO_THAT, "Location specified is not connected to current location by paint!");
-        }
-    }
-
     @Override
-    public boolean canSendMessage(MapLocation loc) {
-        // use dummy message content as does not affect if message can be sent
-        return canSendMessage(loc, 0);
-    }
-
-    @Override
-    public boolean canSendMessage(MapLocation loc, int messageContent) {
-        try {
-            Message message = new Message(messageContent, this.robot.getID(), this.gameWorld.getCurrentRound());
-            assertCanSendMessage(loc, message);
-            return true;
-        } catch (GameActionException e) {
-            return false;
-        }
-    }
-
-    @Override
-    public void sendMessage(MapLocation loc, int messageContent) throws GameActionException {
+    public void squeak(int messageContent) {
         Message message = new Message(messageContent, this.robot.getID(), this.gameWorld.getCurrentRound());
-        assertCanSendMessage(loc, message);
-        InternalRobot robot = this.gameWorld.getRobot(loc);
-        this.robot.sendMessage(robot, message);
+        this.gameWorld.squeak(this.robot, message);
         this.robot.incrementMessageCount();
-        // this.gameWorld.getMatchMaker().addMessageAction(robot.getID(), messageContent);
     }
 
     @Override 
-    public Message[] readMessages(int roundNum) {
+    public Message[] readSqueaks(int roundNum) {
         ArrayList<Message> messages = new ArrayList<>();
         for (Message m : this.robot.getMessages()){
             if (roundNum == -1 || m.getRound() == roundNum)
@@ -890,30 +835,6 @@ public final class RobotControllerImpl implements RobotController {
         if (this.robot.getSentMessagesCount() >= GameConstants.MAX_MESSAGES_SENT_TOWER){
             throw new GameActionException(CANT_DO_THAT, "Tower has already sent too many messages this round!");
         }
-    }
-
-    @Override
-    public boolean canBroadcastMessage() {
-        try {
-            assertCanBroadcastMessage();
-            return true;
-        } catch (GameActionException e) {
-            return false;
-        }
-    }
-
-    @Override
-    public void broadcastMessage(int messageContent) throws GameActionException{
-        assertCanBroadcastMessage();
-        Message message = new Message(messageContent, this.robot.getID(), this.gameWorld.getCurrentRound());
-        MapLocation[] allLocs = this.gameWorld.getAllLocationsWithinRadiusSquared(getLocation(), GameConstants.BROADCAST_RADIUS_SQUARED);
-        for(MapLocation loc : allLocs) {
-            InternalRobot robot = this.gameWorld.getRobot(loc);
-            if(robot != null && robot.getType().isTowerType() && robot.getTeam() == getTeam() && robot != this.robot) {
-                this.robot.sendMessage(robot, message);
-            }
-        }
-        this.robot.incrementMessageCount();
     }
 
     // ***********************************

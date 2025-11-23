@@ -990,6 +990,17 @@ public class GameWorld {
         return spawnRobot(ID, type, location, team);
     }
 
+    public void squeak(InternalRobot robot, Message message){
+        MapLocation[] locations = getAllLocationsWithinRadiusSquared(robot.getLocation(), GameConstants.SQUEAK_RADIUS_SQUARED);
+        for (MapLocation loc : locations){
+            InternalRobot otherRobot = getRobot(loc);
+            if (otherRobot != null && otherRobot.getTeam() == robot.getTeam()){
+                otherRobot.addMessage(message.copy());
+            }
+            //TODO alert cats
+        }
+    }
+
     // *********************************
     // ****** DESTROYING ***************
     // *********************************

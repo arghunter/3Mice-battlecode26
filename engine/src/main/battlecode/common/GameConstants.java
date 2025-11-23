@@ -107,6 +107,9 @@ public class GameConstants {
     /** The maximum number of messages a tower can send per turn */
     public static final int MAX_MESSAGES_SENT_TOWER = 20;
 
+    /** The maximum squared radius a robot can squeak to */
+    public static final int SQUEAK_RADIUS_SQUARED = 16;
+
     /** A robot takes this much damage every time it ends a turn with 0 paint */
     public static final int NO_PAINT_DAMAGE = 20;
 
