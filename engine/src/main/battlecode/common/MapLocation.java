@@ -142,7 +142,7 @@ public final class MapLocation implements Serializable, Comparable<MapLocation> 
      * @param location the location to test
      * @param distanceSquared the distance squared for the location to be within
      * @param facingDir the direction robot is facing
-     * @param theta the angle of the vision cone
+     * @param theta the angle of the vision cone in degrees
      * @return true if the given location is within distanceSquared to this one; false otherwise
      *
      * @battlecode.doc.costlymethod
@@ -158,8 +158,8 @@ public final class MapLocation implements Serializable, Comparable<MapLocation> 
      * @param location the location to test
      * @param distanceSquared the distance squared for the location to be within
      * @param facingDir the direction robot is facing
-     * @param theta the angle of the vision cone
-     * @param useTopRight true if the top right coordinate of the location should be used (for 2x2 robots)
+     * @param theta the angle of the vision cone in degrees
+     * @param useTopRight true if the top right coordinate of this location (not the "location" argument) should be used (for 2x2 robots)
      * @return true if the given location is within distanceSquared to this one; false otherwise
      *
      * @battlecode.doc.costlymethod
@@ -176,12 +176,12 @@ public final class MapLocation implements Serializable, Comparable<MapLocation> 
 
         boolean isValidDistance = useTopRight ? this.topRightDistanceSquaredTo(location) <= distanceSquared : this.distanceSquaredTo(location) <= distanceSquared;
         
-        // calculate angle between facingDir and direction to location
+        // calculate angle (degrees) between facingDir and direction to location
         double dx = location.x - (useTopRight ? (this.x + 0.5) : this.x);
         double dy = location.y - (useTopRight ? (this.y + 0.5) : this.y);
         
         double cosSim = (facingDir.dx * dx + facingDir.dy * dy)/(Math.sqrt((dx*dx + dy*dy) * (facingDir.dx*facingDir.dx + facingDir.dy*facingDir.dy)));
-        double halfAngle = Math.abs(Math.acos(cosSim));
+        double halfAngle = Math.toDegrees(Math.abs(Math.acos(cosSim)));
         boolean isValidAngle = halfAngle-adjustment <= theta/2;
         
         return isValidDistance && isValidAngle;
