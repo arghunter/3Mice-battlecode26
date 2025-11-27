@@ -601,6 +601,66 @@ public interface RobotController {
      */
     void removeDirt(MapLocation loc) throws GameActionException;
 
+    /**
+     * Tests whether this robot can place a rat trap at the given location.
+     * @param loc
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public boolean canPlaceRatTrap(MapLocation loc);
+
+    /**
+     * Places a rat trap at the given location.
+     * @param loc
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public void placeRatTrap(MapLocation loc) throws GameActionException;
+
+    /**
+     * Tests whether this robot can remove a rat trap at the given location.
+     * @param loc
+     * @throws GameActionException
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public boolean canRemoveRatTrap(MapLocation loc);
+
+    /**
+     * Removes the rat trap at the given location.
+     * @param loc
+     * @throws GameActionException
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public void removeRatTrap(MapLocation loc) throws GameActionException;
+
+    /**
+     * Tests whether this robot can place a cat trap at the given location.
+     * @param loc
+     */
+    public boolean canPlaceCatTrap(MapLocation loc);
+
+    /**
+     * Places a cat trap at the given location.
+     * @param loc
+     */
+    public void placeCatTrap(MapLocation loc) throws GameActionException;
+
+    /**
+     * Tests whether this robot can remove a cat trap at the given location.
+     * @param loc
+     * @throws GameActionException
+     */
+    public boolean canRemoveCatTrap(MapLocation loc);
+
+    /**
+     * Removes the cat trap at the given location.
+     * @param loc
+     * @throws GameActionException
+     */
+    public void removeCatTrap(MapLocation loc) throws GameActionException;
+
     // ****************************
     // ***** ATTACK / HEAL ********
     // ****************************
