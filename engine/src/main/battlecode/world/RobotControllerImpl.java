@@ -146,6 +146,11 @@ public final class RobotControllerImpl implements RobotController {
     }
 
     @Override
+    public int getDirt() {
+        return this.gameWorld.getTeamInfo().getDirt(getTeam());
+    }
+
+    @Override
     public UnitType getType(){
         return this.robot.getType();
     }
@@ -199,9 +204,13 @@ public final class RobotControllerImpl implements RobotController {
     private void assertCanPlaceDirt(MapLocation loc) throws GameActionException {
         assertIsRobotType(this.robot.getType());
         // Use unit action radius as the allowed range for the action
-        assertCanActLocation(loc, this.robot.getType().actionRadiusSquared);
+        assertCanActLocation(loc, GameConstants.BUILD_DISTANCE_SQUARED);
 
         // state checks :
+        if (this.gameWorld.getTeamInfo().getDirt(this.robot.getTeam()) <= 0)
+            throw new GameActionException(CANT_DO_THAT, "No dirt available to place!");
+        if (this.gameWorld.getAllCheese() < GameConstants.PLACE_DIRT_CHEESE_COST)
+            throw new GameActionException(CANT_DO_THAT, "Insufficient cheese to place dirt!");
         if (this.gameWorld.getWall(loc))
             throw new GameActionException(CANT_DO_THAT, "Can't place dirt on a wall!");
         if (this.gameWorld.getRobot(loc) != null)
@@ -212,8 +221,10 @@ public final class RobotControllerImpl implements RobotController {
 
     private void assertCanRemoveDirt(MapLocation loc) throws GameActionException {
         assertIsRobotType(this.robot.getType());
-        assertCanActLocation(loc, this.robot.getType().actionRadiusSquared);
+        assertCanActLocation(loc, GameConstants.BUILD_DISTANCE_SQUARED);
 
+        if (this.gameWorld.getAllCheese() < GameConstants.DIG_DIRT_CHEESE_COST)
+            throw new GameActionException(CANT_DO_THAT, "Insufficient cheese to place dirt!");
         if (!this.gameWorld.getDirt(loc))
             throw new GameActionException(CANT_DO_THAT, "No dirt to remove at that location!");
     }
@@ -229,12 +240,30 @@ public final class RobotControllerImpl implements RobotController {
     }
 
     @Override
+    public void placeDirt(MapLocation loc) {
+        if (canPlaceDirt(loc)) {
+            this.gameWorld.setDirt(loc, true);
+            this.gameWorld.getTeamInfo().updateDirt(this.robot.getTeam(), true);
+            this.robot.addCheese(-1*GameConstants.PLACE_DIRT_CHEESE_COST);   
+        }
+    }
+
+    @Override
     public boolean canRemoveDirt(MapLocation loc) {
         try {
             assertCanRemoveDirt(loc);
             return true;
         } catch (GameActionException e) {
             return false;
+        }
+    }
+
+    @Override
+    public void removeDirt(MapLocation loc) {
+        if (canRemoveDirt(loc)) {
+            this.gameWorld.setDirt(loc, false);
+            this.gameWorld.getTeamInfo().updateDirt(this.robot.getTeam(), false);
+            this.robot.addCheese(-1*GameConstants.DIG_DIRT_CHEESE_COST);
         }
     }
 

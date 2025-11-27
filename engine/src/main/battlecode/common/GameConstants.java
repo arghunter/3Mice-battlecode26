@@ -89,6 +89,9 @@ public class GameConstants {
     /** The maximum distance from a rat king for building robots */
     public static final int BUILD_ROBOT_RADIUS_SQUARED = 4;
 
+    /** The maximum distance from a robot for building traps or dirt */
+    public static final int BUILD_DISTANCE_SQUARED = 9;
+
     /** The maximum amount of bytes that can be encoded in a message */
     public static final int MAX_MESSAGE_BYTES = 4; // TODO need to spec messages as a whole!
 
@@ -128,6 +131,12 @@ public class GameConstants {
 
     /** The area effected by the cat's attack. */
     public static final int CAT_ATTACK_AOE_RADIUS_SQUARED = 4; // TODO need to specify!
+
+    /** The cheese cost to dig up a tile of dirt */
+    public static final int DIG_DIRT_CHEESE_COST = 10;
+
+    /** The cheese cost to place a tile of dirt */
+    public static final int PLACE_DIRT_CHEESE_COST = 20;
 
     // *********************************
     // ****** COOLDOWNS ****************
