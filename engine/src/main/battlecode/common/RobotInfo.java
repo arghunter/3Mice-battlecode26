@@ -38,15 +38,27 @@ public class RobotInfo {
      * The current cheese this robot holds
      */
     public final int cheeseAmount;
+  
+    /**
+     * Whether or not the robot is a cat and is crouching
+     */
+    public final boolean crouching;
 
-    public RobotInfo(int ID, Team team, UnitType type, int health, MapLocation location) {
+    /**
+     * The current robot being carried by this robot, or null if not carrying any robots.
+     */
+    public final RobotInfo carryingRobot;
+
+    public RobotInfo(int ID, Team team, UnitType type, int health, MapLocation location, int cheeseAmount, RobotInfo carryingRobot, boolean crouching) {
         super();
         this.ID = ID;
         this.team = team;
         this.type = type;
         this.health = health;
         this.location = location;
-        this.cheeseAmount = 0;
+        this.cheeseAmount = cheeseAmount;
+        this.crouching = !type.isRatType() && crouching;
+        this.carryingRobot = carryingRobot;
     }
 
     /**
@@ -64,7 +76,7 @@ public class RobotInfo {
      * @return the team that this robot is on
      */
     public Team getTeam() {
-        return team;
+        return this.team;
     }
 
     /**
@@ -73,7 +85,7 @@ public class RobotInfo {
      * @return the health of this robot
      */
     public int getHealth() {
-        return health;
+        return this.health;
     }
 
     /**
@@ -101,6 +113,23 @@ public class RobotInfo {
      */
     public int getRawCheeseAmount() {
         return this.cheeseAmount;
+
+    /**
+     * Returns whether or not the robot is crouching
+     *
+     * @return if the robot is crouching
+     */
+    public boolean isCrouching(){
+        return this.crouching;
+    }
+
+    /**
+     * Returns the robot this robot is carrying, or null if not carrying a robot. 
+     * 
+     * @return the robot the robot is carrying, or null if not carrying a robot
+     */
+    public RobotInfo getCarryingRobot() {
+        return this.carryingRobot;
     }
 
     @Override
@@ -139,6 +168,8 @@ public class RobotInfo {
                 ", health=" + health +
                 ", location=" + location +
                 ", paint amount=" + cheeseAmount +
+                ", crouching=" + crouching +
+                ", carrying=" + carryingRobot +
                 '}';
     }
 }

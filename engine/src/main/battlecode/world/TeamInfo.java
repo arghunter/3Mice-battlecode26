@@ -18,6 +18,7 @@ public class TeamInfo {
     private int[] totalPaintedSquares;
     private int[] totalNumberOfTowers;
     private int[] oldCheeseCounts;
+    private int[] totalNumRats;
 
     /**
      * Create a new representation of TeamInfo
@@ -31,12 +32,13 @@ public class TeamInfo {
         this.oldCheeseCounts = new int[2];
         this.totalPaintedSquares = new int[2];
         this.totalNumberOfTowers = new int[2];
+        this.totalNumRats = new int[2];
     }
 
     // *********************************
     // ***** GETTER METHODS ************
     // *********************************
-
+  
     /**
      * Get the amount of cheese.
      * 
@@ -44,8 +46,8 @@ public class TeamInfo {
      * @return the team's cheese count
      */
 
-    public int getMoney(Team team) {
-        return this.moneyCounts[team.ordinal()];
+    public int getCheese(Team team) {
+        return this.globalCheese[team.ordinal()];
     }
 
     /**
@@ -80,6 +82,15 @@ public class TeamInfo {
         return this.totalNumberOfTowers[team.ordinal()];
     }
 
+     /**
+     * Get the total number of rats belonging to a team
+     * @param team the team to query
+     * @return the number of rats the team has
+     */
+    public int getNumRats(Team team){
+        return this.totalNumRats[team.ordinal()];
+    }
+
     /**
      * Change the total number of squares painted by the team over the game
      * 
@@ -99,6 +110,14 @@ public class TeamInfo {
 
     public void addTowers(int num, Team team) {
         this.totalNumberOfTowers[team.ordinal()] += num;
+    }
+
+    /**
+     * Change the total number of rats belonging to a team
+     * @param team the team to change
+     */
+    public void addRats(int num, Team team){
+        this.totalNumRats[team.ordinal()] += num;
     }
 
     // *********************************

@@ -10,23 +10,18 @@ public class MapInfo {
 
     private boolean isDirt;
 
-    private PaintType paint;
-
-    private PaintType mark;
+    //You can only see traps from your own team
+    private TrapType trap;
 
     private boolean hasCheeseMine;
 
-    private boolean isResourcePatternCenter;
-
-    public MapInfo(MapLocation loc, boolean isPassable, boolean isWall, boolean isDirt, PaintType paint, PaintType mark,
-            boolean isResourcePatternCenter) {
+    public MapInfo(MapLocation loc, boolean isPassable, boolean isWall, boolean isDirt, TrapType trap, boolean hasCheeseMine) {
         this.loc = loc;
         this.isPassable = isPassable;
         this.isWall = isWall;
         this.isDirt = isDirt;
-        this.paint = paint;
-        this.mark = mark;
-        this.isResourcePatternCenter = isResourcePatternCenter;
+        this.trap = trap;
+        this.hasCheeseMine = hasCheeseMine;
     }
 
     /**
@@ -74,25 +69,14 @@ public class MapInfo {
     }
 
     /**
-     * Returns the paint value of this square
+     * Returns the trap on this square, or TrapType.NONE if there is no trap.
      * 
-     * @return the paint value of this square
-     * 
-     * @battlecode.doc.costlymethod
-     */
-    public PaintType getPaint() {
-        return paint;
-    }
-
-    /**
-     * Returns the mark value of this square
-     * 
-     * @return the mark value of this square
+     * @return the trap on this square
      * 
      * @battlecode.doc.costlymethod
      */
-    public PaintType getMark() {
-        return mark;
+    public TrapType getTrap() {
+        return trap;
     }
 
     /**
@@ -106,24 +90,14 @@ public class MapInfo {
         return loc;
     }
 
-    /**
-     * Returns whether this tile is at the center of an ally resource pattern
-     * (regardless of whether the pattern is active yet)
-     * 
-     * @return Whether this is a resource pattern center
-     */
-    public boolean isResourcePatternCenter() {
-        return isResourcePatternCenter;
-    }
-
     public String toString() {
         return "Location{" +
                 "loc=" + loc.toString() +
                 (isWall ? ", wall" : "") +
                 (isDirt ? ", dirt" : "") +
                 (hasCheeseMine ? ", with cheese mine" : "") +
-                ", paint=" + paint.toString() +
-                ", mark=" + mark.toString() +
+                (isPassable ? ", passable" : ", not passable") +
+                ", trap=" + trap +
                 "}";
     }
 }

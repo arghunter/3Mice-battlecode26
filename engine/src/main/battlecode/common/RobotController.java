@@ -403,7 +403,7 @@ public interface RobotController {
     MapLocation adjacentLocation(Direction dir);
 
     /**
-     * Returns a list of all locations within the given radiusSquared of a location.
+     * Returns a list of all locations within the given vision cone of a location.
      * If radiusSquared is larger than the robot's vision radius, uses the robot's
      * vision radius instead.
      *
@@ -506,27 +506,25 @@ public interface RobotController {
     // ***********************************
 
     /**
-     * Checks if a tower can spawn a robot at the given location.
-     * Robots can spawn within a circle of radius of sqrt(4) of the tower.
+     * Checks if a rat king can spawn a robot at the given location.
+     * Robots can spawn within a circle of radius of sqrt(4) of the rat king.
      * 
-     * @param type the type of robot to spawn
      * @param loc  the location to spawn the robot at
      * @return true if robot can be built at loc
      * 
      * @battlecode.doc.costlymethod
      */
-    boolean canBuildRobot(UnitType type, MapLocation loc);
+    boolean canBuildRobot(MapLocation loc);
 
     /**
      * Spawns a robot at the given location.
-     * Robots can spawn within a circle of radius of sqrt(4) of the tower.
+     * Robots can spawn within a circle of radius of sqrt(4) of the rat king.
      * 
-     * @param type the type of robot to spawn
      * @param loc  the location to spawn the robot at
      * 
      * @battlecode.doc.costlymethod
      */
-    void buildRobot(UnitType type, MapLocation loc) throws GameActionException;
+    void buildRobot(MapLocation loc) throws GameActionException;
 
     /**
      * Checks if the location can be marked.
@@ -597,6 +595,15 @@ public interface RobotController {
     public boolean canPlaceDirt(MapLocation loc);
 
     /**
+     * Places dirt at the given location.
+     * 
+     * @param loc the location to place the dirt
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    void placeDirt(MapLocation loc) throws GameActionException;
+
+     /**
      * Tests whether this robot can place dirt at the given location.
      * 
      * @param loc
@@ -605,6 +612,75 @@ public interface RobotController {
      * @battlecode.doc.costlymethod
      */
     public boolean canRemoveDirt(MapLocation loc);
+
+    /**
+     * Removes dirt from the given location.
+     * 
+     * @param loc the location to remove dirt from
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    void removeDirt(MapLocation loc) throws GameActionException;
+
+    /**
+     * Tests whether this robot can place a rat trap at the given location.
+     * @param loc
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public boolean canPlaceRatTrap(MapLocation loc);
+
+    /**
+     * Places a rat trap at the given location.
+     * @param loc
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public void placeRatTrap(MapLocation loc) throws GameActionException;
+
+    /**
+     * Tests whether this robot can remove a rat trap at the given location.
+     * @param loc
+     * @throws GameActionException
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public boolean canRemoveRatTrap(MapLocation loc);
+
+    /**
+     * Removes the rat trap at the given location.
+     * @param loc
+     * @throws GameActionException
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public void removeRatTrap(MapLocation loc) throws GameActionException;
+
+    /**
+     * Tests whether this robot can place a cat trap at the given location.
+     * @param loc
+     */
+    public boolean canPlaceCatTrap(MapLocation loc);
+
+    /**
+     * Places a cat trap at the given location.
+     * @param loc
+     */
+    public void placeCatTrap(MapLocation loc) throws GameActionException;
+
+    /**
+     * Tests whether this robot can remove a cat trap at the given location.
+     * @param loc
+     * @throws GameActionException
+     */
+    public boolean canRemoveCatTrap(MapLocation loc);
+
+    /**
+     * Removes the cat trap at the given location.
+     * @param loc
+     * @throws GameActionException
+     */
+    public void removeCatTrap(MapLocation loc) throws GameActionException;
 
     // ****************************
     // ***** ATTACK / HEAL ********

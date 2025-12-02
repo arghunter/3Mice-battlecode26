@@ -39,9 +39,10 @@ public class GameWorld {
 
     private int[] cheeseAmounts;
     private InternalRobot[][] robots;
-    private ArrayList<Trap>[] trapTriggers;
     private Trap[] trapLocations;
     private CheeseMine[] cheeseMines;
+    private ArrayList<Trap>[] trapTriggers;
+    private HashMap<TrapType, Integer> trapCounts;
     private int trapId;
     private final LiveMap gameMap;
     private final TeamInfo teamInfo;
@@ -126,6 +127,10 @@ public class GameWorld {
         this.gameMap = gm;
         this.objectInfo = new ObjectInfo(gm);
         this.colorLocations = new int[numSquares];
+        this.trapCounts = new HashMap<>();
+        trapCounts.put(TrapType.CATTRAP, 0);
+        trapCounts.put(TrapType.RATTRAP, 0);
+        trapTriggers = new ArrayList[numSquares];
 
         for (boolean wall : walls) {
             if (wall) {
@@ -595,45 +600,67 @@ public class GameWorld {
         return (this.trapLocations[locationToIndex(loc)] != null);
     }
 
+    public boolean hasRatTrap(MapLocation loc) {
+        Trap trap = this.trapLocations[locationToIndex(loc)];
+        return (trap != null && trap.getType() == TrapType.RATTRAP);
+    }
+
+    public boolean hasCatTrap(MapLocation loc) {
+        Trap trap = this.trapLocations[locationToIndex(loc)];
+        return (trap != null && trap.getType() == TrapType.CATTRAP);
+    }
+
     public ArrayList<Trap> getTrapTriggers(MapLocation loc) {
         return this.trapTriggers[locationToIndex(loc)];
     }
 
     public void placeTrap(MapLocation loc, TrapType type, Team team) {
         Trap trap = new Trap(loc, type, team, trapId);
-        trapId++;
-        matchMaker.addTrap(trap);
-        this.trapLocations[locationToIndex(loc)] = trap;
-        for (MapLocation adjLoc : getAllLocationsWithinRadiusSquared(loc, 1)) {
+        
+        int idx = locationToIndex(loc);
+        this.trapLocations[idx] = trap;
+        this.cheeseAmounts[idx] = Math.max(this.cheeseAmounts[idx], type.spawnCheeseAmount);
+
+        for (MapLocation adjLoc : getAllLocationsWithinRadiusSquared(loc, type.triggerRadiusSquared)) {
             this.trapTriggers[locationToIndex(adjLoc)].add(trap);
         }
+
+        matchMaker.addTrap(trap);
+        this.trapCounts.put(type, this.trapCounts.get(type) + 1);
+        trapId++;
     }
 
-    // TODO: need to seperate out cat/rat types
-    public void triggerTrap(Trap trap, InternalRobot robot, boolean entered) {
-        MapLocation loc = trap.getLocation();
-        TrapType type = trap.getType();
-        switch (type) {
-            case RATTRAP:
-                for (InternalRobot rob : getAllRobotsWithinRadiusSquared(loc, 1,
-                        trap.getTeam().opponent())) {
-                    rob.setMovementCooldownTurns(type.stunTime);
-                    rob.setActionCooldownTurns(type.stunTime);
-                    rob.takeDamage(type.damage);
-                }
-                break;
-            case CATTRAP:
-                for (InternalRobot rob : getAllRobotsWithinRadiusSquared(loc, 1,
-                        trap.getTeam().opponent())) {
-                    rob.setMovementCooldownTurns(type.stunTime);
-                    rob.setActionCooldownTurns(type.stunTime);
-                    rob.takeDamage(type.damage);
-                }
-                break;
+    public void removeTrap(MapLocation loc) {
+        Trap trap = this.trapLocations[locationToIndex(loc)];
+        if (trap == null) {
+            return;
         }
-        for (MapLocation adjLoc : getAllLocationsWithinRadiusSquared(loc, 2)) {
+        TrapType type = trap.getType();
+        this.trapCounts.put(type, this.trapCounts.get(type) - 1);
+        this.trapLocations[locationToIndex(loc)] = null;
+
+        for (MapLocation adjLoc : getAllLocationsWithinRadiusSquared(loc, type.triggerRadiusSquared)) {
             this.trapTriggers[locationToIndex(adjLoc)].remove(trap);
         }
+    } 
+
+    public int getTrapCount(TrapType type) {
+        return this.trapCounts.get(type);
+    }
+
+    public void trapTriggered(Trap trap, InternalRobot robot) {
+        MapLocation loc = trap.getLocation();
+        TrapType type = trap.getType();
+        
+        robot.setMovementCooldownTurns(type.stunTime);
+        robot.addHealth(-type.damage);
+        //TODO once the cat exists, alert cat of trap trigger
+        //TODO once backstab status exists, update that
+
+        for (MapLocation adjLoc : getAllLocationsWithinRadiusSquared(loc, type.triggerRadiusSquared)) {
+            this.trapTriggers[locationToIndex(adjLoc)].remove(trap);
+        }
+
         this.trapLocations[locationToIndex(loc)] = null;
         matchMaker.addTriggeredTrap(trap.getId());
         matchMaker.addAction(robot.getID(), FlatHelpers.getTrapActionFromTrapType(type),
@@ -763,7 +790,7 @@ public class GameWorld {
                                                                             int width, int height,
                                                                             MapLocation center,
                                                                             Direction lookDirection,
-                                                                            double totalAngle, int radiusSquared) {
+                                                                            double angle, int radiusSquared) {
         ArrayList<MapLocation> returnLocations = new ArrayList<MapLocation>();
         int ceiledRadius = (int) Math.ceil(Math.sqrt(radiusSquared)) + 1; // add +1 just to be safe
         int minX = Math.max(center.x - ceiledRadius, origin.x);
@@ -773,15 +800,9 @@ public class GameWorld {
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 MapLocation newLocation = new MapLocation(x, y);
-                int xDiff = newLocation.x - center.x;
-                int yDiff = newLocation.y - center.y;
-                double angle = Math.abs(Math.acos((xDiff * lookDirection.dx + yDiff * lookDirection.dy) / Math.sqrt((xDiff * xDiff + yDiff * yDiff) * (lookDirection.dx * lookDirection.dx + lookDirection.dy * lookDirection.dy))));
-                if (center.isWithinDistanceSquared(newLocation, radiusSquared) && Math.abs(angle)-0.001 <= totalAngle/2) // TODO this 0.001 is a bit of a kludge to fix floating point errors
+                if (center.isWithinDistanceSquared(newLocation, radiusSquared, lookDirection, angle))
                     returnLocations.add(newLocation);
             }
-        }
-        if (!returnLocations.contains(center)) {
-            returnLocations.add(center);
         }
         return returnLocations.toArray(new MapLocation[returnLocations.size()]);
     }
@@ -988,6 +1009,9 @@ public class GameWorld {
         }
         objectInfo.createRobot(robot);
         controlProvider.robotSpawned(robot);
+        if (type.isRatType()){
+            this.teamInfo.addRats(1, team);
+        }
         if (type.isTowerType()) {
             this.teamInfo.addTowers(1, team);
             // TODO robot.addPaint(GameConstants.INITIAL_TOWER_PAINT_AMOUNT);
@@ -1019,6 +1043,9 @@ public class GameWorld {
         MapLocation loc = robot.getLocation();
 
         if (loc != null) {
+            if (robot.getType().isRatType()){
+                this.teamInfo.addRats(-1, robot.getTeam());
+            }
             if (robot.getType().isTowerType()) {
                 this.towersByLoc[locationToIndex(loc)] = Team.NEUTRAL;
                 this.towerLocations.remove(loc);
