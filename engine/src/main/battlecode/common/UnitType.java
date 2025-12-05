@@ -21,11 +21,15 @@ public enum UnitType {
     // robot's vision cone angle (in degrees)
     public final int visionConeAngle;
 
-    // number of turns before unit can act again
+    // amount action cooldown gets incremented for taking an action
     public final int actionCooldown;
 
+    public boolean usesTopRightLocationForDistance(){
+        return this.size % 2 == 0;
+    }
+
     public boolean isRobotType(){
-        return this == RAT || this == CAT || this == KING_RAT;
+        return this == RAT || this == CAT || this == RAT_KING;
     }
 
     public boolean isThrowableType(){
@@ -70,8 +74,6 @@ public enum UnitType {
     }
 
     // Getters 
-    // (we didn't have these before so unclear how useful they are but
-    // I'm adding them for completeness)
     public int getHealth() { return health; }
     public int getSize() { return size; }
     public int getSpeed() { return speed; }
