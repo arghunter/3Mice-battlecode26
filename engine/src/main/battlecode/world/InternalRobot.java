@@ -107,7 +107,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.indicatorString = "";
 
         this.controller = new RobotControllerImpl(gameWorld, this);
-
     }
 
     // ******************************************
@@ -317,12 +316,15 @@ public class InternalRobot implements Comparable<InternalRobot> {
     /**
      * Sets the location of the robot.
      * 
-     * @param loc the new location of the robot
+     * @param dx # amount to translate in x direction
+     * @param dy # amount to translate in y direction
      */
-    public void setLocation(MapLocation loc) {
-        this.gameWorld.moveRobot(getLocation(), loc);
+    public void setLocation(int dx, int dy) {
+        for(MapLocation partLoc : this.getAllPartLocations()){
+            this.gameWorld.moveRobot(partLoc, partLoc.translate(dx, dy));
+        }
         // this.gameWorld.getObjectInfo().moveRobot(this, loc);
-        this.location = loc;
+        this.location = this.location.translate(dx, dy);
     }
 
     public void setInternalLocationOnly(MapLocation loc) {
@@ -490,8 +492,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
     private void getThrown(Direction dir) {
         this.grabbedByRobot = null;
         this.thrownDir = dir;
-        this.setLocation(this.getLocation().add(dir));
-        this.gameWorld.addRobot(this.getLocation(), this);
+        this.setLocation(dir.dx, dir.dy);
     }
 
     public void hitGround() {
@@ -508,7 +509,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
             return;
         }
 
-        this.setLocation(newLoc);
+        this.setLocation(this.thrownDir.dx, this.thrownDir.dy);
         
         if (this.actionCooldownTurns <= GameConstants.THROW_STUN_DURATION) {
             this.hitGround();

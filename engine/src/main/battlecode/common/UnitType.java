@@ -29,7 +29,7 @@ public enum UnitType {
     }
 
     public boolean isRobotType(){
-        return this == RAT || this == CAT || this == KING_RAT;
+        return this == RAT || this == CAT || this == RAT_KING;
     }
 
     public boolean isThrowableType(){

@@ -26,6 +26,7 @@ public class GameWorld {
      * Whether we're running.
      */
     protected boolean running = true;
+    protected boolean isCooperation = true;
 
     protected final IDGenerator idGenerator;
     protected final GameStats gameStats;
@@ -341,6 +342,10 @@ public class GameWorld {
 
     public int getCurrentRound() {
         return this.currentRound;
+    }
+
+    public boolean isCooperation() {
+        return this.isCooperation;
     }
 
     public boolean getWall(MapLocation loc) {
@@ -749,30 +754,11 @@ public class GameWorld {
     }
 
     public MapLocation[] getAllLocationsWithinRadiusSquared(MapLocation center, int radiusSquared) {
-        return getAllLocationsWithinRadiusSquaredWithoutMap(
+        return getAllLocationsWithinConeRadiusSquaredWithoutMap(
                 this.gameMap.getOrigin(),
                 this.gameMap.getWidth(),
                 this.gameMap.getHeight(),
-                center, radiusSquared);
-    }
-
-    public static MapLocation[] getAllLocationsWithinRadiusSquaredWithoutMap(MapLocation origin,
-            int width, int height,
-            MapLocation center, int radiusSquared) {
-        ArrayList<MapLocation> returnLocations = new ArrayList<MapLocation>();
-        int ceiledRadius = (int) Math.ceil(Math.sqrt(radiusSquared)) + 1; // add +1 just to be safe
-        int minX = Math.max(center.x - ceiledRadius, origin.x);
-        int minY = Math.max(center.y - ceiledRadius, origin.y);
-        int maxX = Math.min(center.x + ceiledRadius, origin.x + width - 1);
-        int maxY = Math.min(center.y + ceiledRadius, origin.y + height - 1);
-        for (int x = minX; x <= maxX; x++) {
-            for (int y = minY; y <= maxY; y++) {
-                MapLocation newLocation = new MapLocation(x, y);
-                if (center.isWithinDistanceSquared(newLocation, radiusSquared))
-                    returnLocations.add(newLocation);
-            }
-        }
-        return returnLocations.toArray(new MapLocation[returnLocations.size()]);
+                center, Direction.CENTER, 360, radiusSquared);
     }
     
     public MapLocation[] getAllLocationsWithinConeRadiusSquared(MapLocation center, Direction lookDirection, double totalAngle, int radiusSquared) {
