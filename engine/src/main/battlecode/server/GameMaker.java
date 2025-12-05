@@ -194,9 +194,9 @@ public class GameMaker {
 
     /**
      * Write a match out to a file.
-     *
      * @param saveFile the file to save to
      */
+    
     public void writeGame(File saveFile) {
         if (saveFile == null) {
             throw new RuntimeException("Null file provided to writeGame");

@@ -11,6 +11,7 @@ import battlecode.common.MapLocation;
 import battlecode.common.Message;
 import battlecode.common.RobotInfo;
 import battlecode.common.Team;
+import battlecode.common.TrapType;
 import battlecode.common.UnitType;
 
 /**
@@ -53,6 +54,8 @@ public class InternalRobot implements Comparable<InternalRobot> {
     private int sentMessagesCount;
 
     private boolean crouching;
+    private int chirality; // 
+
 
     /**
      * Used to avoid recreating the same RobotInfo object over and over.
@@ -602,11 +605,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
         }
     }
 
-    public void canPounce(MapLocation loc){
-        //check if cat can pounce to this location; tries using all 4 parts of the cat landing on loc
-        
-    }
-
     public void pounce(MapLocation loc) {
         // Must be a cat
         if (this.type != UnitType.CAT) {
@@ -625,6 +623,65 @@ public class InternalRobot implements Comparable<InternalRobot> {
         if (!this.gameWorld.isPassable(loc)) {
             return;
         }
+
+        // Check each part of the robot to see if we can pounce so that the part lands on the target location
+        MapSymmetry symmetry = this.gameWorld.getGameMap().getSymmetry();
+        
+        MapLocation cornerToTest;
+        Direction rotateDir;
+
+        if (chirality==0){
+            cornerToTest = this.getLocation();
+            rotateDir = Direction.EAST;
+        }
+        else{
+            switch (symmetry) {
+                case VERTICAL: 
+                    cornerToTest = loc.add(Direction.EAST);
+                    rotateDir = Direction.WEST;
+                case HORIZONTAL: 
+                    cornerToTest = loc.add(Direction.SOUTH);
+                    rotateDir = Direction.NORTH;
+                case ROTATIONAL:
+                    cornerToTest = loc.add(Direction.SOUTHEAST);
+                    rotateDir = Direction.WEST;
+                default: 
+                    throw new RuntimeException("Invalid symmetry");
+            }
+        }
+        for(int i=0; i<4; i+=1){
+            // attempt pounce that matches cornerToTest to target location
+            Direction directionFromCornerToTestToCenter = cornerToTest.directionTo(this.getLocation());
+
+            // dx and dy from top left corner 
+            // assuming getLocation returns the top left corner of the cat
+            int dx = directionFromCornerToTestToCenter.dx + (loc.x - this.getLocation().x); 
+            int dy = directionFromCornerToTestToCenter.dy + (loc.y - this.getLocation().y); 
+
+            boolean isWithinPounceDistance = (this.getLocation().topRightDistanceSquaredTo(loc) <= GameConstants.CAT_POUNCE_MAX_DISTANCE_SQUARED);
+            boolean landingTilesPassable = true;
+
+            // check passability of all landing tiles
+            for (MapLocation tile : this.getAllPartLocations()){
+                if(!this.gameWorld.isPassable(tile)){
+                    landingTilesPassable = false;
+                }
+            }
+            if(isWithinPounceDistance && landingTilesPassable){
+                this.setLocation(dx, dy);
+            }
+            // try another robot part
+            cornerToTest.add(rotateDir);
+            if (chirality == 0){
+                rotateDir = rotateDir.rotateRight();
+                rotateDir = rotateDir.rotateRight();
+            }
+            else{
+                rotateDir = rotateDir.rotateLeft();
+                rotateDir = rotateDir.rotateLeft();
+            }
+        }
+        return;
     }
 
     // *********************************
@@ -727,6 +784,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
         for (int i = 0; i < trapsToTrigger.size(); i++) {
             this.gameWorld.triggerTrap(trapsToTrigger.get(i), this, enteredTraps.get(i));
         }
+
         this.trapsToTrigger = new ArrayList<>();
         this.enteredTraps = new ArrayList<>();
 
