@@ -50,7 +50,6 @@ export class CurrentMap {
     }
 
     constructor(from: StaticMap | CurrentMap) {
-
         if (from instanceof StaticMap) {
             // Create current map from static map
 
@@ -69,8 +68,8 @@ export class CurrentMap {
             this.resourcePatterns = [...from.resourcePatterns]
         }
 
-        this.trapData = new Int8Array(this.width * this.height);
-        this.cheeseData = new Int8Array(this.width * this.height);
+        this.trapData = new Int8Array(this.width * this.height)
+        this.cheeseData = new Int8Array(this.width * this.height)
     }
 
     indexToLocation(index: number): { x: number; y: number } {
@@ -475,7 +474,7 @@ export class StaticMap {
         this.cheeseMines.forEach(({ x, y }) => {
             const coords = renderUtils.getRenderCoords(x, y, this.dimension)
 
-            const imgPath = `cheese_mines/silver_64x64.png`
+            const imgPath = `cheese_mine.png`
             const cheeseMineImage = getImageIfLoaded(imgPath)
             renderUtils.renderCenteredImageOrLoadingIndicator(ctx, cheeseMineImage, coords, 1.0)
         })
