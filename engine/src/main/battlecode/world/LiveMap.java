@@ -20,7 +20,7 @@ import javax.management.RuntimeErrorException;
  * which represents a serialized LiveMap.
  */
 public class LiveMap {
-    
+
     /**
      * The width and height of the map.
      */
@@ -52,9 +52,14 @@ public class LiveMap {
     private byte[] paintArray;
 
     /**
-     * Whether each square is a ruin.
+     * Whether each square is a cheese mine.
      */
-    private boolean[] ruinArray;
+    private boolean[] cheeseMineArray;
+
+    /**
+     * Amount of cheese on each square.
+     */
+    private int[] cheeseArray;
 
     /**
      * The patterns for resources and towers.
@@ -83,15 +88,13 @@ public class LiveMap {
      */
     private final RobotInfo[] initialBodies; // contains nothing
 
-    
-
     public LiveMap(int width,
-                   int height,
-                   MapLocation origin,
-                   int seed,
-                   int rounds,
-                   String mapName, 
-                   RobotInfo[] initialBodies) {
+            int height,
+            MapLocation origin,
+            int seed,
+            int rounds,
+            String mapName,
+            RobotInfo[] initialBodies) {
         this.width = width;
         this.height = height;
         this.origin = origin;
@@ -103,7 +106,8 @@ public class LiveMap {
         int numSquares = width * height;
         this.wallArray = new boolean[numSquares];
         this.paintArray = new byte[numSquares];
-        this.ruinArray = new boolean[numSquares];
+        this.cheeseMineArray = new boolean[numSquares];
+        this.cheeseArray = new int[numSquares];
         this.patternArray = new int[4];
 
         // invariant: bodies is sorted by id
@@ -111,18 +115,19 @@ public class LiveMap {
     }
 
     public LiveMap(int width,
-                   int height,
-                   MapLocation origin,
-                   int seed,
-                   int rounds,
-                   String mapName,
-                   MapSymmetry symmetry,
-                   boolean[] wallArray,
-                   boolean[] dirtArray,
-                   byte[] paintArray,
-                   boolean[] ruinArray,
-                   int[] patternArray,
-                   RobotInfo[] initialBodies) {
+            int height,
+            MapLocation origin,
+            int seed,
+            int rounds,
+            String mapName,
+            MapSymmetry symmetry,
+            boolean[] wallArray,
+            boolean[] dirtArray,
+            byte[] paintArray,
+            boolean[] cheeseMineArray,
+            int[] cheeseArray,
+            int[] patternArray,
+            RobotInfo[] initialBodies) {
         this.width = width;
         this.height = height;
         this.origin = origin;
@@ -139,19 +144,19 @@ public class LiveMap {
             this.dirtArray[i] = dirtArray[i];
         }
         this.paintArray = new byte[paintArray.length];
-        for (int i = 0; i < paintArray.length; i++){
+        for (int i = 0; i < paintArray.length; i++) {
             this.paintArray[i] = paintArray[i];
         }
-        this.ruinArray = new boolean[ruinArray.length];
-        for (int i = 0; i < ruinArray.length; i++){
-            this.ruinArray[i] = ruinArray[i];
+        this.cheeseMineArray = new boolean[cheeseMineArray.length];
+        for (int i = 0; i < cheeseMineArray.length; i++) {
+            this.cheeseMineArray[i] = cheeseMineArray[i];
         }
         this.patternArray = new int[patternArray.length];
-        for (int i = 0; i < patternArray.length; i++){
+        for (int i = 0; i < patternArray.length; i++) {
             this.patternArray[i] = patternArray[i];
         }
         // invariant: bodies is sorted by id
-       Arrays.sort(this.initialBodies, (a, b) -> Integer.compare(a.getID(), b.getID()));
+        Arrays.sort(this.initialBodies, (a, b) -> Integer.compare(a.getID(), b.getID()));
     }
 
     /**
@@ -161,12 +166,14 @@ public class LiveMap {
      */
     public LiveMap(LiveMap gm) {
         this(gm.width, gm.height, gm.origin, gm.seed, gm.rounds, gm.mapName, gm.symmetry,
-         gm.wallArray, gm.dirtArray, gm.paintArray, gm.ruinArray, gm.patternArray, gm.initialBodies);
+                gm.wallArray, gm.dirtArray, gm.paintArray, gm.cheeseMineArray, gm.cheeseArray, gm.patternArray,
+                gm.initialBodies);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof LiveMap)) return false;
+        if (!(o instanceof LiveMap))
+            return false;
         return this.equals((LiveMap) o);
     }
 
@@ -177,17 +184,30 @@ public class LiveMap {
      * @return whether the two maps are equivalent
      */
     public boolean equals(LiveMap other) {
-        if (this.rounds != other.rounds) return false;
-        if (this.width != other.width) return false;
-        if (this.height != other.height) return false;
-        if (this.seed != other.seed) return false;
-        if (!this.mapName.equals(other.mapName)) return false;
-        if (!this.origin.equals(other.origin)) return false;
-        if (!Arrays.equals(this.wallArray, other.wallArray)) return false;
-        if (!Arrays.equals(this.paintArray, other.paintArray)) return false;
-        if (!Arrays.equals(this.ruinArray, other.ruinArray)) return false;
-        if (!Arrays.equals(this.patternArray, other.patternArray)) return false;
-        if (!Arrays.equals(this.initialBodies, other.initialBodies)) return false;
+        if (this.rounds != other.rounds)
+            return false;
+        if (this.width != other.width)
+            return false;
+        if (this.height != other.height)
+            return false;
+        if (this.seed != other.seed)
+            return false;
+        if (!this.mapName.equals(other.mapName))
+            return false;
+        if (!this.origin.equals(other.origin))
+            return false;
+        if (!Arrays.equals(this.wallArray, other.wallArray))
+            return false;
+        if (!Arrays.equals(this.paintArray, other.paintArray))
+            return false;
+        if (!Arrays.equals(this.cheeseMineArray, other.cheeseMineArray))
+            return false;
+        if (!Arrays.equals(this.cheeseArray, other.cheeseArray))
+            return false;
+        if (!Arrays.equals(this.patternArray, other.patternArray))
+            return false;
+        if (!Arrays.equals(this.initialBodies, other.initialBodies))
+            return false;
         return true;
     }
 
@@ -201,7 +221,8 @@ public class LiveMap {
         result = 31 * result + mapName.hashCode();
         result = 31 * result + Arrays.hashCode(wallArray);
         result = 31 * result + Arrays.hashCode(paintArray);
-        result = 31 * result + Arrays.hashCode(ruinArray);
+        result = 31 * result + Arrays.hashCode(cheeseMineArray);
+        result = 31 * result + Arrays.hashCode(cheeseArray);
         result = 31 * result + Arrays.hashCode(patternArray);
         result = 31 * result + Arrays.hashCode(initialBodies);
         return result;
@@ -271,7 +292,7 @@ public class LiveMap {
     /**
      * Determines whether or not the specified circle is completely on the map.
      *
-     * @param loc the center of the circle
+     * @param loc    the center of the circle
      * @param radius the radius of the circle
      * @return true if the given circle is on the map,
      *         false if it's not
@@ -341,19 +362,25 @@ public class LiveMap {
     }
 
     /**
-     * @return the ruin array of the map
+     * @return the cheese mine array of the map
      */
-    public boolean[] getRuinArray(){
-        return ruinArray;
+    public boolean[] getCheeseMineArray() {
+        return cheeseMineArray;
+    }
+
+    /**
+     * @return the cheese array of the map
+     */
+    public int[] getCheeseArray() {
+        return cheeseArray;
     }
 
     /**
      * @return the pattern array of the map
      */
-    public int[] getPatternArray(){
+    public int[] getPatternArray() {
         return patternArray;
     }
-
 
     /**
      * Helper method that converts a location into an index.
@@ -371,10 +398,10 @@ public class LiveMap {
      */
     public MapLocation indexToLocation(int idx) {
         return new MapLocation(idx % getWidth() + getOrigin().x,
-                               idx / getWidth() + getOrigin().y);
+                idx / getWidth() + getOrigin().y);
     }
 
-    public void assertIsValid() throws Exception{
+    public void assertIsValid() throws Exception {
         if (this.width > GameConstants.MAP_MAX_WIDTH) {
             throw new RuntimeException("MAP WIDTH EXCEEDS GameConstants.MAP_MAX_WIDTH");
         }
@@ -391,17 +418,16 @@ public class LiveMap {
         int[] towerCountB = new int[3];
         int initialBodyCountTeamA = 0;
         int initialBodyCountTeamB = 0;
-        for (RobotInfo initialBody : initialBodies){
-            if (initialBody.team == Team.A){
-                towerCountA[FlatHelpers.getRobotTypeFromUnitType(initialBody.type)-1] += 1;
+        for (RobotInfo initialBody : initialBodies) {
+            if (initialBody.team == Team.A) {
+                towerCountA[FlatHelpers.getRobotTypeFromUnitType(initialBody.type) - 1] += 1;
                 initialBodyCountTeamA++;
-            }
-            else if (initialBody.team == Team.B){
-                towerCountB[FlatHelpers.getRobotTypeFromUnitType(initialBody.type)-1] += 1;
+            } else if (initialBody.team == Team.B) {
+                towerCountB[FlatHelpers.getRobotTypeFromUnitType(initialBody.type) - 1] += 1;
                 initialBodyCountTeamB++;
-            }
-            else {
-                throw new RuntimeException("Expected initial body team "  + initialBody.team + " to be team A or team B!");
+            } else {
+                throw new RuntimeException(
+                        "Expected initial body team " + initialBody.team + " to be team A or team B!");
             }
         }
         if (initialBodyCountTeamA != GameConstants.NUMBER_INITIAL_RAT_KINGS) {
@@ -410,31 +436,43 @@ public class LiveMap {
         if (initialBodyCountTeamB != GameConstants.NUMBER_INITIAL_RAT_KINGS) {
             throw new RuntimeException("Expected to have "  + GameConstants.NUMBER_INITIAL_RAT_KINGS + " team B towers!");
         }
-        for (int i = 0; i < towerCountA.length; i++){
-            if (towerCountA[i] != towerCountB[i]){
-                throw new RuntimeException("Expected both teams to have the same number of towers of type " + FlatHelpers.getUnitTypeFromRobotType((byte)(i+1)));
+        for (int i = 0; i < towerCountA.length; i++) {
+            if (towerCountA[i] != towerCountB[i]) {
+                throw new RuntimeException("Expected both teams to have the same number of towers of type "
+                        + FlatHelpers.getUnitTypeFromRobotType((byte) (i + 1)));
             }
         }
 
-        ArrayList<MapLocation> ruinLocs = new ArrayList<>();
+        ArrayList<MapLocation> cheeseMineLocs = new ArrayList<>();
         int numWalls = 0;
-        for (int i = 0; i < this.width*this.height; i++){
-            if (this.wallArray[i] && this.ruinArray[i]){
-                throw new RuntimeException("Walls can't be on the same square as ruins");
+        for (int i = 0; i < this.width * this.height; i++) {
+            if (this.wallArray[i] && this.cheeseMineArray[i]) {
+                throw new RuntimeException("Walls can't be on the same square as cheese mines!");
             }
-            if (this.ruinArray[i])
-                ruinLocs.add(indexToLocation(i));
+            if (this.cheeseMineArray[i])
+                cheeseMineLocs.add(indexToLocation(i));
             if (this.wallArray[i])
                 numWalls += 1;
         }
-        if (numWalls * 100 >= this.width * this.height * GameConstants.MAX_WALL_PERCENTAGE){
+        if (numWalls * 100 >= this.width * this.height * GameConstants.MAX_WALL_PERCENTAGE) {
             throw new RuntimeException("Too much of the area of the map is composed of walls!");
         }
-        for (int i = 0; i < this.width * this.height; i++){
-            if (this.wallArray[i]){
-                for (MapLocation ruin : ruinLocs){
-                    if (ruin.distanceSquaredTo(indexToLocation(i)) <= 8) // 2^2 + 2^2 
-                        throw new RuntimeException("Wall appears at location " + indexToLocation(i).toString() + " which is too close to ruin " + ruin.toString());
+
+        for (int i = 0; i < cheeseMineLocs.size(); i++) {
+            MapLocation curcheeseMine = cheeseMineLocs.get(i);
+            for (int j = i + 1; j < cheeseMineLocs.size(); j++) {
+                MapLocation othercheeseMine = cheeseMineLocs.get(j);
+                if (curcheeseMine.distanceSquaredTo(othercheeseMine) < GameConstants.MIN_CHEESE_MINE_SPACING_SQUARED)
+                    throw new RuntimeException("Cheese mines at location " + curcheeseMine.toString() + " and location "
+                            + othercheeseMine.toString() + " are too close to each other!");
+            }
+        }
+        for (int i = 0; i < this.width * this.height; i++) {
+            if (this.wallArray[i]) {
+                for (MapLocation cheeseMine : cheeseMineLocs) {
+                    if (cheeseMine.distanceSquaredTo(indexToLocation(i)) <= 8) // 2^2 + 2^2
+                        throw new RuntimeException("Wall appears at location " + indexToLocation(i).toString()
+                                + " which is too close to cheese mine " + cheeseMine.toString());
                 }
             }
         }
@@ -451,23 +489,29 @@ public class LiveMap {
             case 2:
                 return 1;
             default:
-                throw new RuntimeException("Argument of LiveMap.getOpposingTeamNumber must be a valid team number, was " + team + ".");
+                throw new RuntimeException(
+                        "Argument of LiveMap.getOpposingTeamNumber must be a valid team number, was " + team + ".");
         }
     }
 
     /**
-     * Performs a flood fill algorithm to check if a predicate is true for any squares
-     * that can be reached from a given location (horizontal, vertical, and diagonal steps allowed).
+     * Performs a flood fill algorithm to check if a predicate is true for any
+     * squares
+     * that can be reached from a given location (horizontal, vertical, and diagonal
+     * steps allowed).
      * 
-     * @param startLoc the starting location
-     * @param checkForBad the predicate to check for each reachable square
-     * @param checkForWall a predicate that checks if the given square has a wall
-     * @param alreadyChecked an array indexed by map location indices which has "true" at
-     * every location reachable from a spawn zone that has already been checked
-     * (WARNING: this array gets updated by floodFillMap)
+     * @param startLoc       the starting location
+     * @param checkForBad    the predicate to check for each reachable square
+     * @param checkForWall   a predicate that checks if the given square has a wall
+     * @param alreadyChecked an array indexed by map location indices which has
+     *                       "true" at
+     *                       every location reachable from a spawn zone that has
+     *                       already been checked
+     *                       (WARNING: this array gets updated by floodFillMap)
      * @return if checkForBad returns true for any reachable squares
      */
-    private boolean floodFillMap(MapLocation startLoc, Predicate<MapLocation> checkForBad, Predicate<MapLocation> checkForWall, boolean[] alreadyChecked) {
+    private boolean floodFillMap(MapLocation startLoc, Predicate<MapLocation> checkForBad,
+            Predicate<MapLocation> checkForWall, boolean[] alreadyChecked) {
         Queue<MapLocation> queue = new LinkedList<MapLocation>(); // stores map locations by index
 
         if (!onTheMap(startLoc)) {
@@ -509,7 +553,6 @@ public class LiveMap {
         return false;
     }
 
-
     @Override
     public String toString() {
         if (wallArray.length == 0) {
@@ -531,11 +574,12 @@ public class LiveMap {
                     ", seed=" + seed +
                     ", rounds=" + rounds +
                     ", mapName='" + mapName + '\'' +
-                    ", paintArray=" + Arrays.toString(paintArray) + 
+                    ", paintArray=" + Arrays.toString(paintArray) +
                     ", wallArray=" + Arrays.toString(wallArray) +
-                    ", ruinArray=" + Arrays.toString(ruinArray) + 
-                    ", patternArray=" + Arrays.toString(patternArray) + 
-                    ", initialBodies=" + Arrays.toString(initialBodies) + 
+                    ", cheeseMineArray=" + Arrays.toString(cheeseMineArray) +
+                    ", cheeseArray=" + Arrays.toString(cheeseArray) +
+                    ", patternArray=" + Arrays.toString(patternArray) +
+                    ", initialBodies=" + Arrays.toString(initialBodies) +
                     "}";
         }
     }

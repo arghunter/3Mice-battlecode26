@@ -1,5 +1,7 @@
 package battlecode.common;
 
+import battlecode.world.TeamInfo;
+
 /**
  * RobotInfo stores basic information that was 'sensed' of another Robot. This
  * info is ephemeral and there is no guarantee any of it will remain the same
@@ -33,23 +35,29 @@ public class RobotInfo {
     public final MapLocation location;
 
     /**
-     * The current paint amount of the robot.
+     * The current cheese this robot holds
      */
-    public final int paintAmount;
+    public final int cheeseAmount;
+  
+    /**
+     * Whether or not the robot is a cat and is crouching
+     */
+    public final boolean crouching;
 
     /**
      * The current robot being carried by this robot, or null if not carrying any robots.
      */
     public final RobotInfo carryingRobot;
 
-    public RobotInfo(int ID, Team team, UnitType type, int health, MapLocation location, int paintAmount, RobotInfo carryingRobot) {
+    public RobotInfo(int ID, Team team, UnitType type, int health, MapLocation location, int cheeseAmount, RobotInfo carryingRobot, boolean crouching) {
         super();
         this.ID = ID;
         this.team = team;
         this.type = type;
         this.health = health;
         this.location = location;
-        this.paintAmount = paintAmount;
+        this.cheeseAmount = cheeseAmount;
+        this.crouching = !type.isRatType() && crouching;
         this.carryingRobot = carryingRobot;
     }
 
@@ -68,7 +76,7 @@ public class RobotInfo {
      * @return the team that this robot is on
      */
     public Team getTeam() {
-        return team;
+        return this.team;
     }
 
     /**
@@ -77,7 +85,7 @@ public class RobotInfo {
      * @return the health of this robot
      */
     public int getHealth() {
-        return health;
+        return this.health;
     }
 
     /**
@@ -94,17 +102,25 @@ public class RobotInfo {
      * 
      * @return the type of this robot.
      */
-    public UnitType getType(){
+    public UnitType getType() {
         return this.type;
     }
 
     /**
-     * Returns the paint amount of this robot. 
+     * Returns the cheese amount of this robot.
      * 
-     * @return the paint amount of the robot
+     * @return the cheese amount of the robot
      */
-    public int getPaintAmount(){
-        return this.paintAmount;
+    public int getRawCheeseAmount() {
+        return this.cheeseAmount;
+
+    /**
+     * Returns whether or not the robot is crouching
+     *
+     * @return if the robot is crouching
+     */
+    public boolean isCrouching(){
+        return this.crouching;
     }
 
     /**
@@ -116,17 +132,21 @@ public class RobotInfo {
         return this.carryingRobot;
     }
 
-
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         RobotInfo robotInfo = (RobotInfo) o;
 
-        if (ID != robotInfo.ID) return false;
-        if (team != robotInfo.team) return false;
-        if (health != robotInfo.health) return false;
+        if (ID != robotInfo.ID)
+            return false;
+        if (team != robotInfo.team)
+            return false;
+        if (health != robotInfo.health)
+            return false;
         return location.equals(robotInfo.location);
     }
 
@@ -147,7 +167,8 @@ public class RobotInfo {
                 ", team=" + team +
                 ", health=" + health +
                 ", location=" + location +
-                ", paint amount=" + paintAmount +
+                ", paint amount=" + cheeseAmount +
+                ", crouching=" + crouching +
                 ", carrying=" + carryingRobot +
                 '}';
     }

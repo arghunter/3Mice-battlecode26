@@ -85,13 +85,31 @@ public interface RobotController {
     int getHealth();
 
     /**
-     * Returns this robot's current paint amount.
+     * Returns the amount of cheese the robot is currently holding.
      *
-     * @return this robot's current paint amount
+     * @return the amount of cheese the robot is currently holding.
      *
      * @battlecode.doc.costlymethod
      */
-    int getPaint();
+    int getRawCheese();
+
+    /**
+     * Returns the amount of global cheese available.
+     *
+     * @return the amount of global cheese available.
+     *
+     * @battlecode.doc.costlymethod
+     */
+    public int getGlobalCheese();
+
+    /**
+     * Returns the amount of cheese the robot has access to.
+     *
+     * @return the amount of cheese the robot has access to.
+     *
+     * @battlecode.doc.costlymethod
+     */
+    public int getAllCheese();
 
     /**
      * Returns the amount of money that this robot's team has.
@@ -112,7 +130,16 @@ public interface RobotController {
     int getChips();
 
     /**
-     * Returns what UnitType this robot is. 
+     * Returns the amount of dirt that this robot's team has.
+     * 
+     * @return the amount of dirt this robot's team has
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    int getDirt();
+
+    /**
+     * Returns what UnitType this robot is.
      * 
      * @return the UnitType of this robot
      * 
@@ -287,7 +314,8 @@ public interface RobotController {
     RobotInfo[] senseNearbyRobots(MapLocation center, int radiusSquared, Team team) throws GameActionException;
 
     /**
-     * Given a senseable location, returns whether that location is passable (a wall).
+     * Given a senseable location, returns whether that location is passable (a
+     * wall).
      * 
      * @param loc the given location
      * @return whether that location is passable
@@ -478,27 +506,25 @@ public interface RobotController {
     // ***********************************
 
     /**
-     * Checks if a tower can spawn a robot at the given location.
-     * Robots can spawn within a circle of radius of sqrt(4) of the tower.
+     * Checks if a rat king can spawn a robot at the given location.
+     * Robots can spawn within a circle of radius of sqrt(4) of the rat king.
      * 
-     * @param type the type of robot to spawn
      * @param loc  the location to spawn the robot at
      * @return true if robot can be built at loc
      * 
      * @battlecode.doc.costlymethod
      */
-    boolean canBuildRobot(UnitType type, MapLocation loc);
+    boolean canBuildRobot(MapLocation loc);
 
     /**
      * Spawns a robot at the given location.
-     * Robots can spawn within a circle of radius of sqrt(4) of the tower.
+     * Robots can spawn within a circle of radius of sqrt(4) of the rat king.
      * 
-     * @param type the type of robot to spawn
      * @param loc  the location to spawn the robot at
      * 
      * @battlecode.doc.costlymethod
      */
-    void buildRobot(UnitType type, MapLocation loc) throws GameActionException;
+    void buildRobot(MapLocation loc) throws GameActionException;
 
     /**
      * Checks if the location can be marked.
@@ -512,7 +538,7 @@ public interface RobotController {
     /**
      * Adds a mark at the given location.
      * 
-     * @param loc the location to mark
+     * @param loc       the location to mark
      * @param secondary whether the secondary color should be used
      * 
      * @battlecode.doc.costlymethod
@@ -538,7 +564,8 @@ public interface RobotController {
     void removeMark(MapLocation loc) throws GameActionException;
 
     /**
-     * Checks if a tower can be upgraded by verifying conditions on the location, team, 
+     * Checks if a tower can be upgraded by verifying conditions on the location,
+     * team,
      * tower level, and cost.
      * 
      * @param loc the location to upgrade the tower at
@@ -548,7 +575,8 @@ public interface RobotController {
     boolean canUpgradeTower(MapLocation loc);
 
     /**
-     * Upgrades a tower if possible; subtracts the corresponding amount of money from the team.
+     * Upgrades a tower if possible; subtracts the corresponding amount of money
+     * from the team.
      * 
      * @param loc the location to upgrade the tower at
      * 
@@ -558,6 +586,7 @@ public interface RobotController {
 
     /**
      * Tests whether this robot can place dirt at the given location.
+     * 
      * @param loc
      * @throws GameActionException
      * 
@@ -576,6 +605,7 @@ public interface RobotController {
 
      /**
      * Tests whether this robot can place dirt at the given location.
+     * 
      * @param loc
      * @throws GameActionException
      * 
@@ -592,15 +622,75 @@ public interface RobotController {
      */
     void removeDirt(MapLocation loc) throws GameActionException;
 
+    /**
+     * Tests whether this robot can place a rat trap at the given location.
+     * @param loc
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public boolean canPlaceRatTrap(MapLocation loc);
+
+    /**
+     * Places a rat trap at the given location.
+     * @param loc
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public void placeRatTrap(MapLocation loc) throws GameActionException;
+
+    /**
+     * Tests whether this robot can remove a rat trap at the given location.
+     * @param loc
+     * @throws GameActionException
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public boolean canRemoveRatTrap(MapLocation loc);
+
+    /**
+     * Removes the rat trap at the given location.
+     * @param loc
+     * @throws GameActionException
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    public void removeRatTrap(MapLocation loc) throws GameActionException;
+
+    /**
+     * Tests whether this robot can place a cat trap at the given location.
+     * @param loc
+     */
+    public boolean canPlaceCatTrap(MapLocation loc);
+
+    /**
+     * Places a cat trap at the given location.
+     * @param loc
+     */
+    public void placeCatTrap(MapLocation loc) throws GameActionException;
+
+    /**
+     * Tests whether this robot can remove a cat trap at the given location.
+     * @param loc
+     * @throws GameActionException
+     */
+    public boolean canRemoveCatTrap(MapLocation loc);
+
+    /**
+     * Removes the cat trap at the given location.
+     * @param loc
+     * @throws GameActionException
+     */
+    public void removeCatTrap(MapLocation loc) throws GameActionException;
+
     // ****************************
     // ***** ATTACK / HEAL ********
     // ****************************
 
     /**
-     * Tests whether this robot can paint the given location. 
+     * Tests whether this robot can paint the given location.
      * 
      * @param loc target location to paint
-     * @return true if rc.attack(loc) will paint the given location 
+     * @return true if rc.attack(loc) will paint the given location
      * 
      * @battlecode.doc.costlymethod
      */
@@ -609,7 +699,7 @@ public interface RobotController {
     /**
      * Tests whether this robot can attack the given location. Types of
      * attacks for specific units determine whether or not towers, other
-     * robots, or empty tiles can be attacked. 
+     * robots, or empty tiles can be attacked.
      *
      * @param loc target location to attack
      * @return whether it is possible to attack the given location
@@ -617,13 +707,13 @@ public interface RobotController {
      * @battlecode.doc.costlymethod
      */
     boolean canAttack(MapLocation loc);
-    
-    /** 
+
+    /**
      * Performs the specific attack for this robot type, defaulting to the
      * primary color
      *
      * @param loc the target location to attack (for splashers, the center location)
-     *      Note: for a tower, leaving loc null represents an area attack
+     *            Note: for a tower, leaving loc null represents an area attack
      * @throws GameActionException if conditions for attacking are not satisfied
      *
      * @battlecode.doc.costlymethod
@@ -648,8 +738,10 @@ public interface RobotController {
      * Reads all squeaks sent to this unit within the past 5 rounds if roundNum = -1, or only
      * squeaks sent from the specified round otherwise
      * 
-     * @param roundNum the round number to read messages from, or -1 to read all messages in the queue
-     * @return All messages of the specified round, or all messages from the past 5 round.
+     * @param roundNum the round number to read messages from, or -1 to read all
+     *                 messages in the queue
+     * @return All messages of the specified round, or all messages from the past 5
+     *         round.
      * 
      * @battlecode.doc.costlymethod
      */
@@ -662,7 +754,8 @@ public interface RobotController {
     /**
      * Tests whether you can transfer paint to a given robot/tower.
      * 
-     * You can give paint to an allied robot/tower if you are a mopper and can act at the
+     * You can give paint to an allied robot/tower if you are a mopper and can act
+     * at the
      * given location.
      * You can take paint from allied towers regardless of type, if you can act
      * at the location. Pass in a negative number to take paint.
@@ -689,10 +782,10 @@ public interface RobotController {
     void transferPaint(MapLocation loc, int amount) throws GameActionException;
 
     /**
-     * Destroys the robot. 
+     * Destroys the robot.
      *
      * @battlecode.doc.costlymethod
-    **/
+     **/
     void disintegrate();
 
     /**
@@ -742,18 +835,19 @@ public interface RobotController {
      *
      * @battlecode.doc.costlymethod
      */
-    void setIndicatorLine(MapLocation startLoc, MapLocation endLoc, int red, int green, int blue) throws GameActionException;
+    void setIndicatorLine(MapLocation startLoc, MapLocation endLoc, int red, int green, int blue)
+            throws GameActionException;
 
     /**
-     * Adds a marker to the timeline at the current 
+     * Adds a marker to the timeline at the current
      * round for debugging purposes.
      * Only the first
      * {@link GameConstants#TIMELINE_LABEL_MAX_LENGTH} characters are used.
      * 
      * @param label the label for the timeline marker
-     * @param red the red component of the marker's color
+     * @param red   the red component of the marker's color
      * @param green the green component of the marker's color
-     * @param blue the blue component of the marker's color
+     * @param blue  the blue component of the marker's color
      * 
      * @battlecode.doc.costlymethod
      */

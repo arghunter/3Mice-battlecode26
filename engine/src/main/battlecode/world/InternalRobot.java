@@ -23,7 +23,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
     private final RobotControllerImpl controller;
     protected final GameWorld gameWorld;
 
-    private int paintAmount;
+    private int cheeseAmount;
     private UnitType type;
 
     private final int ID;
@@ -51,12 +51,18 @@ public class InternalRobot implements Comparable<InternalRobot> {
     // the number of messages this robot/tower has sent this turn
     private int sentMessagesCount;
 
+    private boolean crouching;
+
     /**
      * Used to avoid recreating the same RobotInfo object over and over.
      */
     private RobotInfo cachedRobotInfo;
 
     private String indicatorString;
+
+    private ArrayList<Trap> trapsToTrigger;
+    private ArrayList<Boolean> enteredTraps;
+
 
     /**
      * Create a new internal representation of a robot
@@ -80,10 +86,14 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.health = type.health;
         this.incomingMessages = new LinkedList<>();
 
-        this.paintAmount = 0;
+        this.trapsToTrigger = new ArrayList<>();
+        this.enteredTraps = new ArrayList<>();
+
+        this.cheeseAmount = 0;
 
         this.controlBits = 0;
-        this.currentBytecodeLimit = type.isRobotType() ? GameConstants.ROBOT_BYTECODE_LIMIT : GameConstants.TOWER_BYTECODE_LIMIT;
+        this.currentBytecodeLimit = type.isRobotType() ? GameConstants.ROBOT_BYTECODE_LIMIT
+                : GameConstants.TOWER_BYTECODE_LIMIT;
         this.bytecodesUsed = 0;
 
         this.roundsAlive = 0;
@@ -98,7 +108,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
         this.controller = new RobotControllerImpl(gameWorld, this);
 
-        
     }
 
     // ******************************************
@@ -116,7 +125,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
     public int getID() {
         return ID;
     }
-
 
     // public boolean isCenterRobot(){
     //     return this.offsetToCenter == Direction.CENTER;
@@ -143,7 +151,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
         return dir;
     }
 
-    public MapLocation[] getAllPartLocations(){ 
+    public MapLocation[] getAllPartLocations() {
         return this.getType().getAllLocations(this.location);
     }
 
@@ -155,18 +163,17 @@ public class InternalRobot implements Comparable<InternalRobot> {
         return health;
     }
 
-    public int getPaint() {
-        return paintAmount;
+    public int getCheese() {
+        return cheeseAmount;
     }
 
-    public void addPaint(int amount) {
-        int newPaintAmount = this.paintAmount + amount;
-        if (newPaintAmount > this.type.paintCapacity) {
-            this.paintAmount = this.type.paintCapacity;
-        } else if (newPaintAmount < 0) {
-            this.paintAmount = 0;
+    public void addCheese(int amount) {
+        if (this.cheeseAmount + amount >= 0) {
+            this.cheeseAmount += amount;
         } else {
-            this.paintAmount = newPaintAmount;
+            amount += this.cheeseAmount;
+            this.cheeseAmount = 0;
+            this.gameWorld.getTeamInfo().addCheese(getTeam(), amount);
         }
     }
 
@@ -210,12 +217,12 @@ public class InternalRobot implements Comparable<InternalRobot> {
                 && cachedRobotInfo.ID == ID
                 && cachedRobotInfo.team == team
                 && cachedRobotInfo.health == health
-                && cachedRobotInfo.paintAmount == paintAmount
+                && cachedRobotInfo.cheeseAmount == cheeseAmount
                 && cachedRobotInfo.location.equals(location)) {
             return cachedRobotInfo;
         }
 
-        this.cachedRobotInfo = new RobotInfo(ID, team, type, health, location, paintAmount, carryingRobot != null ? carryingRobot.getRobotInfo() : null);
+        this.cachedRobotInfo = new RobotInfo(ID, team, type, health, location, cheeseAmount, carryingRobot != null ? carryingRobot.getRobotInfo() : null, crouching);
         return this.cachedRobotInfo;
     }
 
@@ -271,7 +278,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
      * @param toSense the MapLocation to sense
      */
     public boolean canSenseLocation(MapLocation toSense) {
-        return this.location.distanceSquaredTo(toSense) <= getVisionRadiusSquared();
+        return this.location.isWithinDistanceSquared(toSense, getVisionRadiusSquared(), this.dir, getVisionConeAngle(), this.type.usesTopRightLocationForDistance());
     }
 
     /**
@@ -281,6 +288,17 @@ public class InternalRobot implements Comparable<InternalRobot> {
      */
     public boolean canSenseRadiusSquared(int radiusSquared) {
         return radiusSquared <= getVisionRadiusSquared();
+    }
+
+    /**
+     * Returns whether this robot can build a trap on this block
+     * 
+     * @param build
+     * @return boolean: can trap be built here by this robot
+     */
+    public boolean canBuildTrap(MapLocation build, TrapType trapType) {
+        return canSenseLocation(build) && canActCooldown()
+                && (this.gameWorld.getTeamInfo().getCheese(this.team) + this.getCheese()) >= trapType.buildCost;
     }
 
     // ******************************************
@@ -319,18 +337,18 @@ public class InternalRobot implements Comparable<InternalRobot> {
     public void upgradeTower(UnitType newType) {
         int damage = this.type.health - getHealth();
         this.type = newType;
-        this.health = newType.health - damage; 
+        this.health = newType.health - damage;
     }
 
     /**
      * Resets the action cooldown.
      */
     public void addActionCooldownTurns(int numActionCooldownToAdd) {
-        int paintPercentage = (int) Math.round(this.paintAmount * 100.0/ this.type.paintCapacity);
-        /* TODO this is paint depletion logic and can probably be removed
+        int paintPercentage = (int) Math.round(this.cheeseAmount * 100.0 / this.type.paintCapacity);
         if (paintPercentage < GameConstants.INCREASED_COOLDOWN_THRESHOLD && type.isRobotType()) {
             numActionCooldownToAdd += (int) Math.round(numActionCooldownToAdd
-                    * (GameConstants.INCREASED_COOLDOWN_INTERCEPT + GameConstants.INCREASED_COOLDOWN_SLOPE * paintPercentage)
+                    * (GameConstants.INCREASED_COOLDOWN_INTERCEPT
+                            + GameConstants.INCREASED_COOLDOWN_SLOPE * paintPercentage)
                     / 100.0);
         }
         */
@@ -342,11 +360,11 @@ public class InternalRobot implements Comparable<InternalRobot> {
      */
     public void addMovementCooldownTurns() {
         int movementCooldown = GameConstants.MOVEMENT_COOLDOWN;
-        int paintPercentage = (int) Math.round(this.paintAmount * 100.0/ this.type.paintCapacity);
-        /* TODO this is paint depletion logic and can probably be removed
+        int paintPercentage = (int) Math.round(this.cheeseAmount * 100.0 / this.type.paintCapacity);
         if (paintPercentage < GameConstants.INCREASED_COOLDOWN_THRESHOLD && type.isRobotType()) {
             movementCooldown += (int) Math.round(movementCooldown
-                    * (GameConstants.INCREASED_COOLDOWN_INTERCEPT + GameConstants.INCREASED_COOLDOWN_SLOPE * paintPercentage)
+                    * (GameConstants.INCREASED_COOLDOWN_INTERCEPT
+                            + GameConstants.INCREASED_COOLDOWN_SLOPE * paintPercentage)
                     / 100.0);
         }
         */
@@ -383,6 +401,11 @@ public class InternalRobot implements Comparable<InternalRobot> {
         if (centerRobot.health <= 0) {
             this.gameWorld.destroyRobot(centerRobot.ID, false, true);
         }
+    }
+
+    public void addTrapTrigger(Trap t, boolean entered) {
+        this.trapsToTrigger.add(t);
+        this.enteredTraps.add(entered);
     }
 
     // *********************************
@@ -520,7 +543,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
         return sentMessagesCount;
     }
 
-    public Message[] getMessages(){
+    public Message[] getMessages() {
         return incomingMessages.toArray(new Message[incomingMessages.size()]);
     }
 
@@ -557,6 +580,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
     // ****************************
     // ****** GETTER METHODS ******
     // ****************************
+    
 
     // *********************************
     // ****** GAMEPLAY METHODS *********
@@ -574,8 +598,8 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
         // Add upgrade action for initially upgraded starting towers
         if (this.type.isTowerType() && this.gameWorld.getCurrentRound() == 1 && this.type.level == 2) {
-            this.getGameWorld().getMatchMaker().addUpgradeAction(getID(), getHealth(), 
-                getType().health, getPaint(), getType().paintCapacity);
+            this.getGameWorld().getMatchMaker().addUpgradeAction(getID(), getHealth(),
+                    getType().health, getPaint(), getType().paintCapacity);
         }
     }
 
@@ -593,12 +617,29 @@ public class InternalRobot implements Comparable<InternalRobot> {
     }
 
     public void processEndOfTurn() {
+        // eat cheese if ratking
+        if (this.type.isRatKingType()) {
+            // ratking starves
+            if (this.gameWorld.getTeamInfo().getCheese(team) < GameConstants.RATKING_CHEESE_CONSUMPTION) {
+                this.addHealth(-GameConstants.RATKING_HEALTH_LOSS);
+            } else {
+                this.addCheese(-GameConstants.RATKING_CHEESE_CONSUMPTION);
+            }
+        }
+
         // indicator strings!
         if (!indicatorString.equals("")) {
             this.gameWorld.getMatchMaker().addIndicatorString(this.ID, this.indicatorString);
         }
 
-        this.gameWorld.getMatchMaker().endTurn(this.ID, this.health, this.paintAmount, this.movementCooldownTurns, this.actionCooldownTurns, this.bytecodesUsed, this.location);
+        for (int i = 0; i < trapsToTrigger.size(); i++) {
+            this.gameWorld.triggerTrap(trapsToTrigger.get(i), this, enteredTraps.get(i));
+        }
+        this.trapsToTrigger = new ArrayList<>();
+        this.enteredTraps = new ArrayList<>();
+
+        this.gameWorld.getMatchMaker().endTurn(this.ID, this.health, this.cheeseAmount, this.movementCooldownTurns,
+                this.actionCooldownTurns, this.bytecodesUsed, this.location);
         this.roundsAlive++;
     }
 
