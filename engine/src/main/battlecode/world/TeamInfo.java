@@ -100,6 +100,10 @@ public class TeamInfo {
      */
     public void addRatKings(int num, Team team){
         this.numRatKings[team.ordinal()] += num;
+
+        if (this.numRatKings[team.ordinal()] == 0){
+            checkWin(team);
+        }
     }
 
     // *********************************
@@ -119,15 +123,6 @@ public class TeamInfo {
             throw new IllegalArgumentException("Invalid cheese change");
         }
         this.globalCheese[team.ordinal()] += amount;
-    }
-
-    /**
-     * Return number of points team has.
-     * 
-     * @param team team to query
-     */
-    public void addPoints(Team team) {
-        return this.points[team.ordinal()];
     }
 
     /**

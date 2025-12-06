@@ -702,20 +702,20 @@ public class GameWorld {
 
     public void destroyRobot(int id, boolean fromException, boolean fromDamage) {
         InternalRobot robot = objectInfo.getRobotByID(id);
+        Team robotTeam = robot.getTeam();
         MapLocation loc = robot.getLocation();
 
         if (loc != null) {
             if (robot.getType().isRatType()){
-                this.teamInfo.addRats(-1, robot.getTeam());
+                this.teamInfo.addRats(-1, robotTeam);
             }
             else if (robot.getType().isRatKingType()){
-                this.teamInfo.addRatKings(-1, robot.getTeam());
+                this.teamInfo.addRatKings(-1, robotTeam);
             }
             for (MapLocation robotLoc : robot.getAllPartLocations()) {
                 removeRobot(robotLoc);
             }
         }
-
         controlProvider.robotKilled(robot);
         objectInfo.destroyRobot(id);
         if (fromDamage || fromException)
@@ -723,9 +723,6 @@ public class GameWorld {
         else
             matchMaker.addDied(id);
         this.currentNumberUnits[robot.getTeam().ordinal()] -= 1;
-        if (this.currentNumberUnits[robot.getTeam().ordinal()] == 0) {
-            setWinner(robot.getTeam().opponent(), DominationFactor.DESTROY_ALL_UNITS);
-        }
     }
 
     // *********************************
