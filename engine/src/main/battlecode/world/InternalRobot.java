@@ -696,8 +696,9 @@ public class InternalRobot implements Comparable<InternalRobot> {
         return null;
     }
 
-    public void pounce(int dx, int dy){
-
+    public void pounce(int[] delta){
+        int dx = delta[0];
+        int dy = delta[1];
         for(MapLocation partLoc : this.getAllPartLocations()){
             // shift location by dx, dy
             MapLocation translatedLoc = partLoc.translate(dx, dy);
@@ -825,6 +826,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
         // TODO: cat does not care about rats that attack it over other rats, also
         // nothing about feeding has been added
         if (this.type == UnitType.CAT) {
+            int[] pounceTraj = null;
             switch (this.catState) {
                 case EXPLORE:
                     MapLocation waypoint = catWaypoints[currentWaypoint];
@@ -883,8 +885,9 @@ public class InternalRobot implements Comparable<InternalRobot> {
                     }
 
                     // pounce towards target if possible
-                    if (canActCooldown() && canPounce(this.catTargetLoc)) {
-                        pounce(this.catTargetLoc);
+                    pounceTraj = canPounce(this.catTargetLoc);
+                    if (canActCooldown() && pounceTraj != null) {
+                        this.pounce(pounceTraj);
                     } else if (canMoveCooldown() && canMove(this.dir.getDeltaX(), this.dir.getDeltaY())) {
                         setLocation(this.dir.getDeltaX(), this.dir.getDeltaY());
                     } else {
@@ -951,8 +954,9 @@ public class InternalRobot implements Comparable<InternalRobot> {
                     this.dir = this.location.directionTo(this.catTargetLoc);
 
                     // pounce towards target if possible
-                    if (canActCooldown() && canPounce(this.catTargetLoc)) {
-                        pounce(this.catTargetLoc);
+                    pounceTraj = canPounce(this.catTargetLoc);
+                    if (canActCooldown() && pounceTraj!=null) {
+                        this.pounce(pounceTraj);
                     } else if (canMoveCooldown() && canMove(this.dir.getDeltaX(), this.dir.getDeltaY())) {
                         setLocation(this.dir.getDeltaX(), this.dir.getDeltaY());
                     } else {
