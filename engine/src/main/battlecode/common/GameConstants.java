@@ -30,8 +30,11 @@ public class GameConstants {
     /** The minimum distance between cheese mines on the map */
     public static final int MIN_CHEESE_MINE_SPACING_SQUARED = 25;
 
-    /** The maximum percentage of the map that can be dirtt */
+    /** The maximum percentage of the map that can be dirt */
     public static final int MAX_DIRT_PERCENTAGE = 20;
+
+    /** The maximum percentage of the map that can be walls */
+    public static final int MAX_WALL_PERCENTAGE = 10; // TODO remove if not using walls
 
     // *********************************
     // ****** GAME PARAMETERS **********

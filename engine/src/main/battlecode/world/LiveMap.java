@@ -449,17 +449,30 @@ public class LiveMap {
 
         ArrayList<MapLocation> cheeseMineLocs = new ArrayList<>();
         int numWalls = 0;
+        int numDirt = 0;
+
         for (int i = 0; i < this.width * this.height; i++) {
             if (this.wallArray[i] && this.cheeseMineArray[i]) {
                 throw new RuntimeException("Walls can't be on the same square as cheese mines!");
             }
-            if (this.cheeseMineArray[i])
+            if (this.cheeseMineArray[i]) {
                 cheeseMineLocs.add(indexToLocation(i));
-            if (this.wallArray[i])
+            }
+            if (this.wallArray[i]) {
                 numWalls += 1;
+            }
+            if (this.dirtArray[i]) {
+                numDirt += 1;
+            }
         }
+
+        // TODO are walls still a thing?
         if (numWalls * 100 >= this.width * this.height * GameConstants.MAX_WALL_PERCENTAGE) {
             throw new RuntimeException("Too much of the area of the map is composed of walls!");
+        }
+
+        if (numDirt * 100 >= this.width * this.height * GameConstants.MAX_DIRT_PERCENTAGE) {
+            throw new RuntimeException("Too much of the area of the map is composed of dirt!");
         }
 
         for (int i = 0; i < cheeseMineLocs.size(); i++) {
@@ -579,6 +592,7 @@ public class LiveMap {
                     ", rounds=" + rounds +
                     ", mapName='" + mapName + '\'' +
                     ", wallArray=" + Arrays.toString(wallArray) +
+                    ", dirtArray=" + Arrays.toString(dirtArray) +
                     ", cheeseMineArray=" + Arrays.toString(cheeseMineArray) +
                     ", cheeseArray=" + Arrays.toString(cheeseArray) +
                     ", initialBodies=" + Arrays.toString(initialBodies) +

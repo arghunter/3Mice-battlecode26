@@ -332,9 +332,8 @@ public final class GameMapIO {
             battlecode.schema.GameMap.addSymmetry(builder, gameMap.getSymmetry().ordinal());
             battlecode.schema.GameMap.addRandomSeed(builder, randomSeed);
             battlecode.schema.GameMap.addWalls(builder, wallArrayInt);
-            battlecode.schema.GameMap.addRuins(builder, ruinLocations);
+            // TODO add dirt here?
             battlecode.schema.GameMap.addInitialBodies(builder, initialBodyOffset);
-            battlecode.schema.GameMap.addPaint(builder, paintArrayInt);
             return battlecode.schema.GameMap.endGameMap(builder);
         }
 

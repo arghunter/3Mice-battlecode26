@@ -37,7 +37,6 @@ public class GameWorld {
     private int[] cheeseAmounts;
     private InternalRobot[][] robots;
     private Trap[] trapLocations;
-    private CheeseMine[] cheeseMines;
     private ArrayList<Trap>[] trapTriggers;
     private HashMap<TrapType, Integer> trapCounts;
     private int trapId;
@@ -56,7 +55,7 @@ public class GameWorld {
     // Whether there is a ruin on each tile, indexed by location
     private boolean[] allCheeseMinesByLoc;
     // list of all cheese mines
-    private ArrayList<CheeseMine> CheeseMines;
+    private ArrayList<CheeseMine> cheeseMines;
     private CheeseMine[] cheeseMineLocs;
 
     public int symmetricY(int y) {
@@ -97,7 +96,6 @@ public class GameWorld {
     public GameWorld(LiveMap gm, RobotControlProvider cp, GameMaker.MatchMaker matchMaker) {
         int width = gm.getWidth();
         int height = gm.getHeight();
-        MapSymmetry symmetry = gm.getSymmetry();
         int numSquares = width * height;
         this.walls = gm.getWallArray();
         this.dirt = gm.getDirtArray();
@@ -130,22 +128,24 @@ public class GameWorld {
         this.matchMaker.makeMatchHeader(this.gameMap);
 
         this.allCheeseMinesByLoc = gm.getCheeseMineArray();
-        this.CheeseMines = new ArrayList<CheeseMine>();
+        this.cheeseMines = new ArrayList<CheeseMine>();
         this.cheeseMineLocs = new CheeseMine[numSquares];
+
         for (int i = 0; i < numSquares; i++) {
             if (this.allCheeseMinesByLoc[i]) {
                 CheeseMine newMine = new CheeseMine(indexToLocation(i), GameConstants.SQ_CHEESE_SPAWN_RADIUS, null);
-                this.CheeseMines.add(newMine);
+                this.cheeseMines.add(newMine);
                 cheeseMineLocs[i] = newMine;
             }
         }
 
-        for (CheeseMine mine : this.CheeseMines) {
+        for (CheeseMine mine : this.cheeseMines) {
             MapLocation symLoc = symmetryLocation(mine.getLocation());
             mine.setPair(cheeseMineLocs[locationToIndex(symLoc)]);
         }
 
         RobotInfo[] initialBodies = gm.getInitialBodies();
+
         for (int i = 0; i < initialBodies.length; i++) {
             RobotInfo robotInfo = initialBodies[i];
             MapLocation newLocation = robotInfo.location.translate(gm.getOrigin().x, gm.getOrigin().y);
@@ -419,7 +419,7 @@ public class GameWorld {
         return this.trapCounts.get(type);
     }
 
-    public void trapTriggered(Trap trap, InternalRobot robot) {
+    public void triggerTrap(Trap trap, InternalRobot robot) {
         MapLocation loc = trap.getLocation();
         TrapType type = trap.getType();
         
@@ -576,10 +576,10 @@ public class GameWorld {
 
         if (totalCheeseValues[Team.A.ordinal()] > totalCheeseValues[Team.B.ordinal()]) {
             // TODO: add new tiebreakers to domination factor
-            setWinner(Team.A, DominationFactor.MORE_MONEY);
+            setWinner(Team.A, DominationFactor.MORE_CHEESE);
             return true;
         } else if (totalCheeseValues[Team.B.ordinal()] > totalCheeseValues[Team.A.ordinal()]) {
-            setWinner(Team.B, DominationFactor.MORE_MONEY);
+            setWinner(Team.B, DominationFactor.MORE_CHEESE);
             return true;
         }
         return false;
@@ -633,7 +633,7 @@ public class GameWorld {
     }
 
     public void processEndOfRound() {
-        for (CheeseMine mine : this.CheeseMines) {
+        for (CheeseMine mine : this.cheeseMines) {
             spawnCheese(mine);
         }
 

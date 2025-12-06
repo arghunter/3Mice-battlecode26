@@ -639,11 +639,12 @@ public final class RobotControllerImpl implements RobotController {
 
             for(int j = this.gameWorld.getTrapTriggers(newLoc).size()-1; j >= 0; j--){
                 Trap trap = this.gameWorld.getTrapTriggers(newLoc).get(j);
-                if (trap.getTeam() == this.robot.getTeam() || t.getType() == TrapType.RATTRAP){
+                if (trap.getTeam() == this.robot.getTeam() || trap.getType() == TrapType.RATTRAP){
                     continue;
                 }
                 this.robot.addTrapTrigger(trap, true);
-            }        }
+            }
+        }
         
         this.robot.addMovementCooldownTurns();
     }
