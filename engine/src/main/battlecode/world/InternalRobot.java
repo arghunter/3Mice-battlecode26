@@ -619,32 +619,24 @@ public class InternalRobot implements Comparable<InternalRobot> {
         }
     }
 
-    public boolean canPounce(MapLocation loc) {
+    public int[] canPounce(MapLocation loc) {
+        /*
+        Returns dx, dy of pounce if allowed; otherwise returns null
+        */
+        
         // Must be a cat
         if (this.type != UnitType.CAT) {
             throw new RuntimeException("Unit must be a cat to pounce!");
         }
-        // disallow pounce to current tile or extremely far tiles
-        int distSq = this.location.distanceSquaredTo(loc);
-        if (distSq <= 0) {
-            return false;
-        }
-        if (distSq > GameConstants.CAT_POUNCE_MAX_DISTANCE_SQUARED) {
-            return false;
-        }
-        // Landing tile must be on map and passable (no walls/dirt)
 
-        if (!this.gameWorld.isPassable(loc)) {
-            return false;
+        // Target location must be on map and passable (no walls/dirt) and within max pounce distnace
+        boolean isWithinPounceDistance = (this.getLocation()
+                    .topRightDistanceSquaredTo(loc) <= GameConstants.CAT_POUNCE_MAX_DISTANCE_SQUARED);
+        if (!this.gameWorld.isPassable(loc) || !isWithinPounceDistance) {
+            return null;
         }
 
-        return true;
-    }
-
-    public void pounce(MapLocation loc) {
-        if (!canPounce(loc))
-            return;
-
+        // Test all 4 corners of the cat
         MapLocation cornerToTest;
         Direction rotateDir;
         // Check each part of the robot to see if we can pounce so that the part lands
@@ -679,8 +671,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
             int dx = directionFromCornerToTestToCenter.dx + (loc.x - this.getLocation().x);
             int dy = directionFromCornerToTestToCenter.dy + (loc.y - this.getLocation().y);
 
-            boolean isWithinPounceDistance = (this.getLocation()
-                    .topRightDistanceSquaredTo(loc) <= GameConstants.CAT_POUNCE_MAX_DISTANCE_SQUARED);
             boolean landingTilesPassable = true;
 
             // check passability of all landing tiles
@@ -689,8 +679,9 @@ public class InternalRobot implements Comparable<InternalRobot> {
                     landingTilesPassable = false;
                 }
             }
-            if (isWithinPounceDistance && landingTilesPassable) {
-                this.setLocation(dx, dy);
+            if (landingTilesPassable) {
+                int[] pounceTraj = {dx, dy};
+                return pounceTraj;
             }
             // try another robot part
             cornerToTest.add(rotateDir);
@@ -702,7 +693,24 @@ public class InternalRobot implements Comparable<InternalRobot> {
                 rotateDir = rotateDir.rotateLeft();
             }
         }
-        return;
+        return null;
+    }
+
+    public void pounce(int dx, int dy){
+
+        for(MapLocation partLoc : this.getAllPartLocations()){
+            // shift location by dx, dy
+            MapLocation translatedLoc = partLoc.translate(dx, dy);
+            InternalRobot crushedRobot = this.gameWorld.getRobot(translatedLoc);
+            if(crushedRobot != null){
+                // destroy robot
+                gameWorld.destroyRobot(crushedRobot.getID());
+            }
+        }
+
+        // actually translate the cat
+        this.setLocation(dx, dy);
+            
     }
 
     // *********************************
