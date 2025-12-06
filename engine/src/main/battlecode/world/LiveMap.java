@@ -47,11 +47,6 @@ public class LiveMap {
     private boolean[] dirtArray;
 
     /**
-     * What kind of paint is on the square.
-     */
-    private byte[] paintArray;
-
-    /**
      * Whether each square is a cheese mine.
      */
     private boolean[] cheeseMineArray;
@@ -109,8 +104,8 @@ public class LiveMap {
         this.symmetry = MapSymmetry.ROTATIONAL;
         this.initialBodies = Arrays.copyOf(initialBodies, initialBodies.length);
         int numSquares = width * height;
+        this.dirtArray = new boolean[numSquares];
         this.wallArray = new boolean[numSquares];
-        this.paintArray = new byte[numSquares];
         this.cheeseMineArray = new boolean[numSquares];
         this.cheeseArray = new int[numSquares];
         this.patternArray = new int[4];
@@ -129,7 +124,6 @@ public class LiveMap {
             MapSymmetry symmetry,
             boolean[] wallArray,
             boolean[] dirtArray,
-            byte[] paintArray,
             boolean[] cheeseMineArray,
             int[] cheeseArray,
             int[] patternArray,
@@ -149,10 +143,6 @@ public class LiveMap {
         }
         for (int i = 0; i < dirtArray.length; i++) {
             this.dirtArray[i] = dirtArray[i];
-        }
-        this.paintArray = new byte[paintArray.length];
-        for (int i = 0; i < paintArray.length; i++) {
-            this.paintArray[i] = paintArray[i];
         }
         this.cheeseMineArray = new boolean[cheeseMineArray.length];
         for (int i = 0; i < cheeseMineArray.length; i++) {
@@ -213,13 +203,9 @@ public class LiveMap {
             return false;
         if (!Arrays.equals(this.wallArray, other.wallArray))
             return false;
-        if (!Arrays.equals(this.paintArray, other.paintArray))
-            return false;
         if (!Arrays.equals(this.cheeseMineArray, other.cheeseMineArray))
             return false;
         if (!Arrays.equals(this.cheeseArray, other.cheeseArray))
-            return false;
-        if (!Arrays.equals(this.patternArray, other.patternArray))
             return false;
         if (!Arrays.equals(this.initialBodies, other.initialBodies))
             return false;
@@ -235,10 +221,8 @@ public class LiveMap {
         result = 31 * result + rounds;
         result = 31 * result + mapName.hashCode();
         result = 31 * result + Arrays.hashCode(wallArray);
-        result = 31 * result + Arrays.hashCode(paintArray);
         result = 31 * result + Arrays.hashCode(cheeseMineArray);
         result = 31 * result + Arrays.hashCode(cheeseArray);
-        result = 31 * result + Arrays.hashCode(patternArray);
         result = 31 * result + Arrays.hashCode(initialBodies);
         return result;
     }
@@ -370,13 +354,6 @@ public class LiveMap {
     }
 
     /**
-     * @return the paint array of the map
-     */
-    public byte[] getPaintArray() {
-        return paintArray;
-    }
-
-    /**
      * @return the cheese mine array of the map
      */
     public boolean[] getCheeseMineArray() {
@@ -457,6 +434,7 @@ public class LiveMap {
         if (this.height < GameConstants.MAP_MIN_HEIGHT) {
             throw new RuntimeException("MAP HEIGHT BENEATH GameConstants.MAP_MIN_HEIGHT");
         }
+        // TODO: update initial body stuff to be rat king related
         int[] towerCountA = new int[3];
         int[] towerCountB = new int[3];
         int initialBodyCountTeamA = 0;
@@ -619,11 +597,9 @@ public class LiveMap {
                     ", seed=" + seed +
                     ", rounds=" + rounds +
                     ", mapName='" + mapName + '\'' +
-                    ", paintArray=" + Arrays.toString(paintArray) +
                     ", wallArray=" + Arrays.toString(wallArray) +
                     ", cheeseMineArray=" + Arrays.toString(cheeseMineArray) +
                     ", cheeseArray=" + Arrays.toString(cheeseArray) +
-                    ", patternArray=" + Arrays.toString(patternArray) +
                     ", initialBodies=" + Arrays.toString(initialBodies) +
                     "}";
         }
