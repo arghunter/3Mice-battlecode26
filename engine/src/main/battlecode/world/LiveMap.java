@@ -57,6 +57,11 @@ public class LiveMap {
     private int[] cheeseArray;
 
     /**
+     * The waypoints for the cats.
+     */
+    private ArrayList<int[]> catWaypoints;
+
+    /**
      * The random seed contained in the map file.
      */
     private final int seed;
@@ -98,6 +103,7 @@ public class LiveMap {
         this.wallArray = new boolean[numSquares];
         this.cheeseMineArray = new boolean[numSquares];
         this.cheeseArray = new int[numSquares];
+        this.catWaypoints = new ArrayList<int[]>();
 
         // invariant: bodies is sorted by id
         Arrays.sort(this.initialBodies, (a, b) -> Integer.compare(a.getID(), b.getID()));
@@ -114,6 +120,7 @@ public class LiveMap {
             boolean[] dirtArray,
             boolean[] cheeseMineArray,
             int[] cheeseArray,
+            ArrayList<int[]> catWaypoints,
             RobotInfo[] initialBodies) {
         this.width = width;
         this.height = height;
@@ -134,6 +141,12 @@ public class LiveMap {
         for (int i = 0; i < cheeseMineArray.length; i++) {
             this.cheeseMineArray[i] = cheeseMineArray[i];
         }
+        for (int i = 0; i < cheeseArray.length; i++) {
+            this.cheeseArray[i] = cheeseArray[i];
+        }
+        for (int i = 0; i < catWaypoints.size(); i++) {
+            this.catWaypoints.add(Arrays.copyOf(catWaypoints.get(i), catWaypoints.get(i).length));
+        }
         // invariant: bodies is sorted by id
         Arrays.sort(this.initialBodies, (a, b) -> Integer.compare(a.getID(), b.getID()));
     }
@@ -146,6 +159,7 @@ public class LiveMap {
     public LiveMap(LiveMap gm) {
         this(gm.width, gm.height, gm.origin, gm.seed, gm.rounds, gm.mapName, gm.symmetry,
                 gm.wallArray, gm.dirtArray, gm.cheeseMineArray, gm.cheeseArray,
+                gm.catWaypoints,
                 gm.initialBodies);
     }
 
@@ -342,6 +356,34 @@ public class LiveMap {
     }
 
     /**
+     * @param catIndex
+     * @return the waypoints for the cat with the given index
+     */
+    public int[] getCatWaypoints(int catIndex) {
+        return catWaypoints.get(catIndex);
+    }
+
+    /**
+     * @param catIndex
+     * @return the waypoints for the cat with the given index
+     */
+    public MapLocation[] getCatWaypointsOrdered(int catIndex) {
+        int max_len = 0;
+        for (int i = 0; i < (catWaypoints.get(catIndex)).length; i++) {
+            if (catWaypoints.get(catIndex)[i] > max_len) {
+                max_len = catWaypoints.get(catIndex)[i];
+            }
+        }
+        MapLocation[] ordered = new MapLocation[max_len];
+        for (int i = 0; i < (catWaypoints.get(catIndex)).length; i++) {
+            if (catWaypoints.get(catIndex)[i] > 0) {
+                ordered[catWaypoints.get(catIndex)[i] - 1] = indexToLocation(i);
+            }
+        }
+        return ordered;
+    }
+
+    /**
      * Helper method that converts a location into an index.
      * 
      * @param loc the MapLocation
@@ -391,10 +433,12 @@ public class LiveMap {
             }
         }
         if (initialBodyCountTeamA != GameConstants.NUMBER_INITIAL_RAT_KINGS) {
-            throw new RuntimeException("Expected to have "  + GameConstants.NUMBER_INITIAL_RAT_KINGS + " team A towers!");
+            throw new RuntimeException(
+                    "Expected to have " + GameConstants.NUMBER_INITIAL_RAT_KINGS + " team A towers!");
         }
         if (initialBodyCountTeamB != GameConstants.NUMBER_INITIAL_RAT_KINGS) {
-            throw new RuntimeException("Expected to have "  + GameConstants.NUMBER_INITIAL_RAT_KINGS + " team B towers!");
+            throw new RuntimeException(
+                    "Expected to have " + GameConstants.NUMBER_INITIAL_RAT_KINGS + " team B towers!");
         }
         for (int i = 0; i < towerCountA.length; i++) {
             if (towerCountA[i] != towerCountB[i]) {

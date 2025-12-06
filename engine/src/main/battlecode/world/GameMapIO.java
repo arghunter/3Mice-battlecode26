@@ -233,9 +233,11 @@ public final class GameMapIO {
             boolean[] dirtArray = new boolean[size];
             boolean[] ruinArray = new boolean[size];
             boolean[] cheeseMineArray = new boolean[size];
+            ArrayList<int[]> catWaypoints = new ArrayList<int[]>();
             int[] cheeseArray = new int[size];
             for (int i = 0; i < wallArray.length; i++) {
                 wallArray[i] = raw.walls(i);
+                dirtArray[i] = raw.dirt(i);
             }
             battlecode.schema.VecTable ruins = raw.ruins();
             int num_ruins = ruins.xsLength();
@@ -252,7 +254,7 @@ public final class GameMapIO {
 
             return new LiveMap(
                     width, height, origin, seed, rounds, mapName, symmetry, wallArray, dirtArray,
-                    cheeseMineArray, cheeseArray, initialBodies);
+                    cheeseMineArray, cheeseArray, catWaypoints, initialBodies);
         }
 
         /**
@@ -277,7 +279,6 @@ public final class GameMapIO {
 
             ArrayList<Boolean> wallArrayList = new ArrayList<>();
             ArrayList<Byte> paintArrayList = new ArrayList<>();
-            ArrayList<Integer> patternArrayList = new ArrayList<>();
 
             ArrayList<Integer> ruinXs = new ArrayList<>();
             ArrayList<Integer> ruinYs = new ArrayList<>();
@@ -312,11 +313,11 @@ public final class GameMapIO {
 
             int wallArrayInt = battlecode.schema.GameMap.createWallsVector(builder,
                     ArrayUtils.toPrimitive(wallArrayList.toArray(new Boolean[wallArrayList.size()])));
-            int paintArrayInt = battlecode.schema.GameMap.createPaintVector(builder,
-                    ArrayUtils.toPrimitive(paintArrayList.toArray(new Byte[paintArrayList.size()])));
-            int patternArrayInt = battlecode.schema.GameMap.createPaintPatternsVector(builder,
-                    ArrayUtils.toPrimitive(patternArrayList.toArray(new Integer[patternArrayList.size()])));
-            int ruinLocations = FlatHelpers.createVecTable(builder, ruinXsList, ruinYsList);
+            //TODO: need to fix this stuff
+            // int paintArrayInt = battlecode.schema.GameMap.createPaintVector(builder,
+            //         ArrayUtils.toPrimitive(paintArrayList.toArray(new Byte[paintArrayList.size()])));
+            //         ArrayUtils.toPrimitive(patternArrayList.toArray(new Integer[patternArrayList.size()])));
+            // int ruinLocations = FlatHelpers.createVecTable(builder, ruinXsList, ruinYsList);
 
             int spawnActionVectorOffset = createSpawnActionsVector(builder, bodyIDs, bodyLocsXs, bodyLocsYs,
                     bodyTeamIDs, bodyTypes);

@@ -107,10 +107,16 @@ public class GameConstants {
     /** The base cheese cost for spawning a rat */
     public static final int BUILD_ROBOT_BASE_COST = 4;
 
-    /** The amount by which the cost to spawn a rat increases by for every NUM_ROBOTS_FOR_COST_INCREASE allied rats */
+    /**
+     * The amount by which the cost to spawn a rat increases by for every
+     * NUM_ROBOTS_FOR_COST_INCREASE allied rats
+     */
     public static final int BUILD_ROBOT_COST_INCREASE = 4;
 
-    /** The number of allied rats needed to increase the base cost of a rat by BUILD_ROBOT_COST_INCREASE */
+    /**
+     * The number of allied rats needed to increase the base cost of a rat by
+     * BUILD_ROBOT_COST_INCREASE
+     */
     public static final int NUM_ROBOTS_FOR_COST_INCREASE = 4;
 
     /** The maximum distance from a robot for building traps or dirt */
@@ -137,16 +143,33 @@ public class GameConstants {
     /** The damage a thrown rat takes upon hitting the ground or a target */
     public static final int THROW_DAMAGE = 20;
 
-    /** The damage a thrown rat takes per tile it impacts early (i.e. rats that hit a wall after 1 turn take 45 damage) */
+    /**
+     * The damage a thrown rat takes per tile it impacts early (i.e. rats that hit a
+     * wall after 1 turn take 45 damage)
+     */
     public static final int THROW_DAMAGE_PER_TURN = 5;
 
-    /**  The damage a robot takes after being bitten by a rat */
+    /** The damage a robot takes after being bitten by a rat */
     public static final int RAT_BITE_DAMAGE = 2;
-    
+
     /** The damage a robot takes after being scratched by a cat */
     public static final int CAT_SCRATCH_DAMAGE = 50;
 
-    /** The minimum gap between an enemy robot's health and our own before we can grab it from all angles */
+    /** The distance squared a cat can pounce to */
+    public static final int CAT_POUNCE_MAX_DISTANCE_SQUARED = 9;
+
+    /**
+     * Percent damage a rat takes when a cat pounces to an adjacent location (eg. 50
+     * = 50% damage)
+     */
+    public static final int CAT_POUNCE_ADJACENT_DAMAGE_PERCENT = 50;
+
+    public static final int CAT_DIG_COOLDOWN = 30;
+
+    /**
+     * The minimum gap between an enemy robot's health and our own before we can
+     * grab it from all angles
+     */
     public static final int HEALTH_GRAB_THRESHOLD = 0;
 
     /** The area effected by the cat's attack. */
@@ -176,28 +199,39 @@ public class GameConstants {
     /**
      * The amount added to the movement cooldown counter when a king moves
      */
-     public static final int RAT_KING_MOVEMENT_COOLDOWN = 100; // TODO need to specify!
+    public static final int RAT_KING_MOVEMENT_COOLDOWN = 100; // TODO need to specify!
 
     /**
      * The amount added to the movement cooldown counter when a king moves
      */
-     public static final int DRAGGING_MOVEMENT_COOLDOWN = 15; // TODO need to specify!
+    public static final int DRAGGING_MOVEMENT_COOLDOWN = 15; // TODO need to specify!
 
     /**
      * The amount added to the action cooldown counter after a king builds a robot
      */
     public static final int BUILD_ROBOT_COOLDOWN = 10;
 
-    /** The amount added to the action cooldown counter after dropping/transferring cheese */
+    /**
+     * The amount added to the action cooldown counter after dropping/transferring
+     * cheese
+     */
     public static final int CHEESE_TRANSFER_COOLDOWN = 10;
 
-    /** The amount added to the action cooldown counter after digging out a tile of dirt */
+    /**
+     * The amount added to the action cooldown counter after digging out a tile of
+     * dirt
+     */
     public static final int DIG_COOLDOWN = 25; // TODO need to specify!
 
-    /** The amount added to the action cooldown counter after building a tile of dirt */
+    /**
+     * The amount added to the action cooldown counter after building a tile of dirt
+     */
     public static final int BUILD_COOLDOWN = 35; // TODO need to specify!
 
-    /** The total time a rat can travel for while thrown (rats are stunned while thrown) */
+    /**
+     * The total time a rat can travel for while thrown (rats are stunned while
+     * thrown)
+     */
     public static final int THROW_DURATION = 40;
 
     /** The total time a rat is stunned after hitting the ground or a target */
