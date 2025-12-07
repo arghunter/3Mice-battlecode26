@@ -23,6 +23,8 @@ type SchemaPacket = {
     wallsOffset: number
     dirtOffset: number
     cheeseMinesOffset: number
+    catWaypointIdsOffset: number
+    catWaypointVecsOffset: number
 }
 
 type ResourcePatternData = {
@@ -300,11 +302,21 @@ export class CurrentMap {
             Array.from(this.staticMap.initialDirt).map((x) => !!x)
         )
         const cheeseMinesOffset = packVecTable(builder, this.staticMap.cheeseMines)
+        const catWaypointIdsOffset = schema.GameMap.createCatWaypointIdsVector(
+            builder,
+            Array.from(this.staticMap.catWaypoints.keys())
+        )
+        const catWaypointVecsOffsets = Array.from(this.staticMap.catWaypoints.values()).map((vecs) =>
+            packVecTable(builder, vecs)
+        )
+        const catWaypointVecsOffset = schema.GameMap.createCatWaypointVecsVector(builder, catWaypointVecsOffsets)
 
         return {
             wallsOffset,
             dirtOffset,
-            cheeseMinesOffset
+            cheeseMinesOffset,
+            catWaypointIdsOffset,
+            catWaypointVecsOffset
         }
     }
 
