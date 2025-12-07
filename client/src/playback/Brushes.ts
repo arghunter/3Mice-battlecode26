@@ -524,8 +524,10 @@ export class CatBrush extends SymmetricMapEditorBrush<StaticMap> {
 
             const team = body.team
             this.bodies.removeBody(body.id)
+            const waypoints = this.map.catWaypoints.get(body.id)
+            this.map.catWaypoints.delete(body.id)
 
-            return team
+            return { team, waypoints }
         }
 
         if (isCat) {
@@ -534,9 +536,14 @@ export class CatBrush extends SymmetricMapEditorBrush<StaticMap> {
             if (id) return () => this.bodies.removeBody(id)
             return null
         } else {
-            const team = remove(x, y)
+            const { team, waypoints } = remove(x, y)!
             if (!team) return null
-            return () => add(x, y, team)
+            return () => {
+                add(x, y, team)
+                if (waypoints) {
+                    this.map.catWaypoints.set(this.bodies.getBodyAtLocation(x, y)!.id, waypoints)
+                }
+            }
         }
     }
 }
