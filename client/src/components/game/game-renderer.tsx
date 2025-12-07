@@ -23,12 +23,14 @@ export const GameRendererPanel: React.FC = () => {
     const { selectedBodyID, prevSelectedBodyIDs, focusedBodyIDs } = GameRenderer.useCanvasClickEvents()
     const { hoveredTile } = GameRenderer.useCanvasHoverEvents()
     const { shiftKeyDown } = GameRenderer.useShiftKeyEvents()
-    const prevSelectedBodies = prevSelectedBodyIDs !== undefined ? prevSelectedBodyIDs.map(id => round?.bodies.bodies.get(id)) : undefined
-    const focusedBodies = focusedBodyIDs !== undefined ? focusedBodyIDs.map(id => round?.bodies.bodies.get(id)) : undefined
+    const prevSelectedBodies =
+        prevSelectedBodyIDs !== undefined ? prevSelectedBodyIDs.map((id) => round?.bodies.bodies.get(id)) : undefined
+    const focusedBodies =
+        focusedBodyIDs !== undefined ? focusedBodyIDs.map((id) => round?.bodies.bodies.get(id)) : undefined
     const selectedBody = selectedBodyID !== undefined ? round?.bodies.bodies.get(selectedBodyID) : undefined
 
-    if(selectedBody !== undefined && !prevSelectedBodies?.includes(selectedBody)){
-        prevSelectedBodies?.push(selectedBody);
+    if (selectedBody !== undefined && !prevSelectedBodies?.includes(selectedBody)) {
+        prevSelectedBodies?.push(selectedBody)
     }
 
     const hoveredBody = hoveredTile ? round?.bodies.getBodyAtLocation(hoveredTile.x, hoveredTile.y) : undefined
@@ -41,36 +43,33 @@ export const GameRendererPanel: React.FC = () => {
               : []
     ).map((v, i) => <p key={i}>{v}</p>)
 
-    const draggableContent = selectedBody
-        ? selectedBody.onHoverInfo().map((v, i) => <p key={i}>{v}</p>)
-        : undefined
+    const draggableContent = selectedBody ? selectedBody.onHoverInfo().map((v, i) => <p key={i}>{v}</p>) : undefined
 
-    
     const draggableContentMulti = prevSelectedBodies
         ? prevSelectedBodies.map((v, i) => {
-            const hoverInfo = v?.onHoverInfo() || [];
-            const focused = !!focusedBodies?.includes(v)
-            const isLast = i === prevSelectedBodies.length-1;
+              const hoverInfo = v?.onHoverInfo() || []
+              const focused = !!focusedBodies?.includes(v)
+              const isLast = i === prevSelectedBodies.length - 1
 
-            const handleToggle = (e: React.SyntheticEvent<HTMLDetailsElement>) => {
-                const isOpen = (e.target as HTMLDetailsElement).open
-                if(isOpen){
-                    GameRenderer.focusRobot(v?.id)
-                } else {
-                    GameRenderer.unfocusRobot(v?.id)
-                }
-            }
-            
-            return (
-                <details key={i} className = {isLast ? "" : "mb-2"} open={focused} onToggle={handleToggle}>
-                <summary>{hoverInfo[0]}</summary>
-                {hoverInfo.slice(1).map((va,j) => <p key={j}>{va}</p>)}
-                </details>
-            )
-            })
+              const handleToggle = (e: React.SyntheticEvent<HTMLDetailsElement>) => {
+                  const isOpen = (e.target as HTMLDetailsElement).open
+                  if (isOpen) {
+                      GameRenderer.focusRobot(v?.id)
+                  } else {
+                      GameRenderer.unfocusRobot(v?.id)
+                  }
+              }
+
+              return (
+                  <details key={i} className={isLast ? '' : 'mb-2'} open={focused} onToggle={handleToggle}>
+                      <summary>{hoverInfo[0]}</summary>
+                      {hoverInfo.slice(1).map((va, j) => (
+                          <p key={j}>{va}</p>
+                      ))}
+                  </details>
+              )
+          })
         : undefined
-
-    
 
     const container = wrapperRef.current?.getBoundingClientRect() || { x: 0, y: 0, width: 0, height: 0 }
 
@@ -96,16 +95,19 @@ export const GameRendererPanel: React.FC = () => {
                             content={floatingTooltipContent}
                         />
                     )}
-                    
-                    <DraggableTooltip content={prevSelectedBodies !== undefined ? draggableContentMulti : draggableContent} container={container} />
+
+                    <DraggableTooltip
+                        content={prevSelectedBodies !== undefined ? draggableContentMulti : draggableContent}
+                        container={container}
+                    />
                     {appContext.state.config.showMapXY && hoveredTile && (
-                        <div className="absolute right-[5px] top-[5px] bg-black/70 z-20 text-white p-2 rounded-md text-xs opacity-50 pointer-events-none">
+                        <div className="absolute right-[5px] top-[5px] bg-black z-20 text-white p-2 rounded-md text-xs opacity-50 pointer-events-none">
                             {`(X: ${hoveredTile.x}, Y: ${hoveredTile.y})`}
                         </div>
                     )}
 
                     {shiftKeyDown && (
-                        <div className="absolute right-[5px] bottom-[5px] bg-black/70 z-20 text-white p-2 rounded-md text-xs opacity-50 pointer-events-none">
+                        <div className="absolute right-[5px] bottom-[5px] bg-black z-20 text-white p-2 rounded-md text-xs opacity-50 pointer-events-none">
                             {`Multi-Select: ${shiftKeyDown ? 'ON' : 'OFF'}`}
                         </div>
                     )}

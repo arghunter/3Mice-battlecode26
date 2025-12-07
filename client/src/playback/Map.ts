@@ -9,7 +9,7 @@ import { TEAM_COLOR_NAMES } from '../constants'
 import * as renderUtils from '../util/RenderUtil'
 import { getImageIfLoaded } from '../util/ImageLoader'
 import { ClientConfig } from '../client-config'
-import { Colors, currentColors, getTeamColors } from '../colors'
+import { Colors, getTeamColors } from '../colors'
 import Round from './Round'
 
 export type Dimension = {
@@ -149,13 +149,13 @@ export class CurrentMap {
                             this,
                             this.dirt,
                             () => {
-                                ctx.fillStyle = currentColors[Colors.DIRT_COLOR]
+                                ctx.fillStyle = Colors.DIRT_COLOR.get()
                                 ctx.fillRect(coords.x, coords.y, 1.0, 1.0)
                             },
                             { x: true, y: false }
                         )
                     } else {
-                        ctx.fillStyle = currentColors[Colors.DIRT_COLOR]
+                        ctx.fillStyle = Colors.DIRT_COLOR.get()
                         ctx.fillRect(coords.x, coords.y, 1.0, 1.0)
                     }
                 }
@@ -467,7 +467,7 @@ export class StaticMap {
 
     draw(ctx: CanvasRenderingContext2D) {
         // Fill background
-        ctx.fillStyle = currentColors[Colors.TILE_COLOR]
+        ctx.fillStyle = Colors.TILES_COLOR.get()
         ctx.fillRect(
             this.dimension.minCorner.x,
             this.dimension.minCorner.y,
@@ -494,14 +494,14 @@ export class StaticMap {
                 // Render rounded (clipped) wall
                 if (this.walls[schemaIdx]) {
                     renderUtils.renderRounded(ctx, i, j, this, this.walls, () => {
-                        ctx.fillStyle = currentColors[Colors.WALLS_COLOR]
+                        ctx.fillStyle = Colors.WALLS_COLOR.get()
                         ctx.fillRect(coords.x, coords.y, 1.0, 1.0)
                     })
                 }
 
                 if (this.initialDirt[schemaIdx]) {
                     renderUtils.renderRounded(ctx, i, j, this, this.initialDirt, () => {
-                        ctx.fillStyle = currentColors[Colors.DIRT_COLOR]
+                        ctx.fillStyle = Colors.DIRT_COLOR.get()
                         ctx.fillRect(coords.x, coords.y, 1.0, 1.0)
                     })
                 }
