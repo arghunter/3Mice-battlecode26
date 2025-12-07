@@ -36,7 +36,7 @@ export default class Actions {
         }
     }
 
-    tickLifetimes(): void {
+    tickLifetimes(round: Round): void {
         // Tick lifetimes of applied actions
         for (let i = 0; i < this.actions.length; i++) {
             this.actions[i].duration--
@@ -46,6 +46,7 @@ export default class Actions {
 
                 // Otherwise, this is faster
                 this.actions[i] = this.actions[this.actions.length - 1]
+                this.actions[i].finish(round)
                 this.actions.pop()
 
                 i--
@@ -82,6 +83,8 @@ export class Action<T extends ActionUnion> {
     apply(round: Round): void {}
 
     draw(match: Match, ctx: CanvasRenderingContext2D) {}
+
+    finish(round: Round): void {}
 
     copy(): Action<T> {
         // creates a new object using this object's prototype and all its parameters. this is a shallow copy, override this if you need a deep copy
