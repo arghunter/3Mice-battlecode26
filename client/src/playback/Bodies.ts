@@ -218,7 +218,7 @@ export default class Bodies {
 export class Body {
     public robotName: string = ''
     public robotType: schema.RobotType = schema.RobotType.NONE
-    protected imgPath: string = ''
+    public imgPath: string = ''
     protected size: number = 1
     public lastPos: Vector
     private prevSquares: Vector[]
