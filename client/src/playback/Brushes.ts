@@ -473,12 +473,36 @@ export class CatBrush extends SymmetricMapEditorBrush<StaticMap> {
                 const symmetricPoint = this.map.applySymmetry(this.bodies.getById(this.lastSelectedCat)!.pos)
                 currentCat = this.bodies.getBodyAtLocation(symmetricPoint.x, symmetricPoint.y)!.id
             }
+
+            // if undoing a waypoint addition
+            if (fields.isCat.value === false) {
+                if (!this.map.catWaypoints.has(currentCat)) {
+                    return null
+                }
+                this.map.catWaypoints.set(
+                    currentCat,
+                    this.map.catWaypoints.get(currentCat)!.filter((wp) => wp.x !== x || wp.y !== y)
+                )
+                return () => {
+                    this.map.catWaypoints.set(currentCat, this.map.catWaypoints.get(currentCat)!.concat({ x, y }))
+                }
+            }
+
+            // if adding a waypoint
+            if (this.bodies.getBodyAtLocation(x, y)) {
+                return null
+            }
             if (!this.map.catWaypoints.has(currentCat)) {
                 this.map.catWaypoints.set(currentCat, [])
             }
             this.map.catWaypoints.get(currentCat)?.push({ x, y })
 
-            return () => {}
+            return () => {
+                this.map.catWaypoints.set(
+                    currentCat,
+                    this.map.catWaypoints.get(currentCat)!.filter((wp) => wp.x !== x || wp.y !== y)
+                )
+            }
         }
 
         const add = (x: number, y: number, team: Team) => {
@@ -500,8 +524,10 @@ export class CatBrush extends SymmetricMapEditorBrush<StaticMap> {
 
             const team = body.team
             this.bodies.removeBody(body.id)
+            const waypoints = this.map.catWaypoints.get(body.id)
+            this.map.catWaypoints.delete(body.id)
 
-            return team
+            return { team, waypoints }
         }
 
         if (isCat) {
@@ -510,9 +536,14 @@ export class CatBrush extends SymmetricMapEditorBrush<StaticMap> {
             if (id) return () => this.bodies.removeBody(id)
             return null
         } else {
-            const team = remove(x, y)
+            const { team, waypoints } = remove(x, y)!
             if (!team) return null
-            return () => add(x, y, team)
+            return () => {
+                add(x, y, team)
+                if (waypoints) {
+                    this.map.catWaypoints.set(this.bodies.getBodyAtLocation(x, y)!.id, waypoints)
+                }
+            }
         }
     }
 }

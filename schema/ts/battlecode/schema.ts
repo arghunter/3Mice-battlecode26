@@ -46,6 +46,7 @@ export { TimelineMarker } from './schema/timeline-marker';
 export { TrapType } from './schema/trap-type';
 export { TriggerTrap } from './schema/trigger-trap';
 export { Turn } from './schema/turn';
+export { UpgradeToRatKing } from './schema/upgrade-to-rat-king';
 export { Vec } from './schema/vec';
 export { VecTable } from './schema/vec-table';
 export { WinType } from './schema/win-type';

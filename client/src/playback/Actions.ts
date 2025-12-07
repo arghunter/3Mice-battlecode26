@@ -22,7 +22,8 @@ export default class Actions {
             for (let i = 0; i < turn.actionsTypeLength(); i++) {
                 const actionType = turn.actionsType(i)!
                 const action =
-                    unionToAction(actionType, (obj) => turn.actions(i, obj)) ?? assert.fail('Failed to parse action')
+                    unionToAction(actionType, (obj) => turn.actions(i, obj)) ??
+                    assert.fail(`Failed to parse action ${i} with type ${actionType} on round ${round.roundNumber}`)
 
                 // TODO: think about revisiting this
                 const actionClass =
@@ -114,8 +115,9 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             ctx.font = '0.4px Arial'
             // parabolic trajectory.
             const fontX = coords.x + (4 * random1 - 2) * interpolationFactor - 0.5
-            const fontY = coords.y - (2 + 4 * random2) * interpolationFactor + 8 * interpolationFactor * interpolationFactor - 0.5
-            ctx.fillText("nom", fontX, fontY)
+            const fontY =
+                coords.y - (2 + 4 * random2) * interpolationFactor + 8 * interpolationFactor * interpolationFactor - 0.5
+            ctx.fillText('nom', fontX, fontY)
             src.imgPath = 'robots/cat/cat_feed.png' // is reset in `finish`.
             ctx.restore()
         }
@@ -215,7 +217,7 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
                 renderUtils.getRenderCoords(pos.x, pos.y, match.currentRound.map.staticMap.dimension),
                 renderUtils.getRenderCoords(target.x, target.y, match.currentRound.map.staticMap.dimension),
                 {
-                    color: Colors.DIRT_COLOR,
+                    color: Colors.DIRT_COLOR.get(),
                     lineWidth: 0.04,
                     opacity: 0.4
                 }
@@ -227,7 +229,7 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             // remove the dirt
             const pos = round.map.indexToLocation(this.actionData.loc())
 
-            round.map.dirt[this.actionData.loc()] = 0;
+            round.map.dirt[this.actionData.loc()] = 0
         }
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
             // dirt breaking animation
@@ -240,9 +242,8 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             // remove cheese from map and increment body cheese count
             const body = round.bodies.getById(this.robotId)
             const pos = round.map.indexToLocation(this.actionData.loc())
-            
-            const amt = round.map.cheeseData[this.actionData.loc()]
 
+            const amt = round.map.cheeseData[this.actionData.loc()]
         }
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
             // cheese pickup animation
@@ -258,7 +259,12 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             const pos = round.map.indexToLocation(this.actionData.loc())
             const amount = this.actionData.amount()
 
-            round.map.cheeseData[this.actionData.loc()] = amount;
+            round.map.cheeseData[this.actionData.loc()] = amount
+        }
+    },
+    [schema.Action.CheeseTransfer]: class CheeseTransferAction extends Action<schema.CheeseTransfer> {
+        apply(round: Round): void {
+            // transfer cheese between bots
         }
     },
     [schema.Action.CatScratch]: class CatScratchAction extends Action<schema.CatScratch> {
@@ -302,7 +308,7 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             const pos = round.map.indexToLocation(this.actionData.loc())
             const teamId = body.team.id // there is also the `team` attribute of the action, but it seems to be unnecessary.
 
-            round.map.trapData[this.actionData.loc()] = 1+body.team.id; // 1 for team 0, 2 for team 1
+            round.map.trapData[this.actionData.loc()] = 1 + body.team.id // 1 for team 0, 2 for team 1
         }
     },
     [schema.Action.TriggerTrap]: class TriggerTrapAction extends Action<schema.TriggerTrap> {
@@ -312,7 +318,7 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             const pos = round.map.indexToLocation(this.actionData.loc())
             const teamId = body.team.id // there is also the `team` attribute of the action, but it seems to be unnecessary.
 
-            round.map.trapData[this.actionData.loc()] = 0; // remove trap
+            round.map.trapData[this.actionData.loc()] = 0 // remove trap
         }
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
             // trap triggering animation
@@ -325,12 +331,21 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             ctx.globalAlpha = 0.3
             ctx.fillStyle = body.team.color
             ctx.beginPath()
-            ctx.arc(coords.x, coords.y-.25, .5, Math.PI, (1+.5*match.getInterpolationFactor())*Math.PI)
-            ctx.arc(coords.x, coords.y-.25, .5, 0, .5*match.getInterpolationFactor()*Math.PI, true)
+            ctx.arc(coords.x, coords.y - 0.25, 0.5, Math.PI, (1 + 0.5 * match.getInterpolationFactor()) * Math.PI)
+            ctx.arc(coords.x, coords.y - 0.25, 0.5, 0, 0.5 * match.getInterpolationFactor() * Math.PI, true)
             ctx.fill()
             ctx.stroke()
             ctx.globalAlpha = 1
         }
+    },
+    [schema.Action.ThrowRat]: class ThrowRatAction extends Action<schema.ThrowRat> {
+        // TODO
+    },
+    [schema.Action.UpgradeToRatKing]: class UpgradeToRatKingAction extends Action<schema.UpgradeToRatKing> {
+        // TODO
+    },
+    [schema.Action.RatSqueak]: class RatSqueakAction extends Action<schema.RatSqueak> {
+        // TODO
     },
     [schema.Action.DamageAction]: class DamageAction extends Action<schema.DamageAction> {
         apply(round: Round): void {

@@ -103,6 +103,11 @@ struct ThrowRat {
     loc: ushort;
 }
 
+/// Upgrade a 3x3 area of rats into a rat king
+struct UpgradeToRatKing {
+    /// Placeholder data bc the struct cant be empty
+    phantom: ushort;
+}
 
 /// Rat Collision
 struct RatCollision {
@@ -239,6 +244,7 @@ union Action {
     PlaceTrap,
     TriggerTrap,
     ThrowRat,
+    UpgradeToRatKing,
     RatSqueak,
     DamageAction,
     SpawnAction,
