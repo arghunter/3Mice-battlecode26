@@ -1,5 +1,6 @@
 package battlecode.util;
 
+import battlecode.common.TrapType;
 import battlecode.common.UnitType;
 import battlecode.schema.VecTable;
 import battlecode.schema.WinType;
@@ -16,59 +17,57 @@ import gnu.trove.TIntArrayList;
 import java.util.List;
 import java.util.function.ObjIntConsumer;
 
+// TODO; update as necessary for whatever's need with GameMaker stuff
+
 /**
  * Misc. helper functions for working with flatbuffers.
  *
  * @author james
  */
 public class FlatHelpers {
+    public static byte getSchemaTrapTypeFromTrapType(TrapType type) {
+        switch (type) {
+            case RAT_TRAP:
+                return battlecode.schema.TrapType.RAT_TRAP;
+            case CAT_TRAP:
+                return battlecode.schema.TrapType.CAT_TRAP;
+            default:
+                throw new RuntimeException("No schema trap type for " + type);
+        }
+    }
 
-    //assumes all robots are level 1 (can change levels manually if needed)
-    public static UnitType getUnitTypeFromRobotType(byte b){
-        switch (b){
+    public static TrapType getTrapTypeFromSchemaTrapType(byte b) {
+        switch (b) {
+            case battlecode.schema.TrapType.RAT_TRAP:
+                return TrapType.RAT_TRAP;
+            case battlecode.schema.TrapType.CAT_TRAP:
+                return TrapType.CAT_TRAP;
+            default:
+                throw new RuntimeException("No trap type for " + b);
+        }
+    }
+
+    public static UnitType getUnitTypeFromRobotType(byte b) {
+        switch (b) {
             case 1:
-                return UnitType.LEVEL_ONE_PAINT_TOWER;
+                return UnitType.RAT;
             case 2:
-                return UnitType.LEVEL_ONE_MONEY_TOWER;
+                return UnitType.RAT_KING;
             case 3:
-                return UnitType.LEVEL_ONE_DEFENSE_TOWER;
-            case 4:
-                return UnitType.SOLDIER;
-            case 5:
-                return UnitType.SPLASHER;
-            case 6:
-                return UnitType.MOPPER;
+                return UnitType.CAT;
             default:
                 throw new RuntimeException("No unit type for " + b);
         }
     }
 
-    public static byte getRobotTypeFromUnitType(UnitType type){
-        switch(type) {
-            case LEVEL_ONE_PAINT_TOWER:
+    public static byte getRobotTypeFromUnitType(UnitType type) {
+        switch (type) {
+            case RAT:
                 return 1;
-            case LEVEL_TWO_PAINT_TOWER:
-                return 1;
-            case LEVEL_THREE_PAINT_TOWER:
-                return 1;
-            case LEVEL_ONE_MONEY_TOWER:
+            case RAT_KING:
                 return 2;
-            case LEVEL_TWO_MONEY_TOWER:
-                return 2;
-            case LEVEL_THREE_MONEY_TOWER:
-                return 2;
-            case LEVEL_ONE_DEFENSE_TOWER:
+            case CAT:
                 return 3;
-            case LEVEL_TWO_DEFENSE_TOWER:
-                return 3;
-            case LEVEL_THREE_DEFENSE_TOWER:
-                return 3;
-            case SOLDIER:
-                return 4;
-            case SPLASHER:
-                return 5;
-            case MOPPER:
-                return 6;
             default:
                 throw new RuntimeException("Cannot find byte encoding for " + type);
         }
@@ -76,20 +75,16 @@ public class FlatHelpers {
 
     public static byte getWinTypeFromDominationFactor(DominationFactor factor) {
         switch (factor) {
-            case PAINT_ENOUGH_AREA:
-                return WinType.MAJORITY_PAINTED;
-            case DESTROY_ALL_UNITS:
-                return WinType.ALL_UNITS_DESTROYED;
-            case MORE_SQUARES_PAINTED:
-                return WinType.AREA_PAINTED;
-            case MORE_TOWERS_ALIVE:
-                return WinType.MORE_TOWERS;
-            case MORE_MONEY:
-                return WinType.MORE_MONEY;
-            case MORE_PAINT_IN_UNITS:
-                return WinType.MORE_STORED_PAINT;
+            case KILL_ALL_RAT_KINGS_BACKSTAB:
+                return WinType.BACKSTAB_RATKING_DESTROYED;
+            case KILL_ALL_RAT_KINGS_COOPERATION:
+                return WinType.RATKING_DESTROYED;
+            case MORE_POINTS:
+                return WinType.MORE_POINTS;
             case MORE_ROBOTS_ALIVE:
                 return WinType.MORE_ROBOTS;
+            case MORE_CHEESE:
+                return WinType.MORE_CHEESE;
             case WON_BY_DUBIOUS_REASONS:
                 return WinType.COIN_FLIP;
             case RESIGNATION:
@@ -190,7 +185,7 @@ public class FlatHelpers {
         return VecTable.createVecTable(builder, xsP, ysP);
     }
 
-    public static int RGBtoInt(int red, int green, int blue){
+    public static int RGBtoInt(int red, int green, int blue) {
         return (red << 16) + (green << 8) + blue;
     }
 }

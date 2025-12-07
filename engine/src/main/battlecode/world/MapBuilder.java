@@ -19,18 +19,11 @@ public class MapBuilder {
     public MapLocation origin;
     public int seed;
     private MapSymmetry symmetry;
-    //TODO; clean up this very outdated file lol
     private boolean[] wallArray;
-    private boolean[] damArray;
-    private boolean[] waterArray;
-    private boolean[] cloudArray;
-    private int[] currentArray;
-    private int[] islandArray;
-    private int[] resourceArray;
-    private int[] spawnZoneArray;
-    private int[] patternArray = new int[4];
-    private boolean[] ruinArray;
-    private byte[] paintArray;
+    private boolean[] dirtArray;
+    private boolean[] cheeseMineArray;
+    private int[] cheeseArray;
+    private ArrayList<int[]> catWaypoints;
 
     private int idCounter;
 
@@ -54,15 +47,10 @@ public class MapBuilder {
         int numSquares = width * height;
 
         this.wallArray = new boolean[numSquares];
-        this.waterArray = new boolean[numSquares];
-        this.damArray = new boolean[numSquares];
-        this.cloudArray = new boolean[numSquares];
-        this.currentArray = new int[numSquares];
-        this.islandArray = new int[numSquares];
-        this.resourceArray = new int[numSquares];
-        this.spawnZoneArray = new int[numSquares];
-        this.ruinArray = new boolean[numSquares];
-        this.paintArray = new byte[numSquares];
+        this.dirtArray = new boolean[numSquares];
+        this.cheeseMineArray = new boolean[numSquares];
+        this.cheeseArray = new int[numSquares];
+        this.catWaypoints = new ArrayList<int[]>();
     }
 
     // ********************
@@ -81,23 +69,6 @@ public class MapBuilder {
 
     private int locationToIndex(MapLocation loc) {
         return loc.x + loc.y * width;
-    }
-
-    public void addTower(int id, Team team, MapLocation loc) {
-        // check if something already exists here, if so shout
-        for (RobotInfo r : bodies) {
-            if (r.location.equals(loc)) {
-                throw new RuntimeException("CANNOT ADD ROBOT TO SAME LOCATION AS OTHER ROBOT");
-            }
-        }
-        bodies.add(new RobotInfo(
-                id,
-                team,
-                UnitType.LEVEL_ONE_PAINT_TOWER,
-                UnitType.LEVEL_ONE_PAINT_TOWER.health,
-                loc,
-                500
-        ));
     }
 
     // public void setWall(int x, int y, boolean value) {
@@ -206,7 +177,9 @@ public class MapBuilder {
     // ********************
 
     public LiveMap build() {
-        return new LiveMap(width, height, origin, seed, 2000, name, symmetry, wallArray, paintArray, ruinArray, patternArray, bodies.toArray(new RobotInfo[bodies.size()]));
+        return new LiveMap(width, height, origin, seed, 2000, name, symmetry,
+            wallArray, dirtArray, cheeseMineArray, cheeseArray, catWaypoints,
+            bodies.toArray(new RobotInfo[bodies.size()]));
     }
 
     /**
@@ -250,21 +223,16 @@ public class MapBuilder {
                     MapSymmetry symmetry = possible.get(i);
                     MapLocation symm = new MapLocation(symmetricX(x, symmetry), symmetricY(y, symmetry));
                     int symIdx = locationToIndex(symm.x, symm.y);
+
                     if (wallArray[curIdx] != wallArray[symIdx]) {
                         possible.remove(symmetry);
-                    }
-                    // else if (cloudArray[curIdx] != cloudArray[symIdx]) {
-                    //     possible.remove(symmetry);
-                    // }
-                    // else if (getSymmetricCurrent(currentArray[curIdx]) != currentArray[symIdx]) {
-                    //     possible.remove(symmetry);
-                    // }
-                    // else if (getSymmetricIsland(islandArray[curIdx]) != islandArray[symIdx]) {
-                    //     possible.remove(symmetry);
-                    // }
-                    else if (resourceArray[curIdx] != resourceArray[symIdx]) {
+                    } else if (dirtArray[curIdx] != dirtArray[symIdx]) {
                         possible.remove(symmetry);
-                    }
+                    } else if (cheeseMineArray[curIdx] != cheeseMineArray[symIdx]) {
+                        possible.remove(symmetry);
+                    } else if (cheeseArray[curIdx] != cheeseArray[symIdx]) {
+                        possible.remove(symmetry);
+                    } // TODO add more checks here
                 }
             }
         }

@@ -1,7 +1,5 @@
 package battlecode.common;
 
-import java.util.Map;
-
 /**
  * A RobotController allows contestants to make their robot sense and interact
  * with the game world. When a contestant's <code>RobotPlayer</code> is
@@ -46,25 +44,6 @@ public interface RobotController {
      */
     int getMapHeight();
 
-    /**
-     * Returns the 5x5 resource pattern.
-     * @return a boolean array of arrays, where entry [i][j] is true 
-     * if the i'th row and j'th column of the pattern should use the secondary color
-     * 
-     * @battlecode.doc.costlymethod
-     */
-    boolean[][] getResourcePattern();
-
-    /**
-     * Returns the 5x5 pattern needed to be drawn to build a tower of the specified type.
-     * @param type the type of tower to build. Must be a tower type.
-     * @return a boolean array of arrays, where entry [i][j] is true 
-     * if the i'th row and j'th column of the pattern should use the secondary color
-     * 
-     * @battlecode.doc.costlymethod
-     */
-    boolean[][] getTowerPattern(UnitType type) throws GameActionException;
-
     // *********************************
     // ****** UNIT QUERY METHODS *******
     // *********************************
@@ -106,49 +85,49 @@ public interface RobotController {
     int getHealth();
 
     /**
-     * Returns this robot's current paint amount.
+     * Returns the amount of cheese the robot is currently holding.
      *
-     * @return this robot's current paint amount
-     *
-     * @battlecode.doc.costlymethod
-     */
-    int getPaint();
-
-    /**
-     * Returns the amount of money that this robot's team has.
-     *
-     * @return the amount of money this robot's team has
+     * @return the amount of cheese the robot is currently holding.
      *
      * @battlecode.doc.costlymethod
      */
-    int getMoney();
+    int getRawCheese();
 
     /**
-     * Alias for getMoney
+     * Returns the amount of global cheese available.
      *
-     * @return the amount of money this robot's team has
+     * @return the amount of global cheese available.
      *
      * @battlecode.doc.costlymethod
      */
-    int getChips();
+    public int getGlobalCheese();
 
     /**
-     * Returns what UnitType this robot is. 
+     * Returns the amount of cheese the robot has access to.
+     *
+     * @return the amount of cheese the robot has access to.
+     *
+     * @battlecode.doc.costlymethod
+     */
+    public int getAllCheese();
+
+    /**
+     * Returns the amount of dirt that this robot's team has.
+     * 
+     * @return the amount of dirt this robot's team has
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    int getDirt();
+
+    /**
+     * Returns what UnitType this robot is.
      * 
      * @return the UnitType of this robot
      * 
      * @battlecode.doc.costlymethod
      */
     UnitType getType();
-
-    /**
-     * Returns how many allied towers are currently alive.
-     * 
-     * @return the number of alive allied towers.
-     * 
-     * @battlecode.doc.costlymethod
-     */
-    int getNumberTowers();
 
     // ***********************************
     // ****** GENERAL VISION METHODS *****
@@ -308,7 +287,8 @@ public interface RobotController {
     RobotInfo[] senseNearbyRobots(MapLocation center, int radiusSquared, Team team) throws GameActionException;
 
     /**
-     * Given a senseable location, returns whether that location is passable (a wall).
+     * Given a senseable location, returns whether that location is passable (a
+     * wall).
      * 
      * @param loc the given location
      * @return whether that location is passable
@@ -319,9 +299,9 @@ public interface RobotController {
     boolean sensePassability(MapLocation loc) throws GameActionException;
 
     /**
-     * Senses the map info at a location. MapInfo includes walls, paint, marks,
-     * and ruins
-     *
+     * Senses the map info at a location.
+     * MapInfo includes walls, dirt, cheese mines, and cheese.
+     * 
      * @param loc to sense map at
      * @return MapInfo describing map at location
      * @throws GameActionException if location can not be sensed
@@ -332,7 +312,7 @@ public interface RobotController {
 
     /**
      * Return map info for all senseable locations.
-     * MapInfo includes walls, paint, marks, and ruins.
+     * MapInfo includes walls, dirt, cheese mines, and cheese.
      *
      * @return MapInfo about all locations within vision radius
      *
@@ -345,7 +325,7 @@ public interface RobotController {
      * If radiusSquared is larger than the robot's vision radius, uses the robot's
      * vision radius instead. If -1 is passed, all locations within vision radius
      * are returned.
-     * MapInfo includes walls, paint, marks, and ruins.
+     * MapInfo includes walls, dirt, cheese mines, and cheese.
      *
      * @param radiusSquared the squared radius of all locations to be returned
      * @return MapInfo about all locations within vision radius
@@ -358,7 +338,7 @@ public interface RobotController {
     /**
      * Return map info for all senseable locations within vision radius of a center
      * location.
-     * MapInfo includes walls, paint, marks, and ruins
+     * MapInfo includes walls, dirt, cheese mines, and cheese.
      *
      * @param center the center of the search area
      * @return MapInfo about all locations within vision radius
@@ -374,7 +354,7 @@ public interface RobotController {
      * If radiusSquared is larger than the robot's vision radius, uses the robot's
      * vision radius instead. If -1 is passed, all locations within vision radius
      * are returned.
-     * MapInfo includes walls, paint, marks, and ruins
+     * MapInfo includes walls, dirt, cheese mines, and cheese.
      *
      * @param center        the center of the search area
      * @param radiusSquared the squared radius of all locations to be returned
@@ -384,20 +364,6 @@ public interface RobotController {
      * @battlecode.doc.costlymethod
      */
     MapInfo[] senseNearbyMapInfos(MapLocation center, int radiusSquared) throws GameActionException;
-
-    /**
-     * Returns the location of all nearby ruins that are visible to the robot.
-     * If radiusSquared is greater than the robot's vision radius, uses the robot's
-     * vision radius instead.
-     * 
-     * @param radiusSquared squared radius of all locations to be returned, -1 for
-     *                      max radius
-     * @return all locations containing ruins
-     * @throws GameActionException if a radius less than -1 is provided
-     * 
-     * @battlecode.doc.costlymethod
-     **/
-    MapLocation[] senseNearbyRuins(int radiusSquared) throws GameActionException;
 
     /**
      * Returns the location adjacent to current location in the given direction.
@@ -410,7 +376,7 @@ public interface RobotController {
     MapLocation adjacentLocation(Direction dir);
 
     /**
-     * Returns a list of all locations within the given radiusSquared of a location.
+     * Returns a list of all locations within the given vision cone of a location.
      * If radiusSquared is larger than the robot's vision radius, uses the robot's
      * vision radius instead.
      *
@@ -481,22 +447,20 @@ public interface RobotController {
     // ***********************************
 
     /**
-     * Checks whether this robot can move one step in the given direction.
+     * Checks whether this robot can move one step in the direction it is facing.
      * Returns false if the robot is not in a mode that can move, if the target
      * location is not on the map, if the target location is occupied, if the target
      * location is impassible, or if there are cooldown turns remaining.
      *
-     * @param dir the direction to move in
      * @return true if it is possible to call <code>move</code> without an exception
      *
      * @battlecode.doc.costlymethod
      */
-    boolean canMove(Direction dir);
+    boolean canMoveForward();
 
     /**
-     * Moves one step in the given direction.
+     * Moves one step in the direction the robot is facing.
      *
-     * @param dir the direction to move in
      * @throws GameActionException if the robot cannot move one step in this
      *                             direction, such as cooldown being too high, the
      *                             target location being
@@ -506,199 +470,176 @@ public interface RobotController {
      *
      * @battlecode.doc.costlymethod
      */
-    void move(Direction dir) throws GameActionException;
+    void moveForward() throws GameActionException;
+
+    /**
+     * Checks whether this robot can turn a certain number of 45 degree steps clockwise.
+     * @param steps 
+     * @return
+     */
+    boolean canTurnCW(int steps);
+
+    /**
+     * Turns a certain number of 45 degree steps clockwise.
+     * @param steps
+     * @throws GameActionException
+     */
+    void turnCW(int steps) throws GameActionException;
+
+    /**
+     * Checks whether this robot can turn a certain number of 45 degree steps counter-clockwise.
+     * @param steps 
+     * @return
+     */
+    boolean canTurnCCW(int steps);
+
+    /**
+     * Turns a certain number of 45 degree steps counter-clockwise.
+     * @param steps
+     * @throws GameActionException
+     */
+    void turnCCW(int steps) throws GameActionException;
 
     // ***********************************
     // *********** BUILDING **************
     // ***********************************
 
     /**
-     * Checks if a tower can spawn a robot at the given location.
-     * Robots can spawn within a circle of radius of sqrt(4) of the tower.
+     * Returns the current cheese cost for an allied rat king to spawn a rat.
      * 
-     * @param type the type of robot to spawn
+     * @return the amount of cheese that would be needed to spawn another rat
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    int getCurrentRatCost();
+
+    /**
+     * Checks if a rat king can spawn a robot at the given location.
+     * Robots can spawn within a circle of radius of sqrt(4) of the rat king.
+     * 
      * @param loc  the location to spawn the robot at
      * @return true if robot can be built at loc
      * 
      * @battlecode.doc.costlymethod
      */
-    boolean canBuildRobot(UnitType type, MapLocation loc);
+    boolean canBuildRobot(MapLocation loc);
 
     /**
      * Spawns a robot at the given location.
-     * Robots can spawn within a circle of radius of sqrt(4) of the tower.
+     * Robots can spawn within a circle of radius of sqrt(4) of the rat king.
      * 
-     * @param type the type of robot to spawn
      * @param loc  the location to spawn the robot at
      * 
      * @battlecode.doc.costlymethod
      */
-    void buildRobot(UnitType type, MapLocation loc) throws GameActionException;
+    void buildRobot(MapLocation loc) throws GameActionException;
 
     /**
-     * Checks if the location can be marked.
+     * Tests whether this robot can place dirt at the given location.
      * 
-     * @param loc the location to mark
+     * @param loc
+     * @throws GameActionException
      * 
      * @battlecode.doc.costlymethod
      */
-    boolean canMark(MapLocation loc);
+    public boolean canPlaceDirt(MapLocation loc);
 
     /**
-     * Adds a mark at the given location.
+     * Places dirt at the given location.
      * 
-     * @param loc the location to mark
-     * @param secondary whether the secondary color should be used
+     * @param loc the location to place the dirt
      * 
      * @battlecode.doc.costlymethod
      */
-    void mark(MapLocation loc, boolean secondary) throws GameActionException;
+    void placeDirt(MapLocation loc) throws GameActionException;
 
-    /**
-     * Checks if a mark at the location can be removed.
+     /**
+     * Tests whether this robot can place dirt at the given location.
      * 
-     * @param loc the location that has the mark
+     * @param loc
+     * @throws GameActionException
      * 
      * @battlecode.doc.costlymethod
      */
-    boolean canRemoveMark(MapLocation loc);
+    public boolean canRemoveDirt(MapLocation loc);
 
     /**
-     * Removes the mark at the given location.
+     * Removes dirt from the given location.
      * 
-     * @param loc the location that has the mark
+     * @param loc the location to remove dirt from
      * 
      * @battlecode.doc.costlymethod
      */
-    void removeMark(MapLocation loc) throws GameActionException;
+    void removeDirt(MapLocation loc) throws GameActionException;
 
     /**
-     * Checks if the robot can build a tower by marking a 5x5 pattern centered at
-     * the given location.
-     * This requires there to be a ruin at the location.
-     * 
-     * @param type which tower pattern type should be used
-     * @param loc  the center of the 5x5 pattern
-     * @return true if a tower pattern can be marked at loc
+     * Tests whether this robot can place a rat trap at the given location.
+     * @param loc
      * 
      * @battlecode.doc.costlymethod
      */
-    boolean canMarkTowerPattern(UnitType type, MapLocation loc);
+    public boolean canPlaceRatTrap(MapLocation loc);
 
     /**
-     * Builds a tower by marking a 5x5 pattern centered at the given location.
-     * This requires there to be a ruin at the location.
-     * 
-     * @param type the type of tower to mark the pattern for
-     * @param loc  the center of the 5x5 pattern
+     * Places a rat trap at the given location.
+     * @param loc
      * 
      * @battlecode.doc.costlymethod
      */
-    void markTowerPattern(UnitType type, MapLocation loc) throws GameActionException;
+    public void placeRatTrap(MapLocation loc) throws GameActionException;
 
     /**
-     * Checks if a tower can be upgraded by verifying conditions on the location, team, 
-     * tower level, and cost.
-     * 
-     * @param loc the location to upgrade the tower at
+     * Tests whether this robot can remove a rat trap at the given location.
+     * @param loc
+     * @throws GameActionException
      * 
      * @battlecode.doc.costlymethod
      */
-    boolean canUpgradeTower(MapLocation loc);
+    public boolean canRemoveRatTrap(MapLocation loc);
 
     /**
-     * Upgrades a tower if possible; subtracts the corresponding amount of money from the team.
-     * 
-     * @param loc the location to upgrade the tower at
+     * Removes the rat trap at the given location.
+     * @param loc
+     * @throws GameActionException
      * 
      * @battlecode.doc.costlymethod
      */
-    void upgradeTower(MapLocation loc) throws GameActionException;
+    public void removeRatTrap(MapLocation loc) throws GameActionException;
 
     /**
-     * Checks if the robot can mark a 5x5 special resource pattern centered at the
-     * given location.
-     * 
-     * @param loc the center of the resource pattern
-     * @return true if an SRP can be marked at loc
-     * 
-     * @battlecode.doc.costlymethod
+     * Tests whether this robot can place a cat trap at the given location.
+     * @param loc
      */
-    boolean canMarkResourcePattern(MapLocation loc);
+    public boolean canPlaceCatTrap(MapLocation loc);
 
     /**
-     * Marks a 5x5 special resource pattern centered at the given location.
-     * 
-     * @param loc the center of the resource pattern
-     * 
-     * @battlecode.doc.costlymethod
+     * Places a cat trap at the given location.
+     * @param loc
      */
-    void markResourcePattern(MapLocation loc) throws GameActionException;
+    public void placeCatTrap(MapLocation loc) throws GameActionException;
 
     /**
-     * Checks if the robot can build a tower at the given location.
-     * This requires there to be a ruin at the location.
-     * This also requires the 5x5 region to be painted correctly.
-     * 
-     * @param type the type of tower to build
-     * @param loc  the location to build at
-     * @return true if tower can be built at loc
-     * 
-     * @battlecode.doc.costlymethod
+     * Tests whether this robot can remove a cat trap at the given location.
+     * @param loc
+     * @throws GameActionException
      */
-    boolean canCompleteTowerPattern(UnitType type, MapLocation loc);
+    public boolean canRemoveCatTrap(MapLocation loc);
 
     /**
-     * Builds a tower at the given location.
-     * This requires there to be a ruin at the location.
-     * This also requires the 5x5 region to be painted correctly.
-     * 
-     * @param type the type of tower to build
-     * @param loc  the location to build at
-     * 
-     * @battlecode.doc.costlymethod
+     * Removes the cat trap at the given location.
+     * @param loc
+     * @throws GameActionException
      */
-    void completeTowerPattern(UnitType type, MapLocation loc) throws GameActionException;
-
-    /**
-     * Checks if the robot can complete a 5x5 special resource pattern centered at the
-     * given location. This requires the 5x5 region to be painted correctly.
-     * 
-     * @param loc the center of the resource pattern
-     * @return true if the SRP can be completed at loc
-     * 
-     * @battlecode.doc.costlymethod
-     */
-    boolean canCompleteResourcePattern(MapLocation loc);
-
-    /**
-     * Completes a 5x5 special resource pattern centered at the given location.
-     * This requires the 5x5 region to be painted correctly.
-     * 
-     * @param loc the center of the resource pattern
-     * 
-     * @battlecode.doc.costlymethod
-     */
-    void completeResourcePattern(MapLocation loc) throws GameActionException;
+    public void removeCatTrap(MapLocation loc) throws GameActionException;
 
     // ****************************
     // ***** ATTACK / HEAL ********
     // ****************************
 
     /**
-     * Tests whether this robot can paint the given location. 
-     * 
-     * @param loc target location to paint
-     * @return true if rc.attack(loc) will paint the given location 
-     * 
-     * @battlecode.doc.costlymethod
-     */
-    boolean canPaint(MapLocation loc);
-
-    /**
      * Tests whether this robot can attack the given location. Types of
      * attacks for specific units determine whether or not towers, other
-     * robots, or empty tiles can be attacked. 
+     * robots, or empty tiles can be attacked.
      *
      * @param loc target location to attack
      * @return whether it is possible to attack the given location
@@ -707,162 +648,133 @@ public interface RobotController {
      */
     boolean canAttack(MapLocation loc);
 
-    /** 
-     * Performs the specific attack for this robot type.
-     *
-     * @param loc the target location to attack (for splashers, the center location)
-     *      Note: for a tower, leaving loc null represents an area attack
-     * @param useSecondaryColor whether or not the attack should use a secondary color
-     * @throws GameActionException if conditions for attacking are not satisfied
-     *
-     * @battlecode.doc.costlymethod
-     */
-    void attack(MapLocation loc, boolean useSecondaryColor) throws GameActionException;
-    
-    /** 
+    // TODO: updaate docstrings from paint related stuff to rat related stuff
+    /**
      * Performs the specific attack for this robot type, defaulting to the
      * primary color
      *
      * @param loc the target location to attack (for splashers, the center location)
-     *      Note: for a tower, leaving loc null represents an area attack
+     *            Note: for a tower, leaving loc null represents an area attack
      * @throws GameActionException if conditions for attacking are not satisfied
      *
      * @battlecode.doc.costlymethod
      */
     void attack(MapLocation loc) throws GameActionException;
 
-    /**
-     * Tests whether this robot (which must be a mopper) can perform
-     * a mop swing in a specific direction
-     *
-     * @param dir the direction in which to mop swing
-     * @return whether it is possible to mop swing in the given direction
-     *
-     * @battlecode.doc.costlymethod
-     */
-    boolean canMopSwing(Direction dir);
-
-    /**
-     * Performs a mop swing in the given direction (only for moppers!)
-     *
-     * @param dir the direction in which to mop swing
-     * @throws GameActionException if conditions for attacking are not satisfied
-     * 
-     * @battlecode.doc.costlymethod
-     */
-    void mopSwing(Direction dir) throws GameActionException;
-
     // ***********************************
     // ****** COMMUNICATION METHODS ******
     // ***********************************
 
     /**
-     * Returns true if the unit can send a message to a specific
-     * location, false otherwise. We can send a message to a location
-     * if it is within a specific distance and connected by paint,
-     * and only if one unit is a robot and the other is a tower.
+     * Sends a message (contained in an int, so 4 bytes) to all locations within squeaking range.
      * 
-     * @param loc the location to send the message to
-     * 
-     * @battlecode.doc.costlymethod
-     */
-    boolean canSendMessage(MapLocation loc);
-
-    /**
-     * Returns true if the unit can send a message to a specific
-     * location, false otherwise. We can send a message to a location
-     * if it is within a specific distance and connected by paint,
-     * and only if one unit is a robot and the other is a tower.
-     * 
-     * @param loc the location to send the message to
-     * @param messageContent the contents of the message.
-     * Does not affect whether or not the message can be sent.
-     * 
-     * @battlecode.doc.costlymethod
-     */
-    boolean canSendMessage(MapLocation loc, int messageContent);
-
-    /**
-     * Sends a message (contained in an int, so 4 bytes) to a specific
-     * unit at a location on the map, if it is possible
-     * 
-     * @param loc the location to send the message to
      * @param messageContent an int representing the content of the
      * message (up to 4 bytes)
-     * @throws GameActionException if conditions for messaging are not 
-     * satisfied
      * 
      * @battlecode.doc.costlymethod
      */
-    void sendMessage(MapLocation loc, int messageContent) throws GameActionException;
+    void squeak(int messageContent);
 
     /**
-     * Returns true if this tower can broadcast a message. You can broadcast a message
-     * if this robot is a tower and the tower has not yet sent the maximum number of messages
-     * this round (broadcasting a message to other towers counts as one message sent, even
-     * if multiple towers receive the message).
-     * @return Whether this robot can broadcast a message
-     */
-    boolean canBroadcastMessage();
-
-    /**
-     * Broadcasts a message to all friendly towers within the broadcasting radius. This works the same
-     * as sendMessage, but it can only be performed by towers and sends the message to all friendly
-     * towers within range simultaneously. The towers need not be connected by paint to receive the message.
-     * @param messageContent The message to broadcast.
-     * @throws GameActionException If the message can't be sent
-     */
-    void broadcastMessage(int messageContent) throws GameActionException;
-
-    /**
-     * Reads all messages sent to this unit within the past 5 rounds if roundNum = -1, or only
-     * messages sent from the specified round otherwise
+     * Reads all squeaks sent to this unit within the past 5 rounds if roundNum = -1, or only
+     * squeaks sent from the specified round otherwise
      * 
-     * @param roundNum the round number to read messages from, or -1 to read all messages in the queue
-     * @return All messages of the specified round, or all messages from the past 5 round.
+     * @param roundNum the round number to read messages from, or -1 to read all
+     *                 messages in the queue
+     * @return All messages of the specified round, or all messages from the past 5
+     *         round.
      * 
      * @battlecode.doc.costlymethod
      */
-    Message[] readMessages(int roundNum);
+    Message[] readSqueaks(int roundNum);
+
+    /**
+     * Writes a value to the shared array at the given index.
+     * This is only allowed for rat kings.
+     * 
+     * @param index the index to write to, between 0 and 63
+     * @param value the value to write in the index (must be between 0 and 1023)
+     * @throws GameActionException if the action is invalid
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    void writeSharedArray(int index, int value) throws GameActionException;
+
+    /**
+     * Reads a value from the shared array at the given index.
+     * All rats and rat kings can read from the shared array.
+     * 
+     * @param index the index to read from, between 0 and 63
+     * @return the value stored at the given index (between 0 and 1023)
+     * @throws GameActionException if the action is invalid
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    int readSharedArray(int index) throws GameActionException;
+
+    /**
+     * Writes a value to the persistent array at the given index.
+     * This is only allowed for rat kings.
+     * 
+     * @param index the index to write to, between 0 and 4
+     * @param value the value to write in the index (must be between 0 and 1023)
+     * @throws GameActionException if the action is invalid
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    void writePersistentArray(int index, int value) throws GameActionException;
+
+    /**
+     * Reads a value from the persistent array at the given index.
+     * All rats and rat kings can read from the persistent array.
+     * 
+     * @param index the index to read from, between 0 and 4
+     * @return the value stored at the given index (between 0 and 1023)
+     * @throws GameActionException if the action is invalid
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    int readPersistentArray(int index) throws GameActionException;
 
     // ***********************************
     // ****** OTHER ACTION METHODS *******
     // ***********************************
 
     /**
-     * Tests whether you can transfer paint to a given robot/tower.
+     * Tests whether you can transfer cheese to a given rat king.
      * 
-     * You can give paint to an allied robot/tower if you are a mopper and can act at the
-     * given location.
-     * You can take paint from allied towers regardless of type, if you can act
-     * at the location. Pass in a negative number to take paint.
+     * You can give cheese to an allied rat king if you are a rat, can act
+     * at the given location, and have enough raw cheese in your local stash.
      * 
-     * @param loc    the location of the robot/tower to transfer paint to
-     * @param amount the amount of paint to transfer. Positive to give paint,
-     *               negative to take paint.
-     * @return true if the robot can transfer paint to a robot/tower at the given
+     * @param loc    the location of the rat king to transfer cheese to
+     * @param amount the amount of cheese to transfer. Positive to give cheese.
+     * @return true if the robot can transfer cheese to a rat king at the given
      *         location
      */
-    boolean canTransferPaint(MapLocation loc, int amount);
+    boolean canTransferCheese(MapLocation loc, int amount);
 
     /**
-     * Transfers paint from the robot's stash to the stash of the allied
-     * robot or tower at loc. Pass in a negative number to take paint, positive
-     * to give paint.
+     * Throws robot in the robot direction
      * 
-     * @param loc    the location of the robot/tower to transfer paint to
-     * @param amount the amount of paint to transfer. Positive to give paint,
-     *               negative to take paint.
-     * @throws GameActionException if the robot is not able to transfer paint to the
+     * @param dir the location 
+     * @battlecode.doc.costlymethod
+     */
+    void throwRat(Direction dir);
+
+    /**
+     * Tests whether the robot can throw a carried robot in the specified direction.
+     * 
+     * @param dir the direction to throw the robot
+     * @throws GameActionException if the robot is not able to transfer cheese to the
      *                             location
      */
-    void transferPaint(MapLocation loc, int amount) throws GameActionException;
+    boolean canThrowRat(Direction dir);
 
     /**
-     * Destroys the robot. 
+     * Destroys the robot.
      *
      * @battlecode.doc.costlymethod
-    **/
+     **/
     void disintegrate();
 
     /**
@@ -912,20 +824,22 @@ public interface RobotController {
      *
      * @battlecode.doc.costlymethod
      */
-    void setIndicatorLine(MapLocation startLoc, MapLocation endLoc, int red, int green, int blue) throws GameActionException;
+    void setIndicatorLine(MapLocation startLoc, MapLocation endLoc, int red, int green, int blue)
+            throws GameActionException;
 
     /**
-     * Adds a marker to the timeline at the current 
+     * Adds a marker to the timeline at the current
      * round for debugging purposes.
      * Only the first
      * {@link GameConstants#TIMELINE_LABEL_MAX_LENGTH} characters are used.
      * 
      * @param label the label for the timeline marker
-     * @param red the red component of the marker's color
+     * @param red   the red component of the marker's color
      * @param green the green component of the marker's color
-     * @param blue the blue component of the marker's color
+     * @param blue  the blue component of the marker's color
      * 
      * @battlecode.doc.costlymethod
      */
     void setTimelineMarker(String label, int red, int green, int blue);
 }
+// TODO: update bytecode costs, particularly for new methods + methods that got renamed from last year

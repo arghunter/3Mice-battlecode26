@@ -8,22 +8,20 @@ public class MapInfo {
 
     private boolean isWall;
 
-    private PaintType paint;
+    private boolean isDirt;
 
-    private PaintType mark;
+    //You can only see traps from your own team
+    private TrapType trap;
 
-    private boolean hasRuin;
+    private boolean hasCheeseMine;
 
-    private boolean isResourcePatternCenter;
-
-    public MapInfo(MapLocation loc, boolean isPassable, boolean isWall, PaintType paint, PaintType mark, boolean hasRuin, boolean isResourcePatternCenter){
+    public MapInfo(MapLocation loc, boolean isPassable, boolean isWall, boolean isDirt, TrapType trap, boolean hasCheeseMine) {
         this.loc = loc;
         this.isPassable = isPassable;
         this.isWall = isWall;
-        this.paint = paint;
-        this.mark = mark;
-        this.hasRuin = hasRuin;
-        this.isResourcePatternCenter = isResourcePatternCenter;
+        this.isDirt = isDirt;
+        this.trap = trap;
+        this.hasCheeseMine = hasCheeseMine;
     }
 
     /**
@@ -49,36 +47,36 @@ public class MapInfo {
     }
 
     /**
-     * Returns if this square has a ruin.
+     * Returns if this square is a wall.
      * 
-     * @return whether this square has a ruin
+     * @return whether this square is a wall
      * 
      * @battlecode.doc.costlymethod
      */
-    public boolean hasRuin() {
-        return hasRuin;
+    public boolean isDirt() {
+        return isDirt;
     }
 
     /**
-     * Returns the paint value of this square
+     * Returns if this square has a cheese mine.
      * 
-     * @return the paint value of this square
+     * @return whether this square has a cheese mine
      * 
      * @battlecode.doc.costlymethod
      */
-    public PaintType getPaint() {
-        return paint;
+    public boolean hasCheeseMine() {
+        return hasCheeseMine;
     }
 
     /**
-     * Returns the mark value of this square
+     * Returns the trap on this square, or TrapType.NONE if there is no trap.
      * 
-     * @return the mark value of this square
+     * @return the trap on this square
      * 
      * @battlecode.doc.costlymethod
      */
-    public PaintType getMark() {
-        return mark;
+    public TrapType getTrap() {
+        return trap;
     }
 
     /**
@@ -92,22 +90,14 @@ public class MapInfo {
         return loc;
     }
 
-    /**
-     * Returns whether this tile is at the center of an ally resource pattern (regardless of whether the pattern is active yet)
-     * 
-     * @return Whether this is a resource pattern center
-     */
-    public boolean isResourcePatternCenter() {
-        return isResourcePatternCenter;
-    }
-
-    public String toString(){
+    public String toString() {
         return "Location{" +
                 "loc=" + loc.toString() +
                 (isWall ? ", wall" : "") +
-                (hasRuin ? ", with ruin" : "") +
-                ", paint=" + paint.toString() +
-                ", mark=" + mark.toString() +
+                (isDirt ? ", dirt" : "") +
+                (hasCheeseMine ? ", with cheese mine" : "") +
+                (isPassable ? ", passable" : ", not passable") +
+                ", trap=" + trap +
                 "}";
     }
 }

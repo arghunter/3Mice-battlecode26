@@ -20,9 +20,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
+// TODO: map serialization and deserialization
 /**
- * This class contains the code for reading a flatbuffer map file and converting it
+ * This class contains the code for reading a flatbuffer map file and converting
+ * it
  * to a proper LiveMap.
  */
 public final class GameMapIO {
@@ -32,9 +33,9 @@ public final class GameMapIO {
     private static final ClassLoader BACKUP_LOADER = GameMapIO.class.getClassLoader();
 
     /**
-     * The file extension for battlecode 2025 match files.
+     * The file extension for battlecode 2026 match files.
      */
-    public static final String MAP_EXTENSION = ".map25";
+    public static final String MAP_EXTENSION = ".map26";
 
     /**
      * The package we check for maps in if they can't be found in the file system.
@@ -47,7 +48,7 @@ public final class GameMapIO {
      * "battlecode.world.resources" is checked as a backup.
      *
      * @param mapName name of map.
-     * @param mapDir directory to load the extra map from; may be null.
+     * @param mapDir  directory to load the extra map from; may be null.
      * @return LiveMap for map
      * @throws IOException if the map fails to load or can't be found.
      */
@@ -58,7 +59,8 @@ public final class GameMapIO {
         if (mapFile.exists()) {
             result = loadMap(new FileInputStream(mapFile), teamsReversed);
         } else {
-            final InputStream backupStream = BACKUP_LOADER.getResourceAsStream(DEFAULT_MAP_PACKAGE + mapName + MAP_EXTENSION);
+            final InputStream backupStream = BACKUP_LOADER
+                    .getResourceAsStream(DEFAULT_MAP_PACKAGE + mapName + MAP_EXTENSION);
             if (backupStream == null) {
                 throw new IOException("Can't load map: " + mapName + " from dir " + mapDir + " or default maps.");
             }
@@ -67,20 +69,18 @@ public final class GameMapIO {
 
         if (!result.getMapName().equals(mapName)) {
             throw new IOException("Invalid map: name (" + result.getMapName()
-                    + ") does not match filename (" + mapName + MAP_EXTENSION + ")"
-            );
+                    + ") does not match filename (" + mapName + MAP_EXTENSION + ")");
         }
 
         return result;
     }
 
     public static LiveMap loadMapAsResource(final ClassLoader loader,
-                                            final String mapPackage,
-                                            final String map, final boolean teamsReversed) throws IOException {
+            final String mapPackage,
+            final String map, final boolean teamsReversed) throws IOException {
         final InputStream mapStream = loader.getResourceAsStream(
-                mapPackage + (mapPackage.endsWith("/")? "" : "/") +
-                map + MAP_EXTENSION
-        );
+                mapPackage + (mapPackage.endsWith("/") ? "" : "/") +
+                        map + MAP_EXTENSION);
 
         if (mapStream == null) {
             throw new IOException("Can't load map: " + map + " from package " + mapPackage);
@@ -90,8 +90,7 @@ public final class GameMapIO {
 
         if (!result.getMapName().equals(map)) {
             throw new IOException("Invalid map: name (" + result.getMapName()
-                    + ") does not match filename (" + map + MAP_EXTENSION + ")"
-            );
+                    + ") does not match filename (" + map + MAP_EXTENSION + ")");
         }
 
         return result;
@@ -112,7 +111,7 @@ public final class GameMapIO {
      * Write a map to a file.
      *
      * @param mapDir the directory to store the map in
-     * @param map the map to write
+     * @param map    the map to write
      * @throws IOException if the write fails somehow
      */
     public static void writeMap(LiveMap map, File mapDir) throws IOException {
@@ -123,7 +122,8 @@ public final class GameMapIO {
 
     /**
      * @param mapDir the directory to check for extra maps. May be null.
-     * @return a set of available map names, including those built-in to battlecode-server.
+     * @return a set of available map names, including those built-in to
+     *         battlecode-server.
      */
     public static List<String> getAvailableMaps(File mapDir) {
         final List<String> result = new ArrayList<>();
@@ -153,8 +153,7 @@ public final class GameMapIO {
                     final String name = ze.getName();
                     if (name.startsWith(DEFAULT_MAP_PACKAGE) && name.endsWith(MAP_EXTENSION)) {
                         result.add(
-                                name.substring(DEFAULT_MAP_PACKAGE.length(), name.length() - MAP_EXTENSION.length())
-                        );
+                                name.substring(DEFAULT_MAP_PACKAGE.length(), name.length() - MAP_EXTENSION.length()));
                     }
                 }
             } else {
@@ -179,7 +178,8 @@ public final class GameMapIO {
     /**
      * Prevent instantiation.
      */
-    private GameMapIO() {}
+    private GameMapIO() {
+    }
 
     /**
      * Conversion from / to flatbuffers.
@@ -193,8 +193,7 @@ public final class GameMapIO {
          */
         public static LiveMap deserialize(byte[] mapBytes, boolean teamsReversed) {
             battlecode.schema.GameMap rawMap = battlecode.schema.GameMap.getRootAsGameMap(
-                    ByteBuffer.wrap(mapBytes)
-            );
+                    ByteBuffer.wrap(mapBytes));
 
             return Serial.deserialize(rawMap, teamsReversed);
         }
@@ -224,28 +223,48 @@ public final class GameMapIO {
         public static LiveMap deserialize(battlecode.schema.GameMap raw, boolean teamsReversed) {
             final int width = (int) (raw.size().x());
             final int height = (int) (raw.size().y());
-            final MapLocation origin = new MapLocation(0,0);
+            final MapLocation origin = new MapLocation(0, 0);
             final MapSymmetry symmetry = MapSymmetry.values()[raw.symmetry()];
             final int seed = raw.randomSeed();
             final int rounds = GameConstants.GAME_MAX_NUMBER_OF_ROUNDS;
             final String mapName = raw.name();
-            int size = width*height;
+            int size = width * height;
             boolean[] wallArray = new boolean[size];
-            boolean[] ruinArray = new boolean[size];
-            byte[] paintArray = new byte[size];
-            int[] patternArray = new int[4];
+            boolean[] dirtArray = new boolean[size];
+            boolean[] cheeseMineArray = new boolean[size];
+            ArrayList<int[]> catWaypoints = new ArrayList<int[]>();
+            int[] cheeseArray = new int[size];
+
             for (int i = 0; i < wallArray.length; i++) {
                 wallArray[i] = raw.walls(i);
-                paintArray[i] = possiblyReversePaint(raw.paint(i), teamsReversed);
+                dirtArray[i] = raw.dirt(i);
+                cheeseArray[i] = 0; // raw.cheese(i);
             }
-            for (int i = 0; i < patternArray.length; i++){
-                patternArray[i] = raw.paintPatterns(i);
+
+            VecTable cheeseMinesTable = raw.cheeseMines();
+
+            for (int i = 0; i < cheeseMinesTable.xsLength(); i++) {
+                int x = cheeseMinesTable.xs(i);
+                int y = cheeseMinesTable.ys(i);
+
+                int idx = x + width * y;
+                cheeseMineArray[idx] = true;
             }
-            battlecode.schema.VecTable ruins = raw.ruins();
-            int num_ruins = ruins.xsLength();
-            for (int i = 0; i < num_ruins; i++){
-                MapLocation cur = new MapLocation(ruins.xs(i), ruins.ys(i));
-                ruinArray[cur.x+cur.y*width] = true;
+
+            int numCats = raw.catWaypointVecsLength();
+
+            for (int i = 0; i < numCats; i++) {
+                VecTable waypointTable = raw.catWaypointVecs(i);
+                int numWaypoints = waypointTable.xsLength();
+                int[] waypoints = new int[numWaypoints];
+
+                for (int j = 0; j < numWaypoints; j++) {
+                    int x = waypointTable.xs(j);
+                    int y = waypointTable.ys(j);
+                    waypoints[j] = x + width * y;
+                }
+
+                catWaypoints.add(waypoints);
             }
 
             ArrayList<RobotInfo> initBodies = new ArrayList<>();
@@ -253,11 +272,11 @@ public final class GameMapIO {
             initInitialBodiesFromSchemaBodyTable(bodyTable, initBodies, teamsReversed);
 
             RobotInfo[] initialBodies = initBodies.toArray(new RobotInfo[initBodies.size()]);
-        
-            return new LiveMap(
-                width, height, origin, seed, rounds, mapName, symmetry, wallArray, paintArray, ruinArray, patternArray, initialBodies);
-        }
 
+            return new LiveMap(
+                    width, height, origin, seed, rounds, mapName, symmetry, wallArray, dirtArray,
+                    cheeseMineArray, cheeseArray, catWaypoints, initialBodies);
+        }
 
         /**
          * Write a map to a builder.
@@ -270,9 +289,9 @@ public final class GameMapIO {
             int name = builder.createString(gameMap.getMapName());
             int randomSeed = gameMap.getSeed();
             boolean[] wallArray = gameMap.getWallArray();
-            byte[] paintArray = gameMap.getPaintArray();
-            boolean[] ruinArray = gameMap.getRuinArray();
-            int[] patternArray = gameMap.getPatternArray();
+            boolean[] dirtArray = gameMap.getDirtArray();
+            boolean[] cheeseMineArray = gameMap.getCheeseMineArray();
+            int[] cheeseArray = gameMap.getCheeseArray();
 
             // Make body tables
             ArrayList<Integer> bodyIDs = new ArrayList<>();
@@ -282,8 +301,9 @@ public final class GameMapIO {
             ArrayList<Integer> bodyLocsYs = new ArrayList<>();
 
             ArrayList<Boolean> wallArrayList = new ArrayList<>();
-            ArrayList<Byte> paintArrayList = new ArrayList<>();
-            ArrayList<Integer> patternArrayList = new ArrayList<>();
+            ArrayList<Boolean> dirtArrayList = new ArrayList<>();
+            ArrayList<Boolean> cheeseMineArrayList = new ArrayList<>();
+            ArrayList<Integer> cheeseArrayList = new ArrayList<>();
 
             ArrayList<Integer> ruinXs = new ArrayList<>();
             ArrayList<Integer> ruinYs = new ArrayList<>();
@@ -294,38 +314,28 @@ public final class GameMapIO {
                 bodyTypes.add(FlatHelpers.getRobotTypeFromUnitType(robot.type));
                 bodyLocsXs.add(robot.location.x);
                 bodyLocsYs.add(robot.location.y);
-                ruinArray[gameMap.locationToIndex(robot.location)] = true;
             }
 
             for (int i = 0; i < gameMap.getWidth() * gameMap.getHeight(); i++) {
                 wallArrayList.add(wallArray[i]);
-                paintArrayList.add(paintArray[i]);
-                if (ruinArray[i]){
-                    MapLocation loc = gameMap.indexToLocation(i);
-                    ruinXs.add(loc.x);
-                    ruinYs.add(loc.y);
-                }
-            }
-            for (int i = 0; i < 4; i++){
-                patternArrayList.add(patternArray[i]);
+                dirtArrayList.add(dirtArray[i]);
+                cheeseMineArrayList.add(cheeseMineArray[i]);
+                cheeseArrayList.add(cheeseArray[i]);
             }
 
-            int[] ruinsXsArray = new int[ruinXs.size()];
-            int[] ruinYsArray = new int[ruinYs.size()];
-            for (int i = 0; i < ruinXs.size(); i++){
-                ruinsXsArray[i] = ruinXs.get(i);
-                ruinYsArray[i] = ruinYs.get(i);
-            }
+            int wallArrayInt = battlecode.schema.GameMap.createWallsVector(builder,
+                    ArrayUtils.toPrimitive(wallArrayList.toArray(new Boolean[wallArrayList.size()])));
+            int dirtArrayInt = battlecode.schema.GameMap.createDirtVector(builder,
+                    ArrayUtils.toPrimitive(dirtArrayList.toArray(new Boolean[dirtArrayList.size()])));
 
-            TIntArrayList ruinXsList = new TIntArrayList(ruinsXsArray);
-            TIntArrayList ruinYsList = new TIntArrayList(ruinYsArray);
+            //TODO: need to fix this stuff
+            // int paintArrayInt = battlecode.schema.GameMap.createPaintVector(builder,
+            //         ArrayUtils.toPrimitive(paintArrayList.toArray(new Byte[paintArrayList.size()])));
+            //         ArrayUtils.toPrimitive(patternArrayList.toArray(new Integer[patternArrayList.size()])));
+            // int ruinLocations = FlatHelpers.createVecTable(builder, ruinXsList, ruinYsList);
 
-            int wallArrayInt = battlecode.schema.GameMap.createWallsVector(builder, ArrayUtils.toPrimitive(wallArrayList.toArray(new Boolean[wallArrayList.size()])));
-            int paintArrayInt = battlecode.schema.GameMap.createPaintVector(builder, ArrayUtils.toPrimitive(paintArrayList.toArray(new Byte[paintArrayList.size()])));
-            int patternArrayInt = battlecode.schema.GameMap.createPaintPatternsVector(builder, ArrayUtils.toPrimitive(patternArrayList.toArray(new Integer[patternArrayList.size()])));
-            int ruinLocations = FlatHelpers.createVecTable(builder, ruinXsList, ruinYsList);
-
-            int spawnActionVectorOffset = createSpawnActionsVector(builder, bodyIDs, bodyLocsXs, bodyLocsYs, bodyTeamIDs, bodyTypes);
+            int spawnActionVectorOffset = createSpawnActionsVector(builder, bodyIDs, bodyLocsXs, bodyLocsYs,
+                    bodyTeamIDs, bodyTypes);
             int initialBodyOffset = InitialBodyTable.createInitialBodyTable(builder, spawnActionVectorOffset);
 
             // Build LiveMap for flatbuffer
@@ -337,10 +347,8 @@ public final class GameMapIO {
             battlecode.schema.GameMap.addSymmetry(builder, gameMap.getSymmetry().ordinal());
             battlecode.schema.GameMap.addRandomSeed(builder, randomSeed);
             battlecode.schema.GameMap.addWalls(builder, wallArrayInt);
-            battlecode.schema.GameMap.addRuins(builder, ruinLocations);
+            battlecode.schema.GameMap.addDirt(builder, dirtArrayInt);
             battlecode.schema.GameMap.addInitialBodies(builder, initialBodyOffset);
-            battlecode.schema.GameMap.addPaint(builder, paintArrayInt);
-            battlecode.schema.GameMap.addPaintPatterns(builder, patternArrayInt);
             return battlecode.schema.GameMap.endGameMap(builder);
         }
 
@@ -348,44 +356,33 @@ public final class GameMapIO {
         // *** HELPER METHODS *********
         // ****************************
 
-        private static void initInitialBodiesFromSchemaBodyTable(InitialBodyTable bodyTable, ArrayList<RobotInfo> initialBodies, boolean teamsReversed) {
-            for (int i = 0; i < bodyTable.spawnActionsLength(); i++){
+        private static void initInitialBodiesFromSchemaBodyTable(InitialBodyTable bodyTable,
+                ArrayList<RobotInfo> initialBodies, boolean teamsReversed) {
+            for (int i = 0; i < bodyTable.spawnActionsLength(); i++) {
                 battlecode.schema.SpawnAction curSpawnAction = bodyTable.spawnActions(i);
                 int curId = curSpawnAction.id();
                 UnitType bodyType = FlatHelpers.getUnitTypeFromRobotType(curSpawnAction.robotType());
                 int bodyX = curSpawnAction.x();
                 int bodyY = curSpawnAction.y();
                 Team bodyTeam = TeamMapping.team(curSpawnAction.team());
-                if (teamsReversed){
+                if (teamsReversed) {
                     bodyTeam = bodyTeam.opponent();
                 }
-                int initialPaint = GameConstants.INITIAL_TOWER_PAINT_AMOUNT;
-                if (bodyType.isRobotType())
-                    initialPaint = (int) Math.round(bodyType.paintCapacity * GameConstants.INITIAL_ROBOT_PAINT_PERCENTAGE / 100.0);
-                initialBodies.add(new RobotInfo(curId, bodyTeam, bodyType, bodyType.health, new MapLocation(bodyX, bodyY), initialPaint));
+                boolean initialCrouching = false;
+                int initialCheese = 0;
+                RobotInfo carryingRobot = null;
+                initialBodies.add(new RobotInfo(curId, bodyTeam, bodyType, bodyType.health, new MapLocation(bodyX, bodyY), initialCheese, carryingRobot, initialCrouching));
             }
         }
 
-        // No color = 0, Team A color 1 = 1, Team A color 2 = 2, Team B color 1 = 3, Team B color 2 = 4
-        private static byte possiblyReversePaint(byte originalPaint, boolean teamsReversed){
-            if (!teamsReversed)
-                return originalPaint;
-            switch (originalPaint){
-                case 1: return 3;
-                case 2: return 4;
-                case 3: return 1;
-                case 4: return 2;
-                default: return originalPaint;
-            }
-        }
-
-        private static int createSpawnActionsVector(FlatBufferBuilder builder, ArrayList<Integer> ids, ArrayList<Integer> xs, ArrayList<Integer> ys, ArrayList<Byte> teams, ArrayList<Byte> types){
+        private static int createSpawnActionsVector(FlatBufferBuilder builder, ArrayList<Integer> ids,
+                ArrayList<Integer> xs, ArrayList<Integer> ys, ArrayList<Byte> teams, ArrayList<Byte> types) {
             InitialBodyTable.startSpawnActionsVector(builder, ids.size());
-            for (int i = 0; i < ids.size(); i++){
+            for (int i = 0; i < ids.size(); i++) {
                 SpawnAction.createSpawnAction(builder, ids.get(i), xs.get(i), ys.get(i), teams.get(i), types.get(i));
             }
             return builder.endVector();
         }
-        
+
     }
 }
