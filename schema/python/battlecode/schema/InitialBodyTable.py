@@ -9,6 +9,7 @@ from ..schema.SpawnAction import SpawnAction
 from typing import Optional
 np = import_numpy()
 
+# A list of initial bodies to be placed on the map.
 class InitialBodyTable(object):
     __slots__ = ['_tab']
 

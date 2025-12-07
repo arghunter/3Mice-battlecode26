@@ -45,38 +45,33 @@ baseHealth():number {
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-basePaint():number {
+maxCheese():number {
   const offset = this.bb!.__offset(this.bb_pos, 12);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-maxPaint():number {
+visionConeRadiusSquared():number {
   const offset = this.bb!.__offset(this.bb_pos, 14);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-actionRadiusSquared():number {
+visionConeAngle():number {
   const offset = this.bb!.__offset(this.bb_pos, 16);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-visionRadiusSquared():number {
+messageRadiusSquared():number {
   const offset = this.bb!.__offset(this.bb_pos, 18);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-messageRadiusSquared():number {
+bytecodeLimit():number {
   const offset = this.bb!.__offset(this.bb_pos, 20);
   return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
 }
 
-bytecodeLimit():number {
-  const offset = this.bb!.__offset(this.bb_pos, 22);
-  return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
-}
-
 static startRobotTypeMetadata(builder:flatbuffers.Builder) {
-  builder.startObject(10);
+  builder.startObject(9);
 }
 
 static addType(builder:flatbuffers.Builder, type:RobotType) {
@@ -95,28 +90,24 @@ static addBaseHealth(builder:flatbuffers.Builder, baseHealth:number) {
   builder.addFieldInt32(3, baseHealth, 0);
 }
 
-static addBasePaint(builder:flatbuffers.Builder, basePaint:number) {
-  builder.addFieldInt32(4, basePaint, 0);
+static addMaxCheese(builder:flatbuffers.Builder, maxCheese:number) {
+  builder.addFieldInt32(4, maxCheese, 0);
 }
 
-static addMaxPaint(builder:flatbuffers.Builder, maxPaint:number) {
-  builder.addFieldInt32(5, maxPaint, 0);
+static addVisionConeRadiusSquared(builder:flatbuffers.Builder, visionConeRadiusSquared:number) {
+  builder.addFieldInt32(5, visionConeRadiusSquared, 0);
 }
 
-static addActionRadiusSquared(builder:flatbuffers.Builder, actionRadiusSquared:number) {
-  builder.addFieldInt32(6, actionRadiusSquared, 0);
-}
-
-static addVisionRadiusSquared(builder:flatbuffers.Builder, visionRadiusSquared:number) {
-  builder.addFieldInt32(7, visionRadiusSquared, 0);
+static addVisionConeAngle(builder:flatbuffers.Builder, visionConeAngle:number) {
+  builder.addFieldInt32(6, visionConeAngle, 0);
 }
 
 static addMessageRadiusSquared(builder:flatbuffers.Builder, messageRadiusSquared:number) {
-  builder.addFieldInt32(8, messageRadiusSquared, 0);
+  builder.addFieldInt32(7, messageRadiusSquared, 0);
 }
 
 static addBytecodeLimit(builder:flatbuffers.Builder, bytecodeLimit:number) {
-  builder.addFieldInt32(9, bytecodeLimit, 0);
+  builder.addFieldInt32(8, bytecodeLimit, 0);
 }
 
 static endRobotTypeMetadata(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -124,16 +115,15 @@ static endRobotTypeMetadata(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 }
 
-static createRobotTypeMetadata(builder:flatbuffers.Builder, type:RobotType, actionCooldown:number, movementCooldown:number, baseHealth:number, basePaint:number, maxPaint:number, actionRadiusSquared:number, visionRadiusSquared:number, messageRadiusSquared:number, bytecodeLimit:number):flatbuffers.Offset {
+static createRobotTypeMetadata(builder:flatbuffers.Builder, type:RobotType, actionCooldown:number, movementCooldown:number, baseHealth:number, maxCheese:number, visionConeRadiusSquared:number, visionConeAngle:number, messageRadiusSquared:number, bytecodeLimit:number):flatbuffers.Offset {
   RobotTypeMetadata.startRobotTypeMetadata(builder);
   RobotTypeMetadata.addType(builder, type);
   RobotTypeMetadata.addActionCooldown(builder, actionCooldown);
   RobotTypeMetadata.addMovementCooldown(builder, movementCooldown);
   RobotTypeMetadata.addBaseHealth(builder, baseHealth);
-  RobotTypeMetadata.addBasePaint(builder, basePaint);
-  RobotTypeMetadata.addMaxPaint(builder, maxPaint);
-  RobotTypeMetadata.addActionRadiusSquared(builder, actionRadiusSquared);
-  RobotTypeMetadata.addVisionRadiusSquared(builder, visionRadiusSquared);
+  RobotTypeMetadata.addMaxCheese(builder, maxCheese);
+  RobotTypeMetadata.addVisionConeRadiusSquared(builder, visionConeRadiusSquared);
+  RobotTypeMetadata.addVisionConeAngle(builder, visionConeAngle);
   RobotTypeMetadata.addMessageRadiusSquared(builder, messageRadiusSquared);
   RobotTypeMetadata.addBytecodeLimit(builder, bytecodeLimit);
   return RobotTypeMetadata.endRobotTypeMetadata(builder);

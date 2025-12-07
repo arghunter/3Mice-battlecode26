@@ -41,74 +41,44 @@ var Round = /** @class */ (function () {
         return offset ? new Int32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
     };
     /**
-     * The total amount of resource this round per team
+     * The total amount of cheese this round per team
      */
-    Round.prototype.teamResourceAmounts = function (index) {
+    Round.prototype.teamCheeseAmounts = function (index) {
         var offset = this.bb.__offset(this.bb_pos, 6);
         return offset ? this.bb.readInt32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
     };
-    Round.prototype.teamResourceAmountsLength = function () {
+    Round.prototype.teamCheeseAmountsLength = function () {
         var offset = this.bb.__offset(this.bb_pos, 6);
         return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
     };
-    Round.prototype.teamResourceAmountsArray = function () {
+    Round.prototype.teamCheeseAmountsArray = function () {
         var offset = this.bb.__offset(this.bb_pos, 6);
-        return offset ? new Int32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
-    };
-    /**
-     * The total paint coverage percent per team, mult by 10 (i.e. 70.5% is 705)
-     */
-    Round.prototype.teamCoverageAmounts = function (index) {
-        var offset = this.bb.__offset(this.bb_pos, 8);
-        return offset ? this.bb.readInt32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
-    };
-    Round.prototype.teamCoverageAmountsLength = function () {
-        var offset = this.bb.__offset(this.bb_pos, 8);
-        return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
-    };
-    Round.prototype.teamCoverageAmountsArray = function () {
-        var offset = this.bb.__offset(this.bb_pos, 8);
-        return offset ? new Int32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
-    };
-    /**
-     * The total number of active resource patterns per team
-     */
-    Round.prototype.teamResourcePatternAmounts = function (index) {
-        var offset = this.bb.__offset(this.bb_pos, 10);
-        return offset ? this.bb.readInt32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
-    };
-    Round.prototype.teamResourcePatternAmountsLength = function () {
-        var offset = this.bb.__offset(this.bb_pos, 10);
-        return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
-    };
-    Round.prototype.teamResourcePatternAmountsArray = function () {
-        var offset = this.bb.__offset(this.bb_pos, 10);
         return offset ? new Int32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
     };
     /**
      * Ordered turn data for each robot during the round
      */
     Round.prototype.turns = function (index, obj) {
-        var offset = this.bb.__offset(this.bb_pos, 12);
+        var offset = this.bb.__offset(this.bb_pos, 8);
         return offset ? (obj || new turn_1.Turn()).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
     };
     Round.prototype.turnsLength = function () {
-        var offset = this.bb.__offset(this.bb_pos, 12);
+        var offset = this.bb.__offset(this.bb_pos, 8);
         return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
     };
     /**
      * The IDs of bodies that died at the end of the round, with no attributable cause.
      */
     Round.prototype.diedIds = function (index) {
-        var offset = this.bb.__offset(this.bb_pos, 14);
+        var offset = this.bb.__offset(this.bb_pos, 10);
         return offset ? this.bb.readInt32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
     };
     Round.prototype.diedIdsLength = function () {
-        var offset = this.bb.__offset(this.bb_pos, 14);
+        var offset = this.bb.__offset(this.bb_pos, 10);
         return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
     };
     Round.prototype.diedIdsArray = function () {
-        var offset = this.bb.__offset(this.bb_pos, 14);
+        var offset = this.bb.__offset(this.bb_pos, 10);
         return offset ? new Int32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
     };
     /**
@@ -117,11 +87,11 @@ var Round = /** @class */ (function () {
      * It should increase by one for each following round.
      */
     Round.prototype.roundId = function () {
-        var offset = this.bb.__offset(this.bb_pos, 16);
+        var offset = this.bb.__offset(this.bb_pos, 12);
         return offset ? this.bb.readInt32(this.bb_pos + offset) : 0;
     };
     Round.startRound = function (builder) {
-        builder.startObject(7);
+        builder.startObject(5);
     };
     Round.addTeamIds = function (builder, teamIdsOffset) {
         builder.addFieldOffset(0, teamIdsOffset, 0);
@@ -136,47 +106,21 @@ var Round = /** @class */ (function () {
     Round.startTeamIdsVector = function (builder, numElems) {
         builder.startVector(4, numElems, 4);
     };
-    Round.addTeamResourceAmounts = function (builder, teamResourceAmountsOffset) {
-        builder.addFieldOffset(1, teamResourceAmountsOffset, 0);
+    Round.addTeamCheeseAmounts = function (builder, teamCheeseAmountsOffset) {
+        builder.addFieldOffset(1, teamCheeseAmountsOffset, 0);
     };
-    Round.createTeamResourceAmountsVector = function (builder, data) {
+    Round.createTeamCheeseAmountsVector = function (builder, data) {
         builder.startVector(4, data.length, 4);
         for (var i = data.length - 1; i >= 0; i--) {
             builder.addInt32(data[i]);
         }
         return builder.endVector();
     };
-    Round.startTeamResourceAmountsVector = function (builder, numElems) {
-        builder.startVector(4, numElems, 4);
-    };
-    Round.addTeamCoverageAmounts = function (builder, teamCoverageAmountsOffset) {
-        builder.addFieldOffset(2, teamCoverageAmountsOffset, 0);
-    };
-    Round.createTeamCoverageAmountsVector = function (builder, data) {
-        builder.startVector(4, data.length, 4);
-        for (var i = data.length - 1; i >= 0; i--) {
-            builder.addInt32(data[i]);
-        }
-        return builder.endVector();
-    };
-    Round.startTeamCoverageAmountsVector = function (builder, numElems) {
-        builder.startVector(4, numElems, 4);
-    };
-    Round.addTeamResourcePatternAmounts = function (builder, teamResourcePatternAmountsOffset) {
-        builder.addFieldOffset(3, teamResourcePatternAmountsOffset, 0);
-    };
-    Round.createTeamResourcePatternAmountsVector = function (builder, data) {
-        builder.startVector(4, data.length, 4);
-        for (var i = data.length - 1; i >= 0; i--) {
-            builder.addInt32(data[i]);
-        }
-        return builder.endVector();
-    };
-    Round.startTeamResourcePatternAmountsVector = function (builder, numElems) {
+    Round.startTeamCheeseAmountsVector = function (builder, numElems) {
         builder.startVector(4, numElems, 4);
     };
     Round.addTurns = function (builder, turnsOffset) {
-        builder.addFieldOffset(4, turnsOffset, 0);
+        builder.addFieldOffset(2, turnsOffset, 0);
     };
     Round.createTurnsVector = function (builder, data) {
         builder.startVector(4, data.length, 4);
@@ -189,7 +133,7 @@ var Round = /** @class */ (function () {
         builder.startVector(4, numElems, 4);
     };
     Round.addDiedIds = function (builder, diedIdsOffset) {
-        builder.addFieldOffset(5, diedIdsOffset, 0);
+        builder.addFieldOffset(3, diedIdsOffset, 0);
     };
     Round.createDiedIdsVector = function (builder, data) {
         builder.startVector(4, data.length, 4);
@@ -202,18 +146,16 @@ var Round = /** @class */ (function () {
         builder.startVector(4, numElems, 4);
     };
     Round.addRoundId = function (builder, roundId) {
-        builder.addFieldInt32(6, roundId, 0);
+        builder.addFieldInt32(4, roundId, 0);
     };
     Round.endRound = function (builder) {
         var offset = builder.endObject();
         return offset;
     };
-    Round.createRound = function (builder, teamIdsOffset, teamResourceAmountsOffset, teamCoverageAmountsOffset, teamResourcePatternAmountsOffset, turnsOffset, diedIdsOffset, roundId) {
+    Round.createRound = function (builder, teamIdsOffset, teamCheeseAmountsOffset, turnsOffset, diedIdsOffset, roundId) {
         Round.startRound(builder);
         Round.addTeamIds(builder, teamIdsOffset);
-        Round.addTeamResourceAmounts(builder, teamResourceAmountsOffset);
-        Round.addTeamCoverageAmounts(builder, teamCoverageAmountsOffset);
-        Round.addTeamResourcePatternAmounts(builder, teamResourcePatternAmountsOffset);
+        Round.addTeamCheeseAmounts(builder, teamCheeseAmountsOffset);
         Round.addTurns(builder, turnsOffset);
         Round.addDiedIds(builder, diedIdsOffset);
         Round.addRoundId(builder, roundId);

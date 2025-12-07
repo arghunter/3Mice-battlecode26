@@ -1,5 +1,8 @@
 import * as flatbuffers from 'flatbuffers';
 import { SpawnAction } from '../../battlecode/schema/spawn-action';
+/**
+ * A list of initial bodies to be placed on the map.
+ */
 export declare class InitialBodyTable {
     bb: flatbuffers.ByteBuffer | null;
     bb_pos: number;

@@ -69,43 +69,53 @@ wallsArray():Int8Array|null {
   return offset ? new Int8Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
 }
 
-paint(index: number):number|null {
+dirt(index: number):boolean|null {
   const offset = this.bb!.__offset(this.bb_pos, 16);
-  return offset ? this.bb!.readInt8(this.bb!.__vector(this.bb_pos + offset) + index) : 0;
+  return offset ? !!this.bb!.readInt8(this.bb!.__vector(this.bb_pos + offset) + index) : false;
 }
 
-paintLength():number {
+dirtLength():number {
   const offset = this.bb!.__offset(this.bb_pos, 16);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
-paintArray():Int8Array|null {
+dirtArray():Int8Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 16);
   return offset ? new Int8Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
 }
 
-ruins(obj?:VecTable):VecTable|null {
+cheeseMines(obj?:VecTable):VecTable|null {
   const offset = this.bb!.__offset(this.bb_pos, 18);
   return offset ? (obj || new VecTable()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
 }
 
-paintPatterns(index: number):number|null {
+catWaypointIds(index: number):number|null {
   const offset = this.bb!.__offset(this.bb_pos, 20);
-  return offset ? this.bb!.readInt32(this.bb!.__vector(this.bb_pos + offset) + index * 4) : 0;
+  return offset ? this.bb!.readUint16(this.bb!.__vector(this.bb_pos + offset) + index * 2) : 0;
 }
 
-paintPatternsLength():number {
+catWaypointIdsLength():number {
   const offset = this.bb!.__offset(this.bb_pos, 20);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
-paintPatternsArray():Int32Array|null {
+catWaypointIdsArray():Uint16Array|null {
   const offset = this.bb!.__offset(this.bb_pos, 20);
-  return offset ? new Int32Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
+  return offset ? new Uint16Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
+}
+
+catWaypointVecs(index: number, obj?:VecTable):VecTable|null {
+  const offset = this.bb!.__offset(this.bb_pos, 22);
+  return offset ? (obj || new VecTable()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+}
+
+catWaypointVecsLength():number {
+  const offset = this.bb!.__offset(this.bb_pos, 22);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
 }
 
 static startGameMap(builder:flatbuffers.Builder) {
-  builder.startObject(9);
+  builder.startObject(10);
 }
 
 static addName(builder:flatbuffers.Builder, nameOffset:flatbuffers.Offset) {
@@ -144,49 +154,60 @@ static startWallsVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(1, numElems, 1);
 }
 
-static addPaint(builder:flatbuffers.Builder, paintOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(6, paintOffset, 0);
+static addDirt(builder:flatbuffers.Builder, dirtOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(6, dirtOffset, 0);
 }
 
-static createPaintVector(builder:flatbuffers.Builder, data:number[]|Int8Array):flatbuffers.Offset;
-/**
- * @deprecated This Uint8Array overload will be removed in the future.
- */
-static createPaintVector(builder:flatbuffers.Builder, data:number[]|Uint8Array):flatbuffers.Offset;
-static createPaintVector(builder:flatbuffers.Builder, data:number[]|Int8Array|Uint8Array):flatbuffers.Offset {
+static createDirtVector(builder:flatbuffers.Builder, data:boolean[]):flatbuffers.Offset {
   builder.startVector(1, data.length, 1);
   for (let i = data.length - 1; i >= 0; i--) {
-    builder.addInt8(data[i]!);
+    builder.addInt8(+data[i]!);
   }
   return builder.endVector();
 }
 
-static startPaintVector(builder:flatbuffers.Builder, numElems:number) {
+static startDirtVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(1, numElems, 1);
 }
 
-static addRuins(builder:flatbuffers.Builder, ruinsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(7, ruinsOffset, 0);
+static addCheeseMines(builder:flatbuffers.Builder, cheeseMinesOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(7, cheeseMinesOffset, 0);
 }
 
-static addPaintPatterns(builder:flatbuffers.Builder, paintPatternsOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(8, paintPatternsOffset, 0);
+static addCatWaypointIds(builder:flatbuffers.Builder, catWaypointIdsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(8, catWaypointIdsOffset, 0);
 }
 
-static createPaintPatternsVector(builder:flatbuffers.Builder, data:number[]|Int32Array):flatbuffers.Offset;
+static createCatWaypointIdsVector(builder:flatbuffers.Builder, data:number[]|Uint16Array):flatbuffers.Offset;
 /**
  * @deprecated This Uint8Array overload will be removed in the future.
  */
-static createPaintPatternsVector(builder:flatbuffers.Builder, data:number[]|Uint8Array):flatbuffers.Offset;
-static createPaintPatternsVector(builder:flatbuffers.Builder, data:number[]|Int32Array|Uint8Array):flatbuffers.Offset {
-  builder.startVector(4, data.length, 4);
+static createCatWaypointIdsVector(builder:flatbuffers.Builder, data:number[]|Uint8Array):flatbuffers.Offset;
+static createCatWaypointIdsVector(builder:flatbuffers.Builder, data:number[]|Uint16Array|Uint8Array):flatbuffers.Offset {
+  builder.startVector(2, data.length, 2);
   for (let i = data.length - 1; i >= 0; i--) {
-    builder.addInt32(data[i]!);
+    builder.addInt16(data[i]!);
   }
   return builder.endVector();
 }
 
-static startPaintPatternsVector(builder:flatbuffers.Builder, numElems:number) {
+static startCatWaypointIdsVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(2, numElems, 2);
+}
+
+static addCatWaypointVecs(builder:flatbuffers.Builder, catWaypointVecsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(9, catWaypointVecsOffset, 0);
+}
+
+static createCatWaypointVecsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (let i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]!);
+  }
+  return builder.endVector();
+}
+
+static startCatWaypointVecsVector(builder:flatbuffers.Builder, numElems:number) {
   builder.startVector(4, numElems, 4);
 }
 

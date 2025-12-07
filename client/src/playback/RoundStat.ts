@@ -5,12 +5,9 @@ import Round from './Round'
 
 const EMPTY_ROBOT_COUNTS: Record<schema.RobotType, number> = {
     [schema.RobotType.NONE]: 0,
-    [schema.RobotType.MONEY_TOWER]: 0,
-    [schema.RobotType.PAINT_TOWER]: 0,
-    [schema.RobotType.DEFENSE_TOWER]: 0,
-    [schema.RobotType.SOLDIER]: 0,
-    [schema.RobotType.MOPPER]: 0,
-    [schema.RobotType.SPLASHER]: 0
+    [schema.RobotType.RAT]: 0,
+    [schema.RobotType.RAT_KING]: 0,
+    [schema.RobotType.CAT]: 0
 }
 
 export class TeamRoundStat {
@@ -78,10 +75,10 @@ export default class RoundStat {
                 assert(team != undefined, `team ${i} not found in game.teams in round`)
                 const teamStat = this.teams.get(team) ?? assert.fail(`team ${i} not found in team stats in round`)
 
-                teamStat.moneyAmount = delta.teamResourceAmounts(i) ?? assert.fail('missing resource amount')
-                teamStat.paintPercent = delta.teamCoverageAmounts(i) ?? assert.fail('missing coverage amount')
-                teamStat.resourcePatterns = delta.teamResourcePatternAmounts(i) ?? assert.fail('missing pattern amount')
-                teamStat.paintPercent /= 10.0
+                // teamStat.moneyAmount = delta.teamResourceAmounts(i) ?? assert.fail('missing resource amount')
+                // teamStat.paintPercent = delta.teamCoverageAmounts(i) ?? assert.fail('missing coverage amount')
+                // teamStat.resourcePatterns = delta.teamResourcePatternAmounts(i) ?? assert.fail('missing pattern amount')
+                // teamStat.paintPercent /= 10.0
 
                 /*
                 // Compute average datapoint every 10 rounds
@@ -116,8 +113,8 @@ export default class RoundStat {
             if (body.dead) continue
 
             teamStat.robotCounts[body.robotType]++
-            teamStat.robotPaints[body.robotType] += body.paint
-            teamStat.totalPaint += body.paint
+            // teamStat.robotCheese[body.robotType] += body.cheese
+            // teamStat.totalCheese += body.cheese
         }
 
         const timems = Date.now() - time

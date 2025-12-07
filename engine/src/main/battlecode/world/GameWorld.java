@@ -3,6 +3,7 @@ package battlecode.world;
 import battlecode.common.*;
 import battlecode.instrumenter.profiler.ProfilerCollection;
 import battlecode.schema.Action;
+import battlecode.schema.GameMap;
 import battlecode.server.ErrorReporter;
 import battlecode.server.GameMaker;
 import battlecode.server.GameState;
@@ -25,34 +26,24 @@ public class GameWorld {
      * Whether we're running.
      */
     protected boolean running = true;
+    protected boolean isCooperation = true;
 
     protected final IDGenerator idGenerator;
     protected final GameStats gameStats;
 
     private boolean[] walls;
     private boolean[] dirt;
-    private int[] markersA;
-    private int[] markersB;
-    private int[] colorLocations; // No color = 0, Team A color 1 = 1, Team A color 2 = 2, Team B color 1 = 3,
-                                  // Team B color 2 = 4
+
+    private int[] cheeseAmounts;
     private InternalRobot[][] robots;
-    private ArrayList<Trap>[] trapTriggers;
     private Trap[] trapLocations;
+    private ArrayList<Trap>[] trapTriggers;
+    private HashMap<TrapType, Integer> trapCounts;
     private int trapId;
     private final LiveMap gameMap;
     private final TeamInfo teamInfo;
     private final ObjectInfo objectInfo;
 
-    private final static int RESOURCE_INDEX = 0, DEFENSE_INDEX = 1, MONEY_INDEX = 2, PAINT_INDEX = 3;
-     // 0 = resource pattern, 1 = defense tower, 2 = money tower, 3 = paint tower
-
-
-    private ArrayList<MapLocation> resourcePatternCenters;
-    private Team[] resourcePatternCentersByLoc;
-    private int[] resourcePatternLifetimes;
-    private ArrayList<MapLocation> towerLocations;
-    private Team[] towersByLoc; // indexed by location
-    private int[] currentDamageIncreases = { 0, 0 };
     private int[] currentNumberUnits = { 0, 0 };
 
     private Map<Team, ProfilerCollection> profilerCollections;
@@ -60,18 +51,58 @@ public class GameWorld {
     private final RobotControlProvider controlProvider;
     private Random rand;
     private final GameMaker.MatchMaker matchMaker;
-    private int areaWithoutWalls;
+
+    // Whether there is a ruin on each tile, indexed by location
+    private boolean[] allCheeseMinesByLoc;
+    // list of all cheese mines
+    private ArrayList<CheeseMine> cheeseMines;
+    private CheeseMine[] cheeseMineLocs;
+
+    private int[] sharedArray;
+    private int[] persistentArray;
+
+    public int symmetricY(int y) {
+        return symmetricY(y, gameMap.getSymmetry());
+    }
+
+    public int symmetricX(int x) {
+        return symmetricX(x, gameMap.getSymmetry());
+    }
+
+    public int symmetricY(int y, MapSymmetry symmetry) {
+        switch (symmetry) {
+            case VERTICAL:
+                return y;
+            case HORIZONTAL:
+            case ROTATIONAL:
+            default:
+                return gameMap.getHeight() - 1 - y;
+        }
+    }
+
+    public int symmetricX(int x, MapSymmetry symmetry) {
+        switch (symmetry) {
+            case HORIZONTAL:
+                return x;
+            case VERTICAL:
+            case ROTATIONAL:
+            default:
+                return gameMap.getWidth() - 1 - x;
+        }
+    }
+
+    public MapLocation symmetryLocation(MapLocation p) {
+        return new MapLocation(symmetricX(p.x), symmetricY(p.y));
+    }
 
     @SuppressWarnings("unchecked")
     public GameWorld(LiveMap gm, RobotControlProvider cp, GameMaker.MatchMaker matchMaker) {
         int width = gm.getWidth();
         int height = gm.getHeight();
         int numSquares = width * height;
-        int numWalls = 0;
         this.walls = gm.getWallArray();
         this.dirt = gm.getDirtArray();
-        this.markersA = new int[numSquares];
-        this.markersB = new int[numSquares];
+        this.cheeseAmounts = gm.getCheeseArray();
         this.robots = new InternalRobot[width][height]; // if represented in cartesian, should be height-width, but this
                                                         // should allow us to index x-y
         this.currentRound = 0;
@@ -79,14 +110,13 @@ public class GameWorld {
         this.gameStats = new GameStats();
         this.gameMap = gm;
         this.objectInfo = new ObjectInfo(gm);
-        this.colorLocations = new int[numSquares];
-
-        for (boolean wall : walls) {
-            if (wall) {
-                numWalls += 1;
-            }
+        this.trapCounts = new HashMap<>();
+        trapCounts.put(TrapType.CAT_TRAP, 0);
+        trapCounts.put(TrapType.RAT_TRAP, 0);
+        trapTriggers = new ArrayList[numSquares];
+        for (int i = 0; i < trapTriggers.length; i++){
+            trapTriggers[i] = new ArrayList<>();
         }
-        this.areaWithoutWalls = numSquares - numWalls;
 
         this.profilerCollections = new HashMap<>();
 
@@ -97,41 +127,39 @@ public class GameWorld {
         this.controlProvider.matchStarted(this);
 
         this.teamInfo = new TeamInfo(this);
-        this.teamInfo.addMoney(Team.A, GameConstants.INITIAL_TEAM_MONEY);
-        this.teamInfo.addMoney(Team.B, GameConstants.INITIAL_TEAM_MONEY);
+        this.teamInfo.addCheese(Team.A, GameConstants.INITIAL_TEAM_CHEESE);
+        this.teamInfo.addCheese(Team.B, GameConstants.INITIAL_TEAM_CHEESE);
 
         // Write match header at beginning of match
         this.matchMaker.makeMatchHeader(this.gameMap);
 
-        // ignore patterns passed in with map and use hardcoded values
-        // this.patternArray = gm.getPatternArray();
-        this.resourcePatternCenters = new ArrayList<MapLocation>();
-        this.resourcePatternCentersByLoc = new Team[numSquares];
-        this.resourcePatternLifetimes = new int[numSquares];
-        byte[] initialPaint = gm.getPaintArray();
+        this.allCheeseMinesByLoc = gm.getCheeseMineArray();
+        this.cheeseMines = new ArrayList<CheeseMine>();
+        this.cheeseMineLocs = new CheeseMine[numSquares];
+
         for (int i = 0; i < numSquares; i++) {
-            this.resourcePatternCentersByLoc[i] = Team.NEUTRAL;
-            setPaint(indexToLocation(i), initialPaint[i]);
+            if (this.allCheeseMinesByLoc[i]) {
+                CheeseMine newMine = new CheeseMine(indexToLocation(i), GameConstants.SQ_CHEESE_SPAWN_RADIUS, null);
+                this.cheeseMines.add(newMine);
+                cheeseMineLocs[i] = newMine;
+            }
         }
 
-        RobotInfo[] initialBodies = gm.getInitialBodies();
-        this.towerLocations = new ArrayList<MapLocation>();
-        this.towersByLoc = new Team[numSquares];
-        for (int i = 0; i < numSquares; i++) {
-            towersByLoc[i] = Team.NEUTRAL;
+        for (CheeseMine mine : this.cheeseMines) {
+            MapLocation symLoc = symmetryLocation(mine.getLocation());
+            mine.setPair(cheeseMineLocs[locationToIndex(symLoc)]);
         }
+
+        this.sharedArray = new int[GameConstants.SHARED_ARRAY_SIZE];
+        this.persistentArray = new int[GameConstants.PERSISTENT_ARRAY_SIZE];
+        // TODO make persistent array last between matches
+
+        RobotInfo[] initialBodies = gm.getInitialBodies();
+
         for (int i = 0; i < initialBodies.length; i++) {
             RobotInfo robotInfo = initialBodies[i];
             MapLocation newLocation = robotInfo.location.translate(gm.getOrigin().x, gm.getOrigin().y);
             spawnRobot(robotInfo.ID, robotInfo.type, newLocation, robotInfo.team);
-            this.towerLocations.add(newLocation);
-            towersByLoc[locationToIndex(newLocation)] = robotInfo.team;
-
-            // Start initial towers at level 2. Defer upgrade action until the tower's first
-            // turn since client only supports actions this way
-            InternalRobot robot = getRobot(newLocation);
-            UnitType newType = robot.getType().getNextLevel();
-            robot.upgradeTower(newType);
         }
     }
 
@@ -184,27 +212,6 @@ public class GameWorld {
         });
     }
 
-    public int getAreaWithoutWalls() {
-        return this.areaWithoutWalls;
-    }
-
-    public void completeTowerPattern(Team team, UnitType type, MapLocation center) {
-        this.towerLocations.add(center);
-        this.towersByLoc[locationToIndex(center)] = team;
-        spawnRobot(type, center, team);
-    }
-
-    public void completeResourcePattern(Team team, MapLocation center) {
-        int idx = locationToIndex(center);
-
-        if (this.resourcePatternCentersByLoc[idx] == Team.NEUTRAL) {
-            this.resourcePatternCenters.add(center);
-        }
-
-        this.resourcePatternCentersByLoc[idx] = team;
-        this.resourcePatternLifetimes[idx] = 0;
-    }
-
     private boolean updateRobot(InternalRobot robot) {
         robot.processBeginningOfTurn();
         this.controlProvider.runRobot(robot);
@@ -254,32 +261,16 @@ public class GameWorld {
         return this.gameStats.getWinner();
     }
 
-    public int getPaint(MapLocation loc) {
-        return this.colorLocations[locationToIndex(loc)];
-    }
-
-    public PaintType paintTypeFromInt(Team team, int paint) {
-        Team paintTeam = teamFromPaint(paint);
-
-        if (paintTeam == Team.NEUTRAL) {
-            return PaintType.EMPTY;
-        } else if (paintTeam == team) {
-            return isPrimaryPaint(paint) ? PaintType.ALLY_PRIMARY : PaintType.ALLY_SECONDARY;
-        } else {
-            return isPrimaryPaint(paint) ? PaintType.ENEMY_PRIMARY : PaintType.ENEMY_SECONDARY;
-        }
-    }
-
-    public PaintType getPaintType(Team team, MapLocation loc) {
-        return paintTypeFromInt(team, getPaint(loc));
-    }
-
     public boolean isRunning() {
         return this.running;
     }
 
     public int getCurrentRound() {
         return this.currentRound;
+    }
+
+    public boolean isCooperation() {
+        return this.isCooperation;
     }
 
     public boolean getWall(MapLocation loc) {
@@ -290,44 +281,6 @@ public class GameWorld {
         return this.dirt[locationToIndex(loc)];
     }
 
-    public void setPaint(MapLocation loc, int paint) {
-        if (!isPaintable(loc))
-            return;
-        if (teamFromPaint(this.colorLocations[locationToIndex(loc)]) != Team.NEUTRAL) {
-            this.getTeamInfo().addPaintedSquares(-1, teamFromPaint(this.colorLocations[locationToIndex(loc)]));
-        }
-        if (teamFromPaint(paint) != Team.NEUTRAL) {
-            this.getTeamInfo().addPaintedSquares(1, teamFromPaint(paint));
-        }
-        this.colorLocations[locationToIndex(loc)] = paint;
-    }
-
-    public int[] getmarkersArray(Team team) {
-        switch (team) {
-            case A:
-                return markersA;
-            case B:
-                return markersB;
-            default:
-                return null;
-        }
-    }
-
-    public int getMarker(Team team, MapLocation loc) {
-        return this.getmarkersArray(team)[locationToIndex(loc)];
-    }
-
-    public void setMarker(Team team, MapLocation loc, int marker) {
-        if (!isPaintable(loc))
-            return;
-        if (marker == 0) {
-            this.matchMaker.addUnmarkAction(loc);
-        } else {
-            this.matchMaker.addMarkAction(loc, !isPrimaryPaint(marker));
-        }
-        this.getmarkersArray(team)[locationToIndex(loc)] = marker;
-    }
-
     /**
      * Allows a robot to add or remove dirt (add = true, remove = false)
      * to a location on the map
@@ -336,236 +289,30 @@ public class GameWorld {
      * @param val, true if adding dirt, false if removing dirt
      * 
      * @returns void, modifies GameWorld's dirt array in place
-     * 
-     * @author: Augusto Schwanz
      */
     public void setDirt(MapLocation loc, boolean val) {
-        if (loc == null) return;
+        if (loc == null)
+            return;
         int mapIndex = locationToIndex(loc);
-        this.dirt[mapIndex] = val; 
-        
+        this.dirt[mapIndex] = val;
+
     }
 
-    public void markPattern(int pattern, Team team, MapLocation center, int rotationAngle, boolean reflect, boolean isTowerPattern) {
-        for (int dx = -GameConstants.PATTERN_SIZE / 2; dx < (GameConstants.PATTERN_SIZE + 1) / 2; dx++) {
-            for (int dy = -GameConstants.PATTERN_SIZE / 2; dy < (GameConstants.PATTERN_SIZE + 1) / 2; dy++) {
-                // int symmetry = 4 * (reflect ? 1 : 0) + rotationAngle;
-                int dx2 = dx;
-                int dy2 = dy;
-                // Remove symmetry logic as all patterns are symmetric
-                // switch (symmetry) {
-                // case 0:
-                // dx2 = dx;
-                // dy2 = dy;
-                // break;
-                // case 1:
-                // dx2 = -dy;
-                // dy2 = dx;
-                // break;
-                // case 2:
-                // dx2 = -dx;
-                // dy2 = -dy;
-                // break;
-                // case 3:
-                // dx2 = dy;
-                // dy2 = -dx;
-                // break;
-                // case 4:
-                // dx2 = -dx;
-                // dy2 = dy;
-                // break;
-                // case 5:
-                // dx2 = dy;
-                // dy2 = dx;
-                // break;
-                // case 6:
-                // dx2 = dx;
-                // dy2 = -dy;
-                // break;
-                // case 7:
-                // dx2 = -dy;
-                // dy2 = -dx;
-                // break;
-                // default:
-                // throw new RuntimeException("THIS ERROR SHOULD NEVER HAPPEN! checkPattern is
-                // broken");
-                // }
-
-                int bit = getPatternBit(pattern, dx, dy);
-                MapLocation loc = center.translate(dx2, dy2);
-                setMarker(team, loc, bit + 1);
-            }
-        }
+    public int getCheeseAmount(MapLocation loc) {
+        return this.cheeseAmounts[locationToIndex(loc)];
     }
 
-    public void markTowerPattern(UnitType type, Team team, MapLocation loc, int rotationAngle, boolean reflect) {
-        markPattern(this.getTowerPattern(type), team, loc, rotationAngle, reflect, true);
+    public void removeCheese(MapLocation loc) {
+        this.cheeseAmounts[locationToIndex(loc)] = 0;
     }
 
-    public void markResourcePattern(Team team, MapLocation loc, int rotationAngle, boolean reflect) {
-        markPattern(this.getResourcePattern(), team, loc, rotationAngle, reflect, false);
-    }
-
-    public boolean hasTower(MapLocation loc) {
-        return this.towersByLoc[locationToIndex(loc)] != Team.NEUTRAL;
-    }
-
-    public boolean hasTower(Team team, MapLocation loc) {
-        return this.towersByLoc[locationToIndex(loc)] == team;
-    }
-
-    /**
-     * Checks if a given location has a tower.
-     * Returns the team of the tower if a tower exists,
-     * and {@value Team#NEUTRAL} if not.
-     * 
-     * @param loc the location to check
-     * @return the team of the tower at this location
-     */
-    public Team getTowerTeam(MapLocation loc) {
-        return this.towersByLoc[locationToIndex(loc)];
-    }
-
-    public int getDefenseTowerDamageIncrease(Team team){
-        return this.currentDamageIncreases[team.ordinal()];
-    }
-    public int getNumResourcePatterns(Team team) {
-        int numPatterns = 0;
-        for (MapLocation loc : this.resourcePatternCenters) {
-            int locIdx = locationToIndex(loc);
-            if (this.resourcePatternCentersByLoc[locIdx] == team
-                    && this.resourcePatternLifetimes[locIdx] >= GameConstants.RESOURCE_PATTERN_ACTIVE_DELAY)
-                numPatterns++;
-        }
-        return numPatterns;
-    }
-
-    public int extraResourcesFromPatterns(Team team) {
-        return getNumResourcePatterns(team) * GameConstants.EXTRA_RESOURCES_FROM_PATTERN;
-    }
-
-    public int getDefenseTowerDamageIncrease(Team team) {
-        return this.currentDamageIncreases[team.ordinal()];
-    }
-
-    public void upgradeTower(UnitType newType, Team team) {
-        if (newType == UnitType.LEVEL_TWO_DEFENSE_TOWER || newType == UnitType.LEVEL_THREE_DEFENSE_TOWER)
-            this.currentDamageIncreases[team.ordinal()] += GameConstants.EXTRA_TOWER_DAMAGE_LEVEL_INCREASE;
-    }
-
-    /**
-     * Returns the resource pattern corresponding to the map,
-     * stored as the bits of an int between 0 and
-     * 2^({@value GameConstants#PATTERN_SIZE}^2) - 1.
-     * The bit at (a, b) (zero-indexed) in the resource pattern
-     * is stored in the place value 2^({@value GameConstants#PATTERN_SIZE} * a + b).
-     * 
-     * @return the resource pattern for this map
-     */
-    public int getResourcePattern() {
-        return this.patternArray[RESOURCE_INDEX];
-    }
-
-    /**
-     * Returns the tower pattern corresponding to the map,
-     * stored as the bits of an int between 0 and
-     * 2^({@value GameConstants#PATTERN_SIZE}^2) - 1.
-     * The bit at (a, b) (zero-indexed) in the tower pattern
-     * is stored in the place value 2^({@value GameConstants#PATTERN_SIZE} * a + b).
-     * 
-     * @return the tower pattern for this map
-     */
-    public int getTowerPattern(UnitType towerType) {
-        return this.patternArray[towerTypeToPatternIndex(towerType)];
-    }
-
-    public boolean isValidPatternCenter(MapLocation loc, boolean isTower) {
-        return (!(loc.x < GameConstants.PATTERN_SIZE / 2
-                || loc.y < GameConstants.PATTERN_SIZE / 2
-                || loc.x >= gameMap.getWidth() - (GameConstants.PATTERN_SIZE - 1) / 2
-                || loc.y >= gameMap.getHeight() - (GameConstants.PATTERN_SIZE - 1) / 2))
-                && (isTower || areaIsPaintable(loc));
-    }
-
-    // checks that location has no walls/ruins in the surrounding 5x5 area
-    public boolean areaIsPaintable(MapLocation loc) {
-        for (int dx = -GameConstants.PATTERN_SIZE / 2; dx < (GameConstants.PATTERN_SIZE + 1) / 2; dx++) {
-            for (int dy = -GameConstants.PATTERN_SIZE / 2; dy < (GameConstants.PATTERN_SIZE + 1) / 2; dy++) {
-                MapLocation newLoc = loc.translate(dx, dy);
-                if (!isPaintable(newLoc))
-                    return false;
-            }
-        }
-        return true;
+    public void addCheese(MapLocation loc, int amount) {
+        this.cheeseAmounts[locationToIndex(loc)] += amount;
     }
 
     public boolean isPassable(MapLocation loc) {
         return !(this.walls[locationToIndex(loc)]
-        || this.dirt[locationToIndex(loc)]);
-    }
-
-    public boolean isPaintable(MapLocation loc) {
-        return isPassable(loc);
-    }
-
-
-    public boolean hasResourcePatternCenter(MapLocation loc, Team team) {
-        return resourcePatternCentersByLoc[locationToIndex(loc)] == team;
-    }
-
-    public Team teamFromPaint(int paint) {
-        if (paint == 1 || paint == 2) {
-            return Team.A;
-        } else if (paint == 3 || paint == 4) {
-            return Team.B;
-        } else {
-            return Team.NEUTRAL;
-        }
-    }
-
-    public boolean isPrimaryPaint(int paint) {
-        return paint == 1 || paint == 3;
-    }
-
-    public int getPrimaryPaint(Team team) {
-        if (team == Team.A)
-            return 1;
-        else if (team == Team.B)
-            return 3;
-        return 0;
-    }
-
-    public int getSecondaryPaint(Team team) {
-        if (team == Team.A)
-            return 2;
-        else if (team == Team.B)
-            return 4;
-        return 0;
-    }
-
-    private int towerTypeToPatternIndex(UnitType towerType) {
-        switch (towerType) {
-            case LEVEL_ONE_DEFENSE_TOWER:
-                return DEFENSE_INDEX;
-            case LEVEL_TWO_DEFENSE_TOWER:
-                return DEFENSE_INDEX;
-            case LEVEL_THREE_DEFENSE_TOWER:
-                return DEFENSE_INDEX;
-            case LEVEL_ONE_MONEY_TOWER:
-                return MONEY_INDEX;
-            case LEVEL_TWO_MONEY_TOWER:
-                return MONEY_INDEX;
-            case LEVEL_THREE_MONEY_TOWER:
-                return MONEY_INDEX;
-            case LEVEL_ONE_PAINT_TOWER:
-                return PAINT_INDEX;
-            case LEVEL_TWO_PAINT_TOWER:
-                return PAINT_INDEX;
-            case LEVEL_THREE_PAINT_TOWER:
-                return PAINT_INDEX;
-            default:
-                return -1;
-        }
+                || this.dirt[locationToIndex(loc)]);
     }
 
     /**
@@ -587,6 +334,42 @@ public class GameWorld {
     }
 
     // ***********************************
+    // ****** CHEESE METHODS *************
+    // ***********************************
+
+    public void spawnCheese(CheeseMine mine) {
+        boolean spawn = rand.nextFloat() < mine.generationProbability(currentRound);
+        if (spawn) {
+            int dx = rand.nextInt(-GameConstants.SQ_CHEESE_SPAWN_RADIUS, GameConstants.SQ_CHEESE_SPAWN_RADIUS);
+            int dy = rand.nextInt(-GameConstants.SQ_CHEESE_SPAWN_RADIUS, GameConstants.SQ_CHEESE_SPAWN_RADIUS);
+
+            // if rotational, flip both symmetries, if vertical/horizontal, only flip the
+            // corresponding one
+            int pair_dx = gameMap.getSymmetry() == MapSymmetry.VERTICAL ? dx : -dx;
+            int pair_dy = gameMap.getSymmetry() == MapSymmetry.HORIZONTAL ? dy : -dy;
+            CheeseMine pairedMine = mine.getPair();
+
+            int cheeseX = mine.getLocation().x + dx;
+            int cheeseY = mine.getLocation().y + dy;
+
+            int pairedX = pairedMine.getLocation().x + pair_dx;
+            int pairedY = pairedMine.getLocation().y + pair_dy;
+
+            addCheese(new MapLocation(cheeseX, cheeseY), GameConstants.CHEESE_SPAWN_AMOUNT);
+            addCheese(new MapLocation(pairedX, pairedY), GameConstants.CHEESE_SPAWN_AMOUNT);
+
+            mine.setLastRound(this.currentRound);
+            pairedMine.setLastRound(this.currentRound);
+
+            // matchMaker.addCheeseSpawnAction(mine, loc); TODO: ADD MATCHMAKER
+        }
+    }
+
+    public boolean hasCheeseMine(MapLocation loc){
+        return this.cheeseMineLocs[locationToIndex(loc)] != null;
+    }
+
+    // ***********************************
     // ****** TRAP METHODS **************
     // ***********************************
 
@@ -598,49 +381,71 @@ public class GameWorld {
         return (this.trapLocations[locationToIndex(loc)] != null);
     }
 
+    public boolean hasRatTrap(MapLocation loc) {
+        Trap trap = this.trapLocations[locationToIndex(loc)];
+        return (trap != null && trap.getType() == TrapType.RAT_TRAP);
+    }
+
+    public boolean hasCatTrap(MapLocation loc) {
+        Trap trap = this.trapLocations[locationToIndex(loc)];
+        return (trap != null && trap.getType() == TrapType.CAT_TRAP);
+    }
+
     public ArrayList<Trap> getTrapTriggers(MapLocation loc) {
         return this.trapTriggers[locationToIndex(loc)];
     }
 
     public void placeTrap(MapLocation loc, TrapType type, Team team) {
         Trap trap = new Trap(loc, type, team, trapId);
-        trapId++;
-        matchMaker.addTrap(trap);
-        this.trapLocations[locationToIndex(loc)] = trap;
-        for (MapLocation adjLoc : getAllLocationsWithinRadiusSquared(loc, 1)) {
+        
+        int idx = locationToIndex(loc);
+        this.trapLocations[idx] = trap;
+        this.cheeseAmounts[idx] = Math.max(this.cheeseAmounts[idx], type.spawnCheeseAmount);
+
+        for (MapLocation adjLoc : getAllLocationsWithinRadiusSquared(loc, type.triggerRadiusSquared)) {
             this.trapTriggers[locationToIndex(adjLoc)].add(trap);
         }
+
+        matchMaker.addTrap(trap);
+        this.trapCounts.put(type, this.trapCounts.get(type) + 1);
+        trapId++;
     }
 
-    // TODO: need to seperate out cat/rat types
-    public void triggerTrap(Trap trap, InternalRobot robot, boolean entered) {
-        MapLocation loc = trap.getLocation();
-        TrapType type = trap.getType();
-        switch (type) {
-            case RATTRAP:
-                for (InternalRobot rob : getAllRobotsWithinRadiusSquared(loc, 1,
-                        trap.getTeam().opponent())) {
-                    rob.setMovementCooldownTurns(type.stunTime);
-                    rob.setActionCooldownTurns(type.stunTime);
-                    rob.takeDamage(type.damage);
-                }
-                break;
-            case CATTRAP:
-                for (InternalRobot rob : getAllRobotsWithinRadiusSquared(loc, 1,
-                        trap.getTeam().opponent())) {
-                    rob.setMovementCooldownTurns(type.stunTime);
-                    rob.setActionCooldownTurns(type.stunTime);
-                    rob.takeDamage(type.damage);
-                }
-                break;
+    public void removeTrap(MapLocation loc) {
+        Trap trap = this.trapLocations[locationToIndex(loc)];
+        if (trap == null) {
+            return;
         }
-        for (MapLocation adjLoc : getAllLocationsWithinRadiusSquared(loc, 2)) {
+        TrapType type = trap.getType();
+        this.trapCounts.put(type, this.trapCounts.get(type) - 1);
+        this.trapLocations[locationToIndex(loc)] = null;
+
+        for (MapLocation adjLoc : getAllLocationsWithinRadiusSquared(loc, type.triggerRadiusSquared)) {
             this.trapTriggers[locationToIndex(adjLoc)].remove(trap);
         }
+    } 
+
+    public int getTrapCount(TrapType type) {
+        return this.trapCounts.get(type);
+    }
+
+    public void triggerTrap(Trap trap, InternalRobot robot) {
+        MapLocation loc = trap.getLocation();
+        TrapType type = trap.getType();
+        
+        robot.setMovementCooldownTurns(type.stunTime);
+        robot.addHealth(-type.damage);
+        //TODO once the cat exists, alert cat of trap trigger
+        //TODO once backstab status exists, update that
+
+        for (MapLocation adjLoc : getAllLocationsWithinRadiusSquared(loc, type.triggerRadiusSquared)) {
+            this.trapTriggers[locationToIndex(adjLoc)].remove(trap);
+        }
+
         this.trapLocations[locationToIndex(loc)] = null;
         matchMaker.addTriggeredTrap(trap.getId());
-        matchMaker.addAction(robot.getID(), FlatHelpers.getTrapActionFromTrapType(type),
-                locationToIndex(trap.getLocation()));
+        // matchMaker.addAction(robot.getID(), FlatHelpers.getTrapActionFromTrapType(type),
+        //         locationToIndex(trap.getLocation()));
     }
 
     // ***********************************
@@ -702,53 +507,12 @@ public class GameWorld {
         return returnRobots.toArray(new InternalRobot[returnRobots.size()]);
     }
 
-    public boolean connectedByPaint(Team t, MapLocation robotLoc, MapLocation towerLoc) {
-        if (teamFromPaint(getPaint(robotLoc)) != t)
-            return false;
-        Queue<MapLocation> q = new LinkedList<MapLocation>();
-        Set<MapLocation> vis = new HashSet<MapLocation>();
-        q.add(robotLoc);
-        MapLocation cur;
-        int[] dx = { 1, 0, -1, 0 }, dy = { 0, 1, 0, -1 };
-        while (!q.isEmpty()) {
-            cur = q.peek();
-            q.remove();
-            if (cur.equals(towerLoc))
-                return true;
-            if (!getGameMap().onTheMap(cur) || vis.contains(cur) || teamFromPaint(getPaint(cur)) != t)
-                continue;
-            vis.add(cur);
-            for (int i = 0; i < 4; i++)
-                q.add(new MapLocation(cur.x + dx[i], cur.y + dy[i]));
-        }
-        return false;
-    }
-
     public MapLocation[] getAllLocationsWithinRadiusSquared(MapLocation center, int radiusSquared) {
-        return getAllLocationsWithinRadiusSquaredWithoutMap(
+        return getAllLocationsWithinConeRadiusSquaredWithoutMap(
                 this.gameMap.getOrigin(),
                 this.gameMap.getWidth(),
                 this.gameMap.getHeight(),
-                center, radiusSquared);
-    }
-
-    public static MapLocation[] getAllLocationsWithinRadiusSquaredWithoutMap(MapLocation origin,
-            int width, int height,
-            MapLocation center, int radiusSquared) {
-        ArrayList<MapLocation> returnLocations = new ArrayList<MapLocation>();
-        int ceiledRadius = (int) Math.ceil(Math.sqrt(radiusSquared)) + 1; // add +1 just to be safe
-        int minX = Math.max(center.x - ceiledRadius, origin.x);
-        int minY = Math.max(center.y - ceiledRadius, origin.y);
-        int maxX = Math.min(center.x + ceiledRadius, origin.x + width - 1);
-        int maxY = Math.min(center.y + ceiledRadius, origin.y + height - 1);
-        for (int x = minX; x <= maxX; x++) {
-            for (int y = minY; y <= maxY; y++) {
-                MapLocation newLocation = new MapLocation(x, y);
-                if (center.isWithinDistanceSquared(newLocation, radiusSquared))
-                    returnLocations.add(newLocation);
-            }
-        }
-        return returnLocations.toArray(new MapLocation[returnLocations.size()]);
+                center, Direction.CENTER, 360, radiusSquared);
     }
     
     public MapLocation[] getAllLocationsWithinConeRadiusSquared(MapLocation center, Direction lookDirection, double totalAngle, int radiusSquared) {
@@ -773,11 +537,14 @@ public class GameWorld {
         int minY = Math.max(center.y - ceiledRadius, origin.y);
         int maxX = Math.min(center.x + ceiledRadius, origin.x + width - 1);
         int maxY = Math.min(center.y + ceiledRadius, origin.y + height - 1);
+        
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 MapLocation newLocation = new MapLocation(x, y);
-                if (center.isWithinDistanceSquared(newLocation, radiusSquared, lookDirection, angle))
+
+                if (center.isWithinDistanceSquared(newLocation, radiusSquared, lookDirection, angle)) {
                     returnLocations.add(newLocation);
+                }
             }
         }
         return returnLocations.toArray(new MapLocation[returnLocations.size()]);
@@ -811,77 +578,34 @@ public class GameWorld {
     }
 
     /**
-     * @return whether a team painted more of the map than the other team
+     * @return whether a team has more cheese
      */
-    public boolean setWinnerIfMoreSquaresPainted() {
-        int[] totalSquaresPainted = new int[2];
+    public boolean setWinnerIfMoreCheese() {
+        int[] totalCheeseValues = new int[2];
 
         // consider team reserves
-        totalSquaresPainted[Team.A.ordinal()] += this.teamInfo.getNumberOfPaintedSquares(Team.A);
-        totalSquaresPainted[Team.B.ordinal()] += this.teamInfo.getNumberOfPaintedSquares(Team.B);
+        totalCheeseValues[Team.A.ordinal()] += this.teamInfo.getCheese(Team.A);
+        totalCheeseValues[Team.B.ordinal()] += this.teamInfo.getCheese(Team.B);
 
-        if (totalSquaresPainted[Team.A.ordinal()] > totalSquaresPainted[Team.B.ordinal()]) {
-            setWinner(Team.A, DominationFactor.MORE_SQUARES_PAINTED);
+        if (totalCheeseValues[Team.A.ordinal()] > totalCheeseValues[Team.B.ordinal()]) {
+            // TODO: add new tiebreakers to domination factor
+            setWinner(Team.A, DominationFactor.MORE_CHEESE);
             return true;
-        } else if (totalSquaresPainted[Team.B.ordinal()] > totalSquaresPainted[Team.A.ordinal()]) {
-            setWinner(Team.B, DominationFactor.MORE_SQUARES_PAINTED);
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * @return whether a team has more money
-     */
-    public boolean setWinnerIfMoreMoney() {
-        int[] totalMoneyValues = new int[2];
-
-        // consider team reserves
-        totalMoneyValues[Team.A.ordinal()] += this.teamInfo.getMoney(Team.A);
-        totalMoneyValues[Team.B.ordinal()] += this.teamInfo.getMoney(Team.B);
-
-        if (totalMoneyValues[Team.A.ordinal()] > totalMoneyValues[Team.B.ordinal()]) {
-            setWinner(Team.A, DominationFactor.MORE_MONEY);
-            return true;
-        } else if (totalMoneyValues[Team.B.ordinal()] > totalMoneyValues[Team.A.ordinal()]) {
-            setWinner(Team.B, DominationFactor.MORE_MONEY);
+        } else if (totalCheeseValues[Team.B.ordinal()] > totalCheeseValues[Team.A.ordinal()]) {
+            setWinner(Team.B, DominationFactor.MORE_CHEESE);
             return true;
         }
         return false;
     }
 
     /**
-     * @return whether a team has more allied towers alive
+     * @return whether a team has more allied rats alive
      */
-    public boolean setWinnerIfMoreTowersAlive() {
-        int[] totalTowersAlive = new int[2];
-
-        for (UnitType type : UnitType.values()) {
-            if (type.isTowerType()) {
-                totalTowersAlive[Team.A.ordinal()] += this.getObjectInfo().getRobotTypeCount(Team.A, type);
-                totalTowersAlive[Team.B.ordinal()] += this.getObjectInfo().getRobotTypeCount(Team.B, type);
-            }
-        }
-
-        if (totalTowersAlive[Team.A.ordinal()] > totalTowersAlive[Team.B.ordinal()]) {
-            setWinner(Team.A, DominationFactor.MORE_TOWERS_ALIVE);
-            return true;
-        } else if (totalTowersAlive[Team.B.ordinal()] > totalTowersAlive[Team.A.ordinal()]) {
-            setWinner(Team.B, DominationFactor.MORE_TOWERS_ALIVE);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @return whether a team has more allied robots alive
-     */
-    public boolean setWinnerIfMoreRobotsAlive() {
+    public boolean setWinnerIfMoreRatsAlive() {
         int[] totalRobotsAlive = new int[2];
 
         for (UnitType type : UnitType.values()) {
-            if (type.isRobotType()) {
+            if (type.isRatType()) {
                 totalRobotsAlive[Team.A.ordinal()] += this.getObjectInfo().getRobotTypeCount(Team.A, type);
                 totalRobotsAlive[Team.B.ordinal()] += this.getObjectInfo().getRobotTypeCount(Team.B, type);
             }
@@ -892,30 +616,6 @@ public class GameWorld {
             return true;
         } else if (totalRobotsAlive[Team.B.ordinal()] > totalRobotsAlive[Team.A.ordinal()]) {
             setWinner(Team.B, DominationFactor.MORE_ROBOTS_ALIVE);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @return whether a team has more paint stored in robots and towers
-     */
-    public boolean setWinnerIfMorePaintInUnits() {
-        int[] paintInUnits = new int[2];
-
-        for (InternalRobot robot : getAllRobots(Team.A)) {
-            paintInUnits[Team.A.ordinal()] += robot.getPaint();
-        }
-
-        for (InternalRobot robot : getAllRobots(Team.B)) {
-            paintInUnits[Team.B.ordinal()] += robot.getPaint();
-        }
-
-        if (paintInUnits[Team.A.ordinal()] > paintInUnits[Team.B.ordinal()]) {
-            setWinner(Team.A, DominationFactor.MORE_PAINT_IN_UNITS);
-            return true;
-        } else if (paintInUnits[Team.B.ordinal()] > paintInUnits[Team.A.ordinal()]) {
-            setWinner(Team.B, DominationFactor.MORE_PAINT_IN_UNITS);
             return true;
         }
         return false;
@@ -937,23 +637,22 @@ public class GameWorld {
      */
     public void checkEndOfMatch() {
         if (timeLimitReached() && gameStats.getWinner() == null) {
-            if (setWinnerIfMoreSquaresPainted())
+            if (setWinnerIfMoreCheese())
                 return;
-            if (setWinnerIfMoreTowersAlive())
-                return;
-            if (setWinnerIfMoreMoney())
-                return;
-            if (setWinnerIfMorePaintInUnits())
-                return;
-            if (setWinnerIfMoreRobotsAlive())
+            if (setWinnerIfMoreRatsAlive())
                 return;
             setWinnerArbitrary();
         }
     }
 
     public void processEndOfRound() {
-        int teamACoverage = (int) Math.round(this.teamInfo.getNumberOfPaintedSquares(Team.A) * 1000.0 / this.areaWithoutWalls);
-        int teamBCoverage = (int) Math.round(this.teamInfo.getNumberOfPaintedSquares(Team.B) * 1000.0 / this.areaWithoutWalls);
+        for (CheeseMine mine : this.cheeseMines) {
+            spawnCheese(mine);
+        }
+
+        // TODO: new team info stuff in matchmaker
+        this.matchMaker.addTeamInfo(Team.A, this.teamInfo.getCheese(Team.A));
+        this.matchMaker.addTeamInfo(Team.B, this.teamInfo.getCheese(Team.B));
         this.teamInfo.processEndOfRound();
 
         this.getMatchMaker().endRound();
@@ -969,18 +668,24 @@ public class GameWorld {
     // *********************************
 
     public int spawnRobot(int ID, UnitType type, MapLocation location, Team team) {
-        InternalRobot robot = new InternalRobot(this, ID, team, type, location);
-        for (MapLocation loc : type.getAllLocations(location)){
+        // TODO: what direction should robots start facing?
+        // IMO, towards center of the map to be fair
+        InternalRobot robot = new InternalRobot(this, ID, team, type, location, Direction.NORTH);
+
+        for (MapLocation loc : type.getAllLocations(location)) {
             addRobot(loc, robot);
         }
+
         objectInfo.createRobot(robot);
         controlProvider.robotSpawned(robot);
-        if (type.isTowerType()) {
-            this.teamInfo.addTowers(1, team);
-            // TODO robot.addPaint(GameConstants.INITIAL_TOWER_PAINT_AMOUNT);
+
+        if (type.isRatType()){
+            this.teamInfo.addRats(1, team);
         }
-        else
-            robot.addPaint((int) Math.round(type.paintCapacity)); // TODO * GameConstants.INITIAL_ROBOT_PAINT_PERCENTAGE / 100.0)); 
+        else if(type.isRatKingType()){
+            this.teamInfo.addRatKings(1, team);
+        }
+
         this.currentNumberUnits[team.ordinal()] += 1;
         return ID;
     }
@@ -988,6 +693,39 @@ public class GameWorld {
     public int spawnRobot(UnitType type, MapLocation location, Team team) {
         int ID = idGenerator.nextID();
         return spawnRobot(ID, type, location, team);
+    }
+
+    public void squeak(InternalRobot robot, Message message) {
+        MapLocation robotLoc = robot.getLocation();
+        MapLocation[] locations = getAllLocationsWithinRadiusSquared(robotLoc, GameConstants.SQUEAK_RADIUS_SQUARED);
+
+        for (MapLocation loc : locations){
+            InternalRobot otherRobot = getRobot(loc);
+
+            if (otherRobot != null && otherRobot.getTeam() == robot.getTeam()) {
+                otherRobot.addMessage(message.copy());
+            }
+            
+            //TODO alert cats
+        }
+
+        matchMaker.addSqueakAction(robotLoc);
+    }
+
+    public void writeSharedArray(int index, int value) {
+        this.sharedArray[index] = value;
+    }
+
+    public int readSharedArray(int index) {
+        return this.sharedArray[index];
+    }
+
+    public void writePersistentArray(int index, int value) {
+        this.persistentArray[index] = value;
+    }
+
+    public int readPersistentArray(int index) {
+        return this.persistentArray[index];
     }
 
     // *********************************
@@ -1003,37 +741,20 @@ public class GameWorld {
 
     public void destroyRobot(int id, boolean fromException, boolean fromDamage) {
         InternalRobot robot = objectInfo.getRobotByID(id);
+        Team robotTeam = robot.getTeam();
         MapLocation loc = robot.getLocation();
 
         if (loc != null) {
-            if (robot.getType().isTowerType()) {
-                this.towersByLoc[locationToIndex(loc)] = Team.NEUTRAL;
-                this.towerLocations.remove(loc);
-                this.teamInfo.addTowers(-1, robot.getTeam());
+            if (robot.getType().isRatType()){
+                this.teamInfo.addRats(-1, robotTeam);
             }
-            switch (robot.getType()) {
-                case LEVEL_ONE_DEFENSE_TOWER:
-                    this.currentDamageIncreases[robot.getTeam()
-                            .ordinal()] -= GameConstants.EXTRA_DAMAGE_FROM_DEFENSE_TOWER;
-                    break;
-                case LEVEL_TWO_DEFENSE_TOWER:
-                    this.currentDamageIncreases[robot.getTeam()
-                            .ordinal()] -= GameConstants.EXTRA_DAMAGE_FROM_DEFENSE_TOWER
-                                    + GameConstants.EXTRA_TOWER_DAMAGE_LEVEL_INCREASE;
-                    break;
-                case LEVEL_THREE_DEFENSE_TOWER:
-                    this.currentDamageIncreases[robot.getTeam()
-                            .ordinal()] -= GameConstants.EXTRA_DAMAGE_FROM_DEFENSE_TOWER
-                                    + 2 * GameConstants.EXTRA_TOWER_DAMAGE_LEVEL_INCREASE;
-                    break;
-                default:
-                    break;
+            else if (robot.getType().isRatKingType()){
+                this.teamInfo.addRatKings(-1, robotTeam);
             }
-            for (MapLocation robotLoc: robot.getAllPartLocations()){
+            for (MapLocation robotLoc : robot.getAllPartLocations()) {
                 removeRobot(robotLoc);
             }
         }
-
         controlProvider.robotKilled(robot);
         objectInfo.destroyRobot(id);
         if (fromDamage || fromException)
@@ -1041,9 +762,6 @@ public class GameWorld {
         else
             matchMaker.addDied(id);
         this.currentNumberUnits[robot.getTeam().ordinal()] -= 1;
-        if (this.currentNumberUnits[robot.getTeam().ordinal()] == 0) {
-            setWinner(robot.getTeam().opponent(), DominationFactor.DESTROY_ALL_UNITS);
-        }
     }
 
     // *********************************
@@ -1056,5 +774,4 @@ public class GameWorld {
         }
         profilerCollections.put(team, profilerCollection);
     }
-
 }

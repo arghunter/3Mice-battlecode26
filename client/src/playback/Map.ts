@@ -4,12 +4,12 @@ import { Vector } from './Vector'
 import Match from './Match'
 import { MapEditorBrush, Symmetry } from '../components/sidebar/map-editor/MapEditorBrush'
 import { packVecTable, parseVecTable } from './SchemaHelpers'
-import { RuinsBrush, WallsBrush, PaintBrush } from './Brushes'
+import { CheeseMinesBrush, WallsBrush, DirtBrush } from './Brushes'
 import { TEAM_COLOR_NAMES } from '../constants'
 import * as renderUtils from '../util/RenderUtil'
 import { getImageIfLoaded } from '../util/ImageLoader'
 import { ClientConfig } from '../client-config'
-import { Colors, currentColors, getPaintColors, getTeamColors } from '../colors'
+import { Colors, currentColors, getTeamColors } from '../colors'
 import Round from './Round'
 
 export type Dimension = {
@@ -21,8 +21,10 @@ export type Dimension = {
 
 type SchemaPacket = {
     wallsOffset: number
-    paintOffset: number
-    ruinsOffset: number
+    dirtOffset: number
+    cheeseMinesOffset: number
+    catWaypointIdsOffset: number
+    catWaypointVecsOffset: number
 }
 
 type ResourcePatternData = {
@@ -33,8 +35,10 @@ type ResourcePatternData = {
 
 export class CurrentMap {
     public readonly staticMap: StaticMap
-    public readonly paint: Int8Array
+    public readonly dirt: Int8Array
     public readonly markers: [Int8Array, Int8Array] // Each team has markers
+    public readonly trapData: Int8Array
+    public readonly cheeseData: Int8Array
     public readonly resourcePatterns: ResourcePatternData[]
 
     get width(): number {
@@ -48,24 +52,26 @@ export class CurrentMap {
     }
 
     constructor(from: StaticMap | CurrentMap) {
-        //this.flagData = new Map()
         if (from instanceof StaticMap) {
             // Create current map from static map
 
             this.staticMap = from
-            this.paint = new Int8Array(from.initialPaint)
+            this.dirt = new Int8Array(from.initialDirt)
             this.markers = [new Int8Array(this.width * this.height), new Int8Array(this.width * this.height)]
             this.resourcePatterns = []
         } else {
             // Create current map from current map (copy)
 
             this.staticMap = from.staticMap
-            this.paint = new Int8Array(from.paint)
+            this.dirt = new Int8Array(from.dirt)
             this.markers = [new Int8Array(from.markers[0]), new Int8Array(from.markers[1])]
 
             // Assumes ResourcePatternData is immutable
             this.resourcePatterns = [...from.resourcePatterns]
         }
+
+        this.trapData = new Int8Array(this.width * this.height)
+        this.cheeseData = new Int8Array(this.width * this.height)
     }
 
     indexToLocation(index: number): { x: number; y: number } {
@@ -101,9 +107,9 @@ export class CurrentMap {
             for (let y = srp.center.y + 2; y >= srp.center.y - 2; y--) {
                 for (let x = srp.center.x - 2; x <= srp.center.x + 2; x++) {
                     const idx = this.locationToIndex(x, y)
-                    const expectedPaint = ((patternMask >> patternIdx) & 1) + (srp.teamId - 1) * 2 + 1
-                    const actualPaint = this.paint[idx]
-                    if (actualPaint !== expectedPaint) {
+                    const expectedDirt = ((patternMask >> patternIdx) & 1) + (srp.teamId - 1) * 2 + 1
+                    const actualDirt = this.dirt[idx]
+                    if (actualDirt !== expectedDirt) {
                         this.resourcePatterns[i] = this.resourcePatterns[this.resourcePatterns.length - 1]
                         this.resourcePatterns.pop()
                         i--
@@ -126,31 +132,30 @@ export class CurrentMap {
         hoveredTile?: Vector
     ) {
         const dimension = this.dimension
-        const paintColors = getPaintColors()
         const teamColors = getTeamColors()
         for (let i = 0; i < dimension.width; i++) {
             for (let j = 0; j < dimension.height; j++) {
                 const schemaIdx = this.locationToIndexUnchecked(i, j)
                 const coords = renderUtils.getRenderCoords(i, j, dimension)
 
-                // Render rounded (clipped) paint
-                const paint = this.paint[schemaIdx]
-                if (paint) {
+                // Render rounded (clipped) dirt
+                const dirt = this.dirt[schemaIdx]
+                if (dirt) {
                     if (config.enableFancyPaint) {
                         renderUtils.renderRounded(
                             ctx,
                             i,
                             j,
                             this,
-                            this.paint,
+                            this.dirt,
                             () => {
-                                ctx.fillStyle = paintColors[paint]
+                                ctx.fillStyle = currentColors[Colors.DIRT_COLOR]
                                 ctx.fillRect(coords.x, coords.y, 1.0, 1.0)
                             },
                             { x: true, y: false }
                         )
                     } else {
-                        ctx.fillStyle = paintColors[paint]
+                        ctx.fillStyle = currentColors[Colors.DIRT_COLOR]
                         ctx.fillRect(coords.x, coords.y, 1.0, 1.0)
                     }
                 }
@@ -163,13 +168,9 @@ export class CurrentMap {
                         ctx.fillStyle = teamColors[0]
                         const label = markerA === 1 ? '1' : '2' // Primary/secondary
                         ctx.font = '1px monospace'
-                        ctx.shadowColor = 'black'
-                        ctx.shadowBlur = 4
                         ctx.scale(0.5, 0.5)
                         ctx.fillText(label, (coords.x + 0.05) * 2, (coords.y + 0.95) * 2)
                         ctx.scale(2, 2)
-                        ctx.shadowColor = ''
-                        ctx.shadowBlur = 0
                     }
 
                     const markerB = this.markers[1][schemaIdx]
@@ -177,13 +178,9 @@ export class CurrentMap {
                         ctx.fillStyle = teamColors[1]
                         const label = markerB === 3 ? '1' : '2' // Primary/secondary
                         ctx.font = '1px monospace'
-                        ctx.shadowColor = 'black'
-                        ctx.shadowBlur = 4
                         ctx.scale(0.5, 0.5)
                         ctx.fillText(label, (coords.x + 0.65) * 2, (coords.y + 0.95) * 2)
                         ctx.scale(2, 2)
-                        ctx.shadowColor = ''
-                        ctx.shadowBlur = 0
                     }
                 }
             }
@@ -214,6 +211,23 @@ export class CurrentMap {
                 }
             })
         }
+
+        const bodies = match.currentRound.bodies
+        if (
+            selectedBodyID &&
+            bodies.hasId(selectedBodyID) &&
+            bodies.getById(selectedBodyID).robotType === schema.RobotType.CAT
+        ) {
+            console.log('Rendering cat waypoints')
+            const waypoints = this.staticMap.catWaypoints.get(selectedBodyID)
+            waypoints?.forEach((waypoint, idx) => {
+                const coords = renderUtils.getRenderCoords(waypoint.x, waypoint.y, this.dimension)
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.5)'
+                ctx.beginPath()
+                ctx.arc(coords.x + 0.5, coords.y + 0.5, 0.3, 0, 2 * Math.PI)
+                ctx.fill()
+            })
+        }
     }
 
     getTooltipInfo(square: Vector, match: Match): string[] {
@@ -222,21 +236,21 @@ export class CurrentMap {
 
         const schemaIdx = this.locationToIndex(square.x, square.y)
 
-        const paint = this.paint[schemaIdx]
+        const dirt = this.dirt[schemaIdx]
         const wall = this.staticMap.walls[schemaIdx]
-        const ruin = this.staticMap.ruins.find((r) => r.x === square.x && r.y === square.y)
+        const cheeseMine = this.staticMap.cheeseMines.find((r) => r.x === square.x && r.y === square.y)
         const srp = this.resourcePatterns.find((r) => r.center.x === square.x && r.center.y === square.y)
         const markerA = this.markers[0][schemaIdx]
         const markerB = this.markers[1][schemaIdx]
 
         const info: string[] = []
-        for (let i = 0; i < match.game.teams.length; i++) {
-            if (paint === i * 2 + 1) {
-                info.push(`${TEAM_COLOR_NAMES[i]} Paint (Primary)`)
-            } else if (paint === i * 2 + 2) {
-                info.push(`${TEAM_COLOR_NAMES[i]} Paint (Secondary)`)
-            }
-        }
+        // for (let i = 0; i < match.game.teams.length; i++) {
+        //     if (paint === i * 2 + 1) {
+        //         info.push(`${TEAM_COLOR_NAMES[i]} Paint (Primary)`)
+        //     } else if (paint === i * 2 + 2) {
+        //         info.push(`${TEAM_COLOR_NAMES[i]} Paint (Secondary)`)
+        //     }
+        // }
         if (markerA) {
             info.push(`Silver Marker (${markerA === 1 ? 'Primary' : 'Secondary'})`)
         }
@@ -246,8 +260,11 @@ export class CurrentMap {
         if (wall) {
             info.push('Wall')
         }
-        if (ruin) {
-            info.push('Ruin')
+        if (cheeseMine) {
+            info.push('Cheese Mine')
+        }
+        if (dirt) {
+            info.push('Dirt')
         }
         if (srp) {
             const roundsRemaining = Math.max(srp.createRound + 50 - match.currentRound.roundNumber, 0)
@@ -262,12 +279,12 @@ export class CurrentMap {
     }
 
     getEditorBrushes(round: Round) {
-        const brushes: MapEditorBrush[] = [new PaintBrush(round), new RuinsBrush(round), new WallsBrush(round)]
+        const brushes: MapEditorBrush[] = [new DirtBrush(round), new CheeseMinesBrush(round), new WallsBrush(round)]
         return brushes.concat(this.staticMap.getEditorBrushes())
     }
 
     isEmpty(): boolean {
-        return this.paint.every((x) => x == 0) && this.staticMap.isEmpty()
+        return this.dirt.every((x) => x == 0) && this.staticMap.isEmpty()
     }
 
     /**
@@ -279,13 +296,27 @@ export class CurrentMap {
             builder,
             Array.from(this.staticMap.walls).map((x) => !!x)
         )
-        const paintOffset = schema.GameMap.createPaintVector(builder, this.staticMap.initialPaint)
-        const ruinsOffset = packVecTable(builder, this.staticMap.ruins)
+        // not sure if this is right
+        const dirtOffset = schema.GameMap.createDirtVector(
+            builder,
+            Array.from(this.staticMap.initialDirt).map((x) => !!x)
+        )
+        const cheeseMinesOffset = packVecTable(builder, this.staticMap.cheeseMines)
+        const catWaypointIdsOffset = schema.GameMap.createCatWaypointIdsVector(
+            builder,
+            Array.from(this.staticMap.catWaypoints.keys())
+        )
+        const catWaypointVecsOffsets = Array.from(this.staticMap.catWaypoints.values()).map((vecs) =>
+            packVecTable(builder, vecs)
+        )
+        const catWaypointVecsOffset = schema.GameMap.createCatWaypointVecsVector(builder, catWaypointVecsOffsets)
 
         return {
             wallsOffset,
-            paintOffset,
-            ruinsOffset
+            dirtOffset,
+            cheeseMinesOffset,
+            catWaypointIdsOffset,
+            catWaypointVecsOffset
         }
     }
 
@@ -295,8 +326,10 @@ export class CurrentMap {
      */
     insertSchemaPacket(builder: flatbuffers.Builder, packet: SchemaPacket) {
         schema.GameMap.addWalls(builder, packet.wallsOffset)
-        schema.GameMap.addPaint(builder, packet.paintOffset)
-        schema.GameMap.addRuins(builder, packet.ruinsOffset)
+        schema.GameMap.addDirt(builder, packet.dirtOffset)
+        schema.GameMap.addCheeseMines(builder, packet.cheeseMinesOffset)
+        schema.GameMap.addCatWaypointIds(builder, packet.catWaypointIdsOffset)
+        schema.GameMap.addCatWaypointVecs(builder, packet.catWaypointVecsOffset)
     }
 }
 
@@ -307,8 +340,9 @@ export class StaticMap {
         public readonly symmetry: number,
         public readonly dimension: Dimension,
         public readonly walls: Int8Array,
-        public readonly ruins: Vector[],
-        public readonly initialPaint: Int8Array
+        public readonly cheeseMines: Vector[],
+        public readonly initialDirt: Int8Array,
+        public readonly catWaypoints: Map<number, Vector[]>
     ) {
         if (symmetry < 0 || symmetry > 2 || !Number.isInteger(symmetry)) {
             throw new Error(`Invalid symmetry ${symmetry}`)
@@ -317,15 +351,15 @@ export class StaticMap {
         if (walls.length != dimension.width * dimension.height) {
             throw new Error('Invalid walls length')
         }
-        if (initialPaint.length != dimension.width * dimension.height) {
-            throw new Error('Invalid paint length')
+        if (initialDirt.length != dimension.width * dimension.height) {
+            throw new Error('Invalid dirt length')
         }
 
         if (walls.some((x) => x !== 0 && x !== 1)) {
             throw new Error('Invalid walls value')
         }
-        if (initialPaint.some((x) => x < 0 || x > 4)) {
-            throw new Error('Invalid paint value')
+        if (initialDirt.some((x) => x !== 0 && x !== 1)) {
+            throw new Error('Invalid dirt value')
         }
     }
 
@@ -345,9 +379,18 @@ export class StaticMap {
         }
 
         const walls = schemaMap.wallsArray() ?? assert.fail('wallsArray() is null')
-        const ruins = parseVecTable(schemaMap.ruins() ?? assert.fail('ruins() is null'))
-        const initialPaint = schemaMap.paintArray() ?? assert.fail('paintArray() is null')
-        return new StaticMap(name, randomSeed, symmetry, dimension, walls, ruins, initialPaint)
+        const cheeseMines = parseVecTable(schemaMap.cheeseMines() ?? assert.fail('cheeseMines() is null'))
+        const initialDirt = schemaMap.dirtArray() ?? assert.fail('dirtArray() is null')
+        const catWaypointIds = schemaMap.catWaypointIdsArray() ?? assert.fail('catWaypointIdsArray() is null')
+        const catWaypoints = new Map<number, Vector[]>()
+        catWaypointIds.forEach((id, idx) => {
+            catWaypoints.set(
+                id,
+                parseVecTable(schemaMap.catWaypointVecs(idx) ?? assert.fail(`catWaypointVecs(${idx}) is null`))
+            )
+        })
+
+        return new StaticMap(name, randomSeed, symmetry, dimension, walls, cheeseMines, initialDirt, catWaypoints)
     }
 
     static fromParams(width: number, height: number, symmetry: Symmetry) {
@@ -364,9 +407,10 @@ export class StaticMap {
         }
 
         const walls = new Int8Array(width * height)
-        const ruins: Vector[] = []
-        const initialPaint = new Int8Array(width * height)
-        return new StaticMap(name, randomSeed, symmetry, dimension, walls, ruins, initialPaint)
+        const cheeseMines: Vector[] = []
+        const initialDirt = new Int8Array(width * height)
+        const catWaypoints = new Map<number, Vector[]>()
+        return new StaticMap(name, randomSeed, symmetry, dimension, walls, cheeseMines, initialDirt, catWaypoints)
     }
 
     get width(): number {
@@ -444,6 +488,13 @@ export class StaticMap {
                     })
                 }
 
+                if (this.initialDirt[schemaIdx]) {
+                    renderUtils.renderRounded(ctx, i, j, this, this.initialDirt, () => {
+                        ctx.fillStyle = currentColors[Colors.DIRT_COLOR]
+                        ctx.fillRect(coords.x, coords.y, 1.0, 1.0)
+                    })
+                }
+
                 // Draw grid
                 const showGrid = true
                 if (showGrid) {
@@ -464,18 +515,18 @@ export class StaticMap {
             }
         }
 
-        // Render ruins
-        this.ruins.forEach(({ x, y }) => {
+        // Render cheese mines
+        this.cheeseMines.forEach(({ x, y }) => {
             const coords = renderUtils.getRenderCoords(x, y, this.dimension)
 
-            const imgPath = `ruins/silver_64x64.png`
-            const ruinImage = getImageIfLoaded(imgPath)
-            renderUtils.renderCenteredImageOrLoadingIndicator(ctx, ruinImage, coords, 1.0)
+            const imgPath = `cheese_mine.png`
+            const cheeseMineImage = getImageIfLoaded(imgPath)
+            renderUtils.renderCenteredImageOrLoadingIndicator(ctx, cheeseMineImage, coords, 1.0)
         })
     }
 
     isEmpty(): boolean {
-        return this.walls.every((x) => x == 0) && this.ruins.length == 0
+        return this.walls.every((x) => x == 0) && this.cheeseMines.length == 0
     }
 
     getEditorBrushes(): MapEditorBrush[] {

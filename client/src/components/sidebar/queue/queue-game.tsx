@@ -30,20 +30,14 @@ export const QueuedGame: React.FC<Props> = (props) => {
         switch (winType) {
             case schema.WinType.RESIGNATION:
                 return 'by resignation '
-            case schema.WinType.MAJORITY_PAINTED:
-                return 'by having paint majority '
-            case schema.WinType.ALL_UNITS_DESTROYED:
-                return 'by destroying all enemy units '
-            case schema.WinType.AREA_PAINTED:
-                return 'by painting more territory '
-            case schema.WinType.MORE_TOWERS:
-                return 'with more towers alive '
-            case schema.WinType.MORE_MONEY:
-                return 'with more money '
-            case schema.WinType.MORE_STORED_PAINT:
-                return 'with more stored paint '
-            case schema.WinType.MORE_ROBOTS:
-                return 'with more robots alive '
+            case schema.WinType.RATKING_DESTROYED:
+                return 'by destroying the rat king '
+            case schema.WinType.BACKSTAB_RATKING_DESTROYED:
+                return 'by backstabbing and destroying the rat king '
+            case schema.WinType.MORE_POINTS:
+                return 'by scoring more points '
+            case schema.WinType.TIE:
+                return 'by tying '
             case schema.WinType.COIN_FLIP:
                 return 'by coin flip '
             default:

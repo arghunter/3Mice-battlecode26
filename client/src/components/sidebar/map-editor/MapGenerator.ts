@@ -24,6 +24,16 @@ export function loadFileAsMap(file: File): Promise<Game> {
 }
 
 export function exportMap(round: Round, name: string) {
+    /*
+    Array.from(round.bodies.bodies.values())
+        .filter(
+            (body) =>
+                body.robotType === RobotType.RAT ||
+                body.robotType === RobotType.RAT_KING ||
+                body.robotType === RobotType.CAT
+        )
+        .forEach((body) => round.bodies.removeBody(body.id))
+    */
     const mapError = verifyMap(round.map, round.bodies)
     if (mapError) return mapError
 
@@ -59,30 +69,26 @@ function verifyMap(map: CurrentMap, bodies: Bodies): string {
     for (let i = 0; i < mapSize; i++) {
         const pos = map.indexToLocation(i)
         const wall = map.staticMap.walls[i]
-        const ruin = map.staticMap.ruins.find((l) => l.x === pos.x && l.y === pos.y)
+        const cheeseMine = map.staticMap.cheeseMines.find((l) => l.x === pos.x && l.y === pos.y)
         const body = bodies.getBodyAtLocation(pos.x, pos.y)
 
-        if (ruin && wall) {
-            return `Ruin and wall overlap at (${pos.x}, ${pos.y})`
-        }
-
-        if (ruin && body) {
-            return `Robot at (${pos.x}, ${pos.y}) is on top of a ruin`
+        if (cheeseMine && wall) {
+            return `Cheese mine and wall overlap at (${pos.x}, ${pos.y})`
         }
 
         if (wall && body) {
             return `Robot at (${pos.x}, ${pos.y}) is on top of a wall`
         }
 
-        if (ruin) {
-            // Check distance to nearby ruins
-            for (const checkRuin of map.staticMap.ruins) {
-                if (checkRuin === ruin) continue
+        if (cheeseMine) {
+            // Check distance to nearby cheese mines
+            for (const checkCheeseMine of map.staticMap.cheeseMines) {
+                if (checkCheeseMine === cheeseMine) continue
 
-                if (squareIntersects(checkRuin, pos, 4)) {
+                if (squareIntersects(checkCheeseMine, pos, 4)) {
                     return (
-                        `Ruin at (${pos.x}, ${pos.y}) is too close to ruin ` +
-                        `at (${checkRuin.x}, ${checkRuin.y}), must be ` +
+                        `Cheese mine at (${pos.x}, ${pos.y}) is too close to cheese mine ` +
+                        `at (${checkCheeseMine.x}, ${checkCheeseMine.y}), must be ` +
                         `>= 5 away`
                     )
                 }
@@ -90,13 +96,13 @@ function verifyMap(map: CurrentMap, bodies: Bodies): string {
         }
 
         if (wall) {
-            // Check distance to nearby ruins
+            // Check distance to nearby cheese mines
 
-            for (const checkRuin of map.staticMap.ruins) {
-                if (squareIntersects(checkRuin, pos, 2)) {
+            for (const checkCheeseMine of map.staticMap.cheeseMines) {
+                if (squareIntersects(checkCheeseMine, pos, 2)) {
                     return (
-                        `Wall at (${pos.x}, ${pos.y}) is too close to ruin ` +
-                        `at (${checkRuin.x}, ${checkRuin.y}), must be ` +
+                        `Wall at (${pos.x}, ${pos.y}) is too close to cheese mine ` +
+                        `at (${checkCheeseMine.x}, ${checkCheeseMine.y}), must be ` +
                         `>= 3 away`
                     )
                 }
@@ -114,24 +120,14 @@ function verifyMap(map: CurrentMap, bodies: Bodies): string {
     }
 
     // Validate initial bodies
-    const numPaintTowers = [0, 0]
-    const numMoneyTowers = [0, 0]
     for (const body of bodies.bodies.values()) {
         // Check distance to nearby ruins, towers, and walls
 
-        if (body.robotType === RobotType.PAINT_TOWER) {
-            numPaintTowers[body.team.id - 1]++
-        } else if (body.robotType === RobotType.MONEY_TOWER) {
-            numMoneyTowers[body.team.id - 1]++
-        } else {
-            return `Tower at (${body.pos.x}, ${body.pos.y}) has invalid type!`
-        }
-
-        for (const checkRuin of map.staticMap.ruins) {
-            if (squareIntersects(checkRuin, body.pos, 4)) {
+        for (const checkCheeseMine of map.staticMap.cheeseMines) {
+            if (squareIntersects(checkCheeseMine, body.pos, 4)) {
                 return (
-                    `Tower at (${body.pos.x}, ${body.pos.y}) is too close to ruin ` +
-                    `at (${checkRuin.x}, ${checkRuin.y}), must be ` +
+                    `Cheese mine at (${checkCheeseMine.x}, ${checkCheeseMine.y}) is too close to cheese mine ` +
+                    `at (${body.pos.x}, ${body.pos.y}), must be ` +
                     `>= 5 away`
                 )
             }
@@ -158,16 +154,6 @@ function verifyMap(map: CurrentMap, bodies: Bodies): string {
                 `at (${pos.x}, ${pos.y}), must be ` +
                 `>= 3 away`
             )
-        }
-    }
-
-    for (const teamIdx of [0, 1]) {
-        if (numPaintTowers[teamIdx] !== 1) {
-            return `Expected exactly 1 ${TEAM_COLOR_NAMES[teamIdx]} paint tower, found ${numPaintTowers[teamIdx]}`
-        }
-
-        if (numMoneyTowers[teamIdx] !== 1) {
-            return `Expected exactly 1 ${TEAM_COLOR_NAMES[teamIdx]} money tower, found ${numMoneyTowers[teamIdx]}`
         }
     }
 

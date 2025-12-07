@@ -44,10 +44,10 @@ const DEFAULT_CONFIG = {
         [Colors.TEAM_ONE]: '#cdcdcc',
         [Colors.TEAM_TWO]: '#fee493',
 
-        [Colors.PAINT_TEAMONE_ONE]: '#666666',
-        [Colors.PAINT_TEAMONE_TWO]: '#565656',
-        [Colors.PAINT_TEAMTWO_ONE]: '#b28b52',
-        [Colors.PAINT_TEAMTWO_TWO]: '#997746',
+        // [Colors.PAINT_TEAMONE_ONE]: '#666666',
+        // [Colors.PAINT_TEAMONE_TWO]: '#565656',
+        // [Colors.PAINT_TEAMTWO_ONE]: '#b28b52',
+        // [Colors.PAINT_TEAMTWO_TWO]: '#997746',
         [Colors.WALLS_COLOR]: '#547f31',
         [Colors.TILE_COLOR]: '#4c301e',
         [Colors.GAMEAREA_BACKGROUND]: '#2e2323',
@@ -143,12 +143,12 @@ const ColorConfig = () => {
                 <SingleColorPicker displayName={'Tiles'} colorName={Colors.TILE_COLOR} />
                 <div className="text-sm pb-1">Silver</div>
                 <SingleColorPicker displayName={'Text'} colorName={Colors.TEAM_ONE} />
-                <SingleColorPicker displayName={'Primary Paint'} colorName={Colors.PAINT_TEAMONE_ONE} />
-                <SingleColorPicker displayName={'Secondary Paint'} colorName={Colors.PAINT_TEAMONE_TWO} />
+                {/* <SingleColorPicker displayName={'Primary Paint'} colorName={Colors.PAINT_TEAMONE_ONE} /> */}
+                {/* <SingleColorPicker displayName={'Secondary Paint'} colorName={Colors.PAINT_TEAMONE_TWO} /> */}
                 <div className="text-sm pb-1">Gold</div>
                 <SingleColorPicker displayName={'Text'} colorName={Colors.TEAM_TWO} />
-                <SingleColorPicker displayName={'Primary Paint'} colorName={Colors.PAINT_TEAMTWO_ONE} />
-                <SingleColorPicker displayName={'Secondary Paint'} colorName={Colors.PAINT_TEAMTWO_TWO} />
+                {/* <SingleColorPicker displayName={'Primary Paint'} colorName={Colors.PAINT_TEAMTWO_ONE} /> */}
+                {/* <SingleColorPicker displayName={'Secondary Paint'} colorName={Colors.PAINT_TEAMTWO_TWO} /> */}
             </div>
             <div className="flex flex-row mt-8">
                 <BrightButton

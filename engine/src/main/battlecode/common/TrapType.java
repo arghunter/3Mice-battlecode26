@@ -6,20 +6,20 @@ package battlecode.common;
 
 public enum TrapType {
 
-    // build cost, damage from activation, stun time from activation, global trap
-    // limit, action cooldown
-
     /**
      * Traps enemy rats
      */
-    RATTRAP(5, 5, 2, 25, 5),
+    RAT_TRAP(5, 5, 20, 25, 5, 0, 25, 2),
 
     /**
      * Traps the cat
      */
-    CATTRAP(10, 2, 9, 5, 10),
+    CAT_TRAP(10, 10, 20, 5, 10, 0, 5, 2),
 
-    NONE(100, 5, 2, 0, 0);
+    /**
+     * No trap
+     */
+    NONE(0, 0, 0, 0, 0, 0, 0, 0);
 
     /**
      * Crumbs cost of each trap
@@ -46,11 +46,30 @@ public enum TrapType {
      */
     public final int actionCooldown;
 
-    TrapType(int buildCost, int damage, int stunTime, int trapLimit, int actionCooldown) {
+    /**
+     * Amount of cheese that spawns with the rat trap, if there isn't already at least this much cheese on the trap location
+     */
+    public final int spawnCheeseAmount;
+
+    /**
+     * Maximum number of this trap type that a team can have active at once
+     */
+    public final int maxCount;
+
+    /**
+     * The radius within which the trap is triggered
+     */
+    public final int triggerRadiusSquared;
+    
+
+    TrapType(int buildCost, int damage, int stunTime, int trapLimit, int actionCooldown, int spawnCheeseAmount, int maxCount, int triggerRadiusSquared) {
         this.buildCost = buildCost;
         this.damage = damage;
         this.stunTime = stunTime;
         this.trapLimit = trapLimit;
         this.actionCooldown = actionCooldown;
+        this.spawnCheeseAmount = spawnCheeseAmount;
+        this.maxCount = maxCount;
+        this.triggerRadiusSquared = triggerRadiusSquared;
     }
 }
