@@ -58,6 +58,9 @@ public class GameWorld {
     private ArrayList<CheeseMine> cheeseMines;
     private CheeseMine[] cheeseMineLocs;
 
+    private int[] sharedArray;
+    private int[] persistentArray;
+
     public int symmetricY(int y) {
         return symmetricY(y, gameMap.getSymmetry());
     }
@@ -143,6 +146,10 @@ public class GameWorld {
             MapLocation symLoc = symmetryLocation(mine.getLocation());
             mine.setPair(cheeseMineLocs[locationToIndex(symLoc)]);
         }
+
+        this.sharedArray = new int[GameConstants.SHARED_ARRAY_SIZE];
+        this.persistentArray = new int[GameConstants.PERSISTENT_ARRAY_SIZE];
+        // TODO make persistent array last between matches
 
         RobotInfo[] initialBodies = gm.getInitialBodies();
 
@@ -434,8 +441,8 @@ public class GameWorld {
 
         this.trapLocations[locationToIndex(loc)] = null;
         matchMaker.addTriggeredTrap(trap.getId());
-        matchMaker.addAction(robot.getID(), FlatHelpers.getTrapActionFromTrapType(type),
-                locationToIndex(trap.getLocation()));
+        // matchMaker.addAction(robot.getID(), FlatHelpers.getTrapActionFromTrapType(type),
+        //         locationToIndex(trap.getLocation()));
     }
 
     // ***********************************
@@ -687,6 +694,22 @@ public class GameWorld {
             }
             //TODO alert cats
         }
+    }
+
+    public void writeSharedArray(int index, int value) {
+        this.sharedArray[index] = value;
+    }
+
+    public int readSharedArray(int index) {
+        return this.sharedArray[index];
+    }
+
+    public void writePersistentArray(int index, int value) {
+        this.persistentArray[index] = value;
+    }
+
+    public int readPersistentArray(int index) {
+        return this.persistentArray[index];
     }
 
     // *********************************

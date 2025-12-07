@@ -211,6 +211,8 @@ public final class RobotControllerImpl implements RobotController {
             throw new GameActionException(CANT_DO_THAT, "Can't place dirt on an occupied tile!");
         if (this.gameWorld.getDirt(loc))
             throw new GameActionException(CANT_DO_THAT, "Tile already has dirt!");
+        
+        this.robot.addActionCooldownTurns(GameConstants.DIG_COOLDOWN);
     }
 
     private void assertCanRemoveDirt(MapLocation loc) throws GameActionException {
@@ -221,6 +223,8 @@ public final class RobotControllerImpl implements RobotController {
             throw new GameActionException(CANT_DO_THAT, "Insufficient cheese to remove dirt!");
         if (!this.gameWorld.getDirt(loc))
             throw new GameActionException(CANT_DO_THAT, "No dirt to remove at that location!");
+
+        this.robot.addActionCooldownTurns(GameConstants.DIG_COOLDOWN);
     }
 
     @Override
@@ -875,6 +879,42 @@ public final class RobotControllerImpl implements RobotController {
                 messages.add(m);
         }
         return messages.toArray(new Message[messages.size()]);
+    }
+
+    @Override
+    public void writeSharedArray(int index, int value) throws GameActionException {
+        if (!this.getType().isRatKingType()) {
+            throw new GameActionException(CANT_DO_THAT, "Only rat kings can write to the shared array!");
+        } else if (index < 0 || index >= GameConstants.SHARED_ARRAY_SIZE) {
+            throw new GameActionException(CANT_DO_THAT, "Index " + index + " is out of bounds for the shared array!");
+        } else if (value < 0 || value > GameConstants.COMM_ARRAY_MAX_VALUE) {
+            throw new GameActionException(CANT_DO_THAT, "Value " + value + " is out of bounds for the shared array!");
+        }
+
+        this.gameWorld.writeSharedArray(index, value);
+    }
+
+    @Override
+    public int readSharedArray(int index) throws GameActionException {
+        return this.gameWorld.readSharedArray(index);
+    }
+
+    @Override
+    public void writePersistentArray(int index, int value) throws GameActionException {
+        if (!this.getType().isRatKingType()) {
+            throw new GameActionException(CANT_DO_THAT, "Only rat kings can write to the persistent array!");
+        } else if (index < 0 || index >= GameConstants.PERSISTENT_ARRAY_SIZE) {
+            throw new GameActionException(CANT_DO_THAT, "Index " + index + " is out of bounds for the persistent array!");
+        } else if (value < 0 || value > GameConstants.COMM_ARRAY_MAX_VALUE) {
+            throw new GameActionException(CANT_DO_THAT, "Value " + value + " is out of bounds for the persistent array!");
+        }
+
+        this.gameWorld.writePersistentArray(index, value);
+    }
+
+    @Override
+    public int readPersistentArray(int index) throws GameActionException {
+        return this.gameWorld.readPersistentArray(index);
     }
 
     // ***********************************

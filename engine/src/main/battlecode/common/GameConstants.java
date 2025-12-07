@@ -184,6 +184,19 @@ public class GameConstants {
     public static final int CAT_GRACE_PERIOD = 100;
 
     // *********************************
+    // ****** COMMUNICATION ************
+    // *********************************
+
+    /** The size of the shared array. */
+    public static final int SHARED_ARRAY_SIZE = 64;
+
+    /** The maximum value of an integer in the shared array and persistent array. */
+    public static final int COMM_ARRAY_MAX_VALUE = 1023;
+
+    /** The size of the persistent array. */
+    public static final int PERSISTENT_ARRAY_SIZE = 5;
+
+    // *********************************
     // ****** COOLDOWNS ****************
     // *********************************
 

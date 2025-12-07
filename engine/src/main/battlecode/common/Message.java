@@ -30,7 +30,7 @@ public class Message {
     }
 
     public String toString() {
-        return "Message with value " + bytes + " sent from robot with ID " + senderID + " during round " + round + ".";
+        return "Message with value " + bytes + " sent from robot with ID " + senderID + " during round " + round + " from location " + sourceLoc + ".";
     }
 
     public Message copy() {

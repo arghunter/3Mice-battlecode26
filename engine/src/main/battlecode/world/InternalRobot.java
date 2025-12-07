@@ -492,11 +492,11 @@ public class InternalRobot implements Comparable<InternalRobot> {
         if (!this.type.isThrowingType()) {
             throw new RuntimeException("Unit must be a rat to grab other rats");
         } else if (!loc.isAdjacentTo(this.getLocation())) {
-            throw new RuntimeException("Can only grab adjacent robots");
-        } else if (false) { // TODO
-            throw new RuntimeException("Can only grab robots in front of us");
+            throw new RuntimeException("A rat can only grab adjacent rats");
+        } else if (!canSenseLocation(loc)) { // TODO replace with checking if the target robot is in front of this robot
+            throw new RuntimeException("A rat can only grab robots in front of it");
         } else if (this.isCarryingRobot()) {
-            throw new RuntimeException("Already carrying a robot");
+            throw new RuntimeException("Already carrying a rat");
         } else if (this.isGrabbedByRobot()) { // This should never occur, since grabbed robots are on action cooldown
             throw new RuntimeException("Cannot grab while being carried");
         }
@@ -507,7 +507,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
                 && !targetRobot.isBeingThrown()) {
             boolean canGrab = false;
             
-            if (false) { // TODO replace with checking if the enemy robot is facing away from us
+            if (!targetRobot.canSenseLocation(this.location)) { // TODO replace with checking if the enemy robot is facing away from this robot
                 canGrab = true; // We can always grab robots facing away from us
             } else if (this.team == this.gameWorld.getRobot(loc).getTeam()) {
                 canGrab = true; // We can always grab allied robots
