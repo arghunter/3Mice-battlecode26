@@ -929,6 +929,30 @@ public final class RobotControllerImpl implements RobotController {
         this.gameWorld.getMatchMaker().addTransferAction(robot.getID(), amount);
     }
 
+    public void assertCanThrowRat(Direction dir) throws GameActionException {
+        assertIsActionReady();
+        MapLocation nextLoc = this.getLocation().add(dir);
+        if (!this.robot.getType().isRatType()) {
+            throw new GameActionException(CANT_DO_THAT, "Only rats can throw other rats!");
+        }
+        if (!this.robot.isCarryingRobot())
+            throw new GameActionException(CANT_DO_THAT, "This rat is not carrying any rat!");
+        if (!this.gameWorld.getGameMap().onTheMap(nextLoc)) {
+            throw new RuntimeException("Cannot throw outside of map!");
+        }
+        if (!this.gameWorld.isPassable(nextLoc) || (this.gameWorld.getRobot(nextLoc) != null)) {
+            throw new RuntimeException("There must be at least 1 empty space in front the throwing rat!");
+        }
+    }
+
+    public boolean canThrowRat(Direction dir){
+        return true; //TODO Implement
+    }
+
+    public void throwRat(Direction dir){
+        //TODO: do something
+    }
+
     @Override
     public void disintegrate() {
         throw new RobotDeathException();

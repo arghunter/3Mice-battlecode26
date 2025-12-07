@@ -706,17 +706,21 @@ public interface RobotController {
     boolean canTransferCheese(MapLocation loc, int amount);
 
     /**
-     * Transfers raw cheese from the robot's stash to the stash of the allied
-     * rat king at loc. Pass in a negative number to take paint, positive
-     * to give paint. Raw cheese transferred to a rat king becomes global cheese,
-     * usable by any robot.
+     * Throws robot in the robot direction
      * 
-     * @param loc    the location of the rat king to transfer cheese to
-     * @param amount the amount of cheese to give. Should be > 0
+     * @param dir the location 
+     * @battlecode.doc.costlymethod
+     */
+    void throwRat(Direction dir);
+
+    /**
+     * Tests whether the robot can throw a carried robot in the specified direction.
+     * 
+     * @param dir the direction to throw the robot
      * @throws GameActionException if the robot is not able to transfer cheese to the
      *                             location
      */
-    void transferCheese(MapLocation loc, int amount) throws GameActionException;
+    boolean canThrowRat(Direction dir);
 
     /**
      * Destroys the robot.
