@@ -808,42 +808,36 @@ public final class RobotControllerImpl implements RobotController {
     }
 
 
-    public void assertCanUpgradeRats(MapLocation loc) throws GameActionException {
+    public void assertCanBecomeRatKing() throws GameActionException {
         assertIsActionReady();
-        assertCanActLocation(loc, UnitType.RAT.actionRadiusSquared);
-        if (this.gameWorld.getTeamInfo().getMoney(this.robot.getTeam()) < 50) {
-            throw new GameActionException(CANT_DO_THAT, "Not enough money to upgrade to a rat king");
+        if (this.gameWorld.getTeamInfo().getCheese(this.robot.getTeam()) < GameConstants.RAT_KING_UPGRADE_CHEESE_COST) {
+            throw new GameActionException(CANT_DO_THAT, "Not enough cheese to upgrade to a rat king");
         }
-
-        Direction[] directions = {
-            Direction.NORTHWEST, Direction.NORTH, Direction.NORTHEAST,
-            Direction.WEST, Direction.EAST,
-            Direction.SOUTHWEST, Direction.SOUTH, Direction.SOUTHEAST
-            
-        };
-        InternalRobot robot = this.gameWorld.getRobot(loc);
-        int numRats = 0;
-        for (Direction d: directions) {
-            MapLocation currentMapLoc = loc.add(d);
-            InternalRobot currentRobot = this.gameWorld.getRobot(currentMapLoc);
-            if (currentRobot != null && robot.getTeam() == currentRobot.getTeam()) {
-                numRats++;
+        int numAllyRats = 0;
+        for (Direction d : Direction.allDirections()){
+            MapLocation curLoc = this.adjacentLocation(d);
+            InternalRobot curRobot = this.gameWorld.getRobot(curLoc);
+            if (curRobot != null && curRobot.getTeam() == this.robot.getTeam() && curRobot.getType() == UnitType.RAT){
+                numAllyRats += 1;
+            }
+            if (curRobot != null && !curRobot.getType().isRatType()){
+                throw new GameActionException(CANT_DO_THAT, "Can't become a rat king when there are nearby cats or rat kings!");
             }
             MapInfo mapInfo = this.getMapInfo(loc);
-            if (mapInfo.isPassable()) {
+            if (!mapInfo.isPassable()) {
                 throw new GameActionException(CANT_DO_THAT, "Can only upgrade if all squares in the 3x3 vicinity are passable");
             }
         }
-        if (numRats < 7) {
+        if (numAllyRats < 7){
             throw new GameActionException(CANT_DO_THAT, "Not enough rats in the 3x3 square");
         }
     }
 
 
     @Override
-    public boolean canUpgradeRats(MapLocation loc) {
+    public boolean canBecomeRatKing() {
         try {
-            assertCanUpgradeRats(loc);
+            assertCanBecomeRatKing();
             return true;
         } catch (GameActionException e) {
             return false;
@@ -851,24 +845,22 @@ public final class RobotControllerImpl implements RobotController {
     }
 
     @Override
-    public void upgradeRats(MapLocation loc) {
+    public void becomeRatKing() throws GameActionException {
         assertCanUpgradeRats(loc);
         int health = 0;
-        Direction[] directions = {
-            Direction.NORTHWEST, Direction.NORTH, Direction.NORTHEAST,
-            Direction.WEST, Direction.EAST,
-            Direction.SOUTHWEST, Direction.SOUTH, Direction.SOUTHEAST
-            
-        };
-        InternalRobot robot = this.gameWorld.getRobot(loc);
-        for (Direction d: directions) {
-            InternalRobot currentRobot = this.gameWorld.getRobot(loc.add(d));
+        for (Direction d: Direction.allDirections()) {
+            InternalRobot currentRobot = this.gameWorld.getRobot(this.adjacentLocation(d));
             if (robot.getTeam() == currentRobot.getTeam()) {
                 health += currentRobot.getHealth();
             }
-            currentRobot.die_exception();
+            if (d != Direction.CENTER){
+                currentRobot.addHealth(-currentRobot.getHealth());
+            }
         }
+        this.gameWorld.getTeamInfo().addCheese(-GameConstants.RAT_KING_UPGRADE_CHEESE_COST);
+        health = Math.min(health, UnitType.RAT_KING.health);
         robot.becomeRatKing(health);
+        // TODO: becomeRatKing action?
     }
 
     // ***********************************

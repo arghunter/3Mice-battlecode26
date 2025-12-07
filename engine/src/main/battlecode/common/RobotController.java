@@ -557,6 +557,27 @@ public interface RobotController {
     void upgradeTower(MapLocation loc) throws GameActionException;
 
     /**
+     * Checks if a rat can become a rat king, when 7 allied rats are in the 3x3 square
+     * centered at this rat's location and the ally team has 50 cheese. 
+     * All tiles in the 3x3 square must be passible.
+     * 
+     * @return true if this rat can become a rat king
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    boolean canBecomeRatKing();
+
+    /**
+     * Upgrades this rat into a rat king if possible, when 7 allied rats are in the 3x3 square
+     * centered at this rat's location and the ally team has 50 cheese.
+     * 
+     * Other rats in the 3x3 square will be killed.
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    void becomeRatKing() throws GameActionException;
+
+    /**
      * Tests whether this robot can place dirt at the given location.
      * @param loc
      * @throws GameActionException
@@ -806,9 +827,4 @@ public interface RobotController {
      * @battlecode.doc.costlymethod
      */
     void setTimelineMarker(String label, int red, int green, int blue);
-
-
-    boolean canUpgradeRats(MapLocation loc);
-
-    void upgradeRats(MapLocation loc);
 }
