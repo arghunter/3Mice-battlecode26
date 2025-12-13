@@ -1041,13 +1041,99 @@ public final class RobotControllerImpl implements RobotController {
         }
     }
 
-    public boolean canThrowRat(Direction dir){
-        return true; //TODO Implement
+    public boolean canThrowRat(Direction dir) {
+        try {
+            assertCanThrowRat(dir);
+            return true;
+        } catch (GameActionException e) {
+            return false;
+        }
     }
 
-    public void throwRat(Direction dir){
-        //TODO: do something
+    @Override
+    public void throwRat(Direction dir) throws GameActionException {
+        assertCanThrowRat(dir);
+        this.robot.throwRobot(dir);
     }
+
+    
+    public void assertCanCarryRat(MapLocation loc) throws GameActionException {
+        assertNotNull(loc);
+        // must be senseable and within one square (adjacent)
+        assertCanActLocation(loc, 1);
+        assertIsActionReady();
+
+        // Must be a rat-type 
+        if (!this.robot.getType().isRatType()) {
+            throw new GameActionException(CANT_DO_THAT, "Only rats can grab other rats!");
+        }
+
+        // adjacency
+        if (!loc.isAdjacentTo(this.getLocation())) {
+            throw new GameActionException(CANT_DO_THAT, "A rat can only grab adjacent robots!");
+        }
+
+        // must be in sight
+        if (!this.canSenseLocation(loc)) {
+            throw new GameActionException(CANT_DO_THAT, "A rat can only grab robots in front of it");
+        }
+
+        // can't already be carrying
+        if (this.robot.isCarryingRobot()) {
+            throw new GameActionException(CANT_DO_THAT, "Already carrying a rat");
+        }
+
+        // cannot grab while being carried
+        if (this.robot.isGrabbedByRobot()) {
+            throw new GameActionException(CANT_DO_THAT, "Cannot grab while being carried");
+        }
+
+        InternalRobot targetRobot = this.gameWorld.getRobot(loc);
+        if (targetRobot == null) {
+            throw new GameActionException(CANT_DO_THAT, "No robot at target location");
+        }
+
+        // target must be throwable (a unit that can be picked up)
+        if (!targetRobot.getType().isThrowableType()) {
+            throw new GameActionException(CANT_DO_THAT, "Target robot is not throwable");
+        }
+
+        if (targetRobot.isBeingThrown()) {
+            throw new GameActionException(CANT_DO_THAT, "Target robot is currently being thrown");
+        }
+
+        // Allow grabbing if the target is facing away (cannot sense this robot), or
+        // the target is allied, or the target is weaker (health comparison w/ threshold)
+        boolean canGrab = false;
+        if (!targetRobot.canSenseLocation(this.getLocation())) {
+            canGrab = true; 
+        } else if (this.robot.getTeam() == targetRobot.getTeam()) {
+            canGrab = true;
+        } else if (targetRobot.getHealth() + GameConstants.HEALTH_GRAB_THRESHOLD < this.robot.getHealth()) {
+            canGrab = true;
+        }
+
+        if (!canGrab) {
+            throw new GameActionException(CANT_DO_THAT, "Cannot grab that robot");
+        }
+    }
+
+    @Override
+    public boolean canCarryRat(MapLocation loc) {
+        try {
+            assertCanCarryRat(loc);
+            return true;
+        } catch (GameActionException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public void carryRat(MapLocation loc) throws GameActionException {
+        assertCanCarryRat(loc);
+        this.robot.grabRobot(loc);
+    }
+
 
     @Override
     public void disintegrate() {

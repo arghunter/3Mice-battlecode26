@@ -780,7 +780,7 @@ public interface RobotController {
      * @param dir the location 
      * @battlecode.doc.costlymethod
      */
-    void throwRat(Direction dir);
+    void throwRat(Direction dir) throws GameActionException;
 
     /**
      * Tests whether the robot can throw a carried robot in the specified direction.
@@ -789,7 +789,23 @@ public interface RobotController {
      * @throws GameActionException if the robot is not able to transfer cheese to the
      *                             location
      */
-    boolean canThrowRat(Direction dir);
+    boolean canThrowRat(Direction dir) throws GameActionException;
+
+    /**
+     * Tests whether the robot can grab (carry) a robot at the specified location.
+     *
+     * @param loc the location to grab from (must be adjacent)
+     * @return true if this robot can pick up a robot at loc
+     */
+    boolean canCarryRat(MapLocation loc);
+
+    /**
+     * Causes this robot to pick up (grab) a robot at the specified location.
+     *
+     * @param loc the location to pick up from (must be adjacent)
+     * @throws GameActionException if this robot cannot pick up the target
+     */
+    void carryRat(MapLocation loc) throws GameActionException;
 
     /**
      * Destroys the robot.
