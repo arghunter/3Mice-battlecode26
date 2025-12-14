@@ -106,7 +106,7 @@ const makeEditorActionData = (map: StaticMap, atype: schema.Action, tx: number, 
         case schema.Action.CatFeed:
             return { loc: () => loc }
         case schema.Action.CatPounce:
-            return { loc: () => loc }
+            return { startLoc: () => loc, endLoc: () => map.locationToIndex(targetX + 1, targetY + 2) }
         case schema.Action.CatScratch:
             return { loc: () => loc }
         case schema.Action.CheesePickup:
