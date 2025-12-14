@@ -365,6 +365,9 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             target.hp = Math.max(target.hp - damage, 0)
         }
     },
+    [schema.Action.StunAction]: class StunAction extends Action<schema.StunAction> {
+        // TODO
+    },
     [schema.Action.SpawnAction]: class SpawnAction extends Action<schema.SpawnAction> {
         apply(round: Round): void {
             round.bodies.spawnBodyFromAction(this.actionData)
