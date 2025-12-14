@@ -330,9 +330,10 @@ export class Body {
         const pos = this.getInterpolatedCoords(match)
         const renderCoords = renderUtils.getRenderCoords(pos.x, pos.y, match.currentRound.map.staticMap.dimension)
 
-
-        renderCoords.x += (this.size-1)*0.5
-        renderCoords.y += (this.size-1)*0.5
+        if(this.robotType == schema.RobotType.CAT){
+            renderCoords.x += (this.size-1)*0.5
+            renderCoords.y -= (this.size-1)*0.5
+        }
 
 
         if (this.dead) ctx.globalAlpha = 0.5
