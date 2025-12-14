@@ -591,6 +591,26 @@ public class InternalRobot implements Comparable<InternalRobot> {
         }
     }
 
+    public void dropRobot(Direction dir) {
+        if (!this.type.isThrowingType()) {
+            throw new RuntimeException("Unit must be a rat to drop other rats");
+        } else if (!this.isCarryingRobot()) {
+            throw new RuntimeException("Not carrying a robot to drop");
+        }
+        MapLocation dropLoc = this.getLocation().add(dir);
+        if (!this.gameWorld.getGameMap().onTheMap(dropLoc)) {
+            throw new RuntimeException("Cannot drop outside of map");
+        } else if (this.gameWorld.getRobot(dropLoc) != null) {
+            throw new RuntimeException("Cannot drop into occupied space");
+        } else if (!this.gameWorld.isPassable(dropLoc)) {
+            throw new RuntimeException("Cannot drop into impassable terrain");
+        }
+
+        // Drop the robot
+        this.carryingRobot.getDropped(dropLoc);
+        this.carryingRobot = null;
+    }
+
     private void getGrabbed(InternalRobot grabber) {
         this.grabbedByRobot = grabber;
         this.movementCooldownTurns += GameConstants.THROW_DURATION + GameConstants.THROW_STUN_DURATION;
