@@ -13,9 +13,6 @@ import { Vector } from './Vector'
 import { Team } from './Game'
 import Round from './Round'
 import { GameRenderer } from './GameRenderer'
-import { once } from 'process'
-import { assert } from 'console'
-import { current } from 'tailwindcss/colors'
 
 const applyInRadius = (
     map: CurrentMap | StaticMap,
@@ -215,9 +212,9 @@ export class RobotBrush extends SinglePointMapEditorBrush<StaticMap> {
             const pos = { x, y }
 
             const id = this.bodies.getNextID()
-            if(this.bodies.checkBodyCollisionAtLocation(robotType, pos)) return null;
-            
-            this.bodies.spawnBodyFromValues(id, robotType, team, pos)
+            if (this.bodies.checkBodyCollisionAtLocation(robotType, pos)) return null
+
+            this.bodies.spawnBodyFromValues(id, robotType, team, pos, 0)
 
             return id
         }
@@ -509,11 +506,11 @@ export class CatBrush extends SymmetricMapEditorBrush<StaticMap> {
 
         const add = (x: number, y: number, team: Team) => {
             const pos = { x, y }
-            
-            if(this.bodies.checkBodyCollisionAtLocation(schema.RobotType.CAT, pos)) return null;
+
+            if (this.bodies.checkBodyCollisionAtLocation(schema.RobotType.CAT, pos)) return null
 
             const id = this.bodies.getNextID()
-            this.bodies.spawnBodyFromValues(id, schema.RobotType.CAT, team, pos)
+            this.bodies.spawnBodyFromValues(id, schema.RobotType.CAT, team, pos, 0)
 
             return id
         }
@@ -573,12 +570,15 @@ export class RatKingBrush extends SymmetricMapEditorBrush<StaticMap> {
 
         const add = (x: number, y: number, team: Team) => {
             const pos = { x, y }
-            if (this.bodies.getBodyAtLocation(x, y) || this.bodies.checkBodyCollisionAtLocation(schema.RobotType.RAT_KING, pos)) {
+            if (
+                this.bodies.getBodyAtLocation(x, y) ||
+                this.bodies.checkBodyCollisionAtLocation(schema.RobotType.RAT_KING, pos)
+            ) {
                 return null
             }
 
             const id = this.bodies.getNextID()
-            this.bodies.spawnBodyFromValues(id, schema.RobotType.RAT_KING, team, pos)
+            this.bodies.spawnBodyFromValues(id, schema.RobotType.RAT_KING, team, pos, 0)
 
             return id
         }
