@@ -589,6 +589,12 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.movementCooldownTurns += GameConstants.THROW_DURATION + GameConstants.THROW_STUN_DURATION;
         this.actionCooldownTurns += GameConstants.THROW_DURATION + GameConstants.THROW_STUN_DURATION;
         this.gameWorld.removeRobot(getLocation());
+        if (this.isCarryingRobot()) { // If we were carrying a robot, drop it
+            this.carryingRobot.getDropped(getLocation());
+            this.carryingRobot = null;
+        }
+
+        this.setInternalLocationOnly(grabber.getLocation());
     }
 
     public void throwRobot(Direction dir) {
@@ -612,7 +618,15 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.grabbedByRobot = null;
         this.thrownDir = dir;
         this.throwDuration = GameConstants.THROW_DURATION/10;
-        this.setLocation(dir.dx, dir.dy);
+        this.setInternalLocationOnly(this.getLocation().add(dir));
+        this.gameWorld.addRobot(this.getLocation(), this);
+    }
+
+    public void getDropped(MapLocation loc) {
+        this.grabbedByRobot = null;
+        this.movementCooldownTurns = GameConstants.THROW_SAFE_LANDING_STUN_DURATION;
+        this.actionCooldownTurns = GameConstants.THROW_SAFE_LANDING_STUN_DURATION;
+        this.setInternalLocationOnly(loc);
         this.gameWorld.addRobot(this.getLocation(), this);
     }
 
