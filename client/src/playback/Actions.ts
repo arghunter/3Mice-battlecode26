@@ -183,15 +183,32 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
         }
     },
     [schema.Action.RatNap]: class RatNapAction extends Action<schema.RatNap> {
+        private static readonly OFFSET = { x: -0.35, y: 0 }
         apply(round: Round): void {
             // move the target onto the source adjust target's size using scale factor
             const src = round.bodies.getById(this.robotId)
             const target = round.bodies.getById(this.actionData.id()) // rat getting napped
+
+            target.lastPos = { ...target.pos }
+            target.pos = { x: src.pos.x + RatNapAction.OFFSET.x, y: src.pos.y + RatNapAction.OFFSET.y }
+            target.size = 0.6
         }
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
             //target rat moves onto src rat, circle around carried group thing
             const src = match.currentRound.bodies.getById(this.robotId)
-            const target = match.currentRound.bodies.getById(this.actionData.id()) // rat getting napped
+            // const target = match.currentRound.bodies.getById(this.actionData.id()) // rat getting napped
+            
+            const srcCoords = renderUtils.getRenderCoords(src.pos.x, src.pos.y, match.map.dimension, true)
+            ctx.save()
+            ctx.shadowBlur = 12
+            ctx.shadowColor = src.team.color
+            ctx.beginPath()
+            ctx.strokeStyle = src.team.color
+            ctx.globalAlpha = 0.7
+            ctx.lineWidth = 0.04
+            ctx.arc(srcCoords.x, srcCoords.y, 0.6, 0, 2 * Math.PI)
+            ctx.stroke()
+            ctx.restore() 
         }
     },
     [schema.Action.RatCollision]: class RatCollisionAction extends Action<schema.RatCollision> {
@@ -200,6 +217,33 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             const src = match.currentRound.bodies.getById(this.robotId)
             const pos = match.map.indexToLocation(this.actionData.loc())
             const coords = renderUtils.getRenderCoords(pos.x, pos.y, match.map.dimension, true)
+            const t = match.getInterpolationFactor()
+
+            ctx.save()
+            // dusty base color that fills the cell and fades out
+            const baseAlpha = 0.4 * (1 - t)
+            ctx.fillStyle = `rgba(150,130,110,${baseAlpha})`
+            ctx.fillRect(coords.x - 0.5, coords.y - 0.5, 1, 1)
+
+            // these are the random rocks that fill the cell
+            const rockCount = 10
+            for (let i = 0; i < rockCount; i++) {
+                const rx = coords.x - 0.5 + Math.random() * 1
+                const ry = coords.y - 0.5 + Math.random() * 1
+                const size = 0.08 + Math.random() * 0.15
+                const shade = 90 + Math.floor(Math.random() * 50)
+                const alpha = 0.7 * (1 - t)
+                ctx.fillStyle = `rgba(${shade},${shade - 10},${shade - 20},${alpha})`
+                ctx.fillRect(rx, ry, size, size)
+            }
+
+            // ring outside the cell (also fades out)
+            ctx.strokeStyle = src.team.color
+            ctx.globalAlpha = 0.35 * (1 - t)
+            ctx.lineWidth = 0.04
+            ctx.strokeRect(coords.x - 0.5, coords.y - 0.5, 1, 1)
+            ctx.restore()
+
         }
     },
     [schema.Action.PlaceDirt]: class PlaceDirtAction extends Action<schema.PlaceDirt> {
