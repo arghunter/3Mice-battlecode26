@@ -557,6 +557,13 @@ public class GameMaker {
             });
         }
 
+        public void addBecomeRatKingAction(int id) {
+            applyToBuilders((builder) -> {
+                int action = UpgradeToRatKing.createUpgradeToRatKing(builder, id);
+                builder.addAction(action, Action.UpgradeToRatKing);
+            });
+        }
+
         // TODO: add the rest
 
         public void addPlaceTrapAction(int trapID, MapLocation loc, Team team, TrapType type) {
