@@ -107,6 +107,8 @@ const makeEditorActionData = (map: StaticMap, atype: schema.Action, tx: number, 
             return { loc: () => loc }
         case schema.Action.CatPounce:
             return { startLoc: () => loc, endLoc: () => map.locationToIndex(targetX + 1, targetY + 2) }
+        case schema.Action.RatSqueak:
+            return { id: () => targetId }
         case schema.Action.CatScratch:
             return { loc: () => loc }
         case schema.Action.CheesePickup:
@@ -184,6 +186,7 @@ export class RobotBrush extends SinglePointMapEditorBrush<StaticMap> {
                 { value: schema.Action.BreakDirt, label: 'Break Dirt' },
                 { value: schema.Action.CatFeed, label: 'Cat Feed' },
                 { value: schema.Action.CatPounce, label: 'Cat Pounce' },
+                { value: schema.Action.RatSqueak, label: 'Rat Squeak' },
                 { value: schema.Action.CatScratch, label: 'Cat Scratch' },
                 { value: schema.Action.CheesePickup, label: 'Cheese Pickup' },
                 { value: schema.Action.CheeseSpawn, label: 'Cheese Spawn' },

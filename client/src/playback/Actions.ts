@@ -378,6 +378,12 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
     },
     [schema.Action.RatSqueak]: class RatSqueakAction extends Action<schema.RatSqueak> {
         // TODO
+
+        draw(match: Match, ctx: CanvasRenderingContext2D): void {
+            const body = match.currentRound.bodies.getById(this.robotId)
+            const renderCoords = renderUtils.getRenderCoords(body.pos.x - 1 + body.size/2, body.pos.y + body.size/2, match.map.dimension, true)
+            renderUtils.renderCenteredImageOrLoadingIndicator(ctx, getImageIfLoaded('robots/squeak.png'), renderCoords, 1)
+        }
     },
     [schema.Action.DamageAction]: class DamageAction extends Action<schema.DamageAction> {
         apply(round: Round): void {
