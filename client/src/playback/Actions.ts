@@ -241,15 +241,32 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
         apply(round: Round): void {
             // remove cheese from map and increment body cheese count
             const body = round.bodies.getById(this.robotId)
-            const pos = round.map.indexToLocation(this.actionData.loc())
-
             const amt = round.map.cheeseData[this.actionData.loc()]
+            round.map.cheeseData[this.actionData.loc()] = 0
+            body.cheese += amt
         }
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
             // cheese pickup animation
+            const map = match.currentRound.map
             const body = match.currentRound.bodies.getById(this.robotId)
-            const pos = match.map.indexToLocation(this.actionData.loc())
-            const coords = renderUtils.getRenderCoords(pos.x, pos.y, match.map.dimension, true)
+            const coords = renderUtils.getRenderCoords(body.pos.x, body.pos.y, map.dimension, false)
+            const factor = match.getInterpolationFactor()
+            const isEndpoint = factor == 0 || factor == 1
+            const size = isEndpoint ? 1 : Math.max(factor * 1.5, 0.3)
+            const alpha = isEndpoint ? 1 : (factor < 0.5 ? factor : 1 - factor) * 2
+
+            ctx.globalAlpha = alpha
+            ctx.shadowBlur = 4
+            ctx.shadowColor = 'black'
+            renderUtils.renderCenteredImageOrLoadingIndicator(
+                ctx,
+                getImageIfLoaded('icons/cheese_64x64.png'),
+                coords,
+                size
+            )
+            ctx.shadowBlur = 0
+            ctx.shadowColor = ''
+            ctx.globalAlpha = 1
         }
     },
     [schema.Action.CheeseSpawn]: class CheeseSpawnAction extends Action<schema.CheeseSpawn> {
@@ -325,8 +342,11 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             const gravity: number = -10
             const interpolationFactor = match.getInterpolationFactor()
             const catX = startPos.x + interpolationFactor * (endPos.x - startPos.x)
-            const catY = gravity * interpolationFactor * interpolationFactor + interpolationFactor * (endPos.y - startPos.y - gravity) + startPos.y
-            body.pos = {x: catX, y: catY}
+            const catY =
+                gravity * interpolationFactor * interpolationFactor +
+                interpolationFactor * (endPos.y - startPos.y - gravity) +
+                startPos.y
+            body.pos = { x: catX, y: catY }
         }
         finish(round: Round): void {
             const body = round.bodies.getById(this.robotId)
@@ -370,9 +390,8 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             ctx.globalAlpha = 1
         }
     },
-    [schema.Action.ThrowRat]: class ThrowRatAction extends Action<schema.ThrowRat> {
-        // TODO
-    },
+    [schema.Action.ThrowRat]: class ThrowRatAction extends Action<schema.ThrowRat> {},
+    // TODO
     [schema.Action.UpgradeToRatKing]: class UpgradeToRatKingAction extends Action<schema.UpgradeToRatKing> {
         // TODO
     },
@@ -381,8 +400,18 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
 
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
             const body = match.currentRound.bodies.getById(this.robotId)
-            const renderCoords = renderUtils.getRenderCoords(body.pos.x - 1 + body.size/2, body.pos.y + body.size/2, match.map.dimension, true)
-            renderUtils.renderCenteredImageOrLoadingIndicator(ctx, getImageIfLoaded('robots/squeak.png'), renderCoords, 1)
+            const renderCoords = renderUtils.getRenderCoords(
+                body.pos.x - 1 + body.size / 2,
+                body.pos.y + body.size / 2,
+                match.map.dimension,
+                true
+            )
+            renderUtils.renderCenteredImageOrLoadingIndicator(
+                ctx,
+                getImageIfLoaded('robots/squeak.png'),
+                renderCoords,
+                1
+            )
         }
     },
     [schema.Action.DamageAction]: class DamageAction extends Action<schema.DamageAction> {

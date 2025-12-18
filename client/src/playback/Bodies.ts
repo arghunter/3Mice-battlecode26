@@ -97,50 +97,49 @@ export default class Bodies {
         const occupiedSpaces: Vector[] = []
 
         for (const otherBody of this.bodies.values()) {
-            if(otherBody.robotType == schema.RobotType.CAT){
-                for(let xoff = 0; xoff <= 1; xoff++){
-                    for(let yoff = 0; yoff <= 1; yoff++){
-                        occupiedSpaces.push({ x: otherBody.pos.x + xoff, y: otherBody.pos.y + yoff } )
-                    }                    
+            if (otherBody.robotType == schema.RobotType.CAT) {
+                for (let xoff = 0; xoff <= 1; xoff++) {
+                    for (let yoff = 0; yoff <= 1; yoff++) {
+                        occupiedSpaces.push({ x: otherBody.pos.x + xoff, y: otherBody.pos.y + yoff })
+                    }
                 }
             }
-            if(otherBody.robotType == schema.RobotType.RAT){
-                occupiedSpaces.push({ x: otherBody.pos.x, y: otherBody.pos.y } )
-
+            if (otherBody.robotType == schema.RobotType.RAT) {
+                occupiedSpaces.push({ x: otherBody.pos.x, y: otherBody.pos.y })
             }
-            if(otherBody.robotType == schema.RobotType.RAT_KING){
-                for(let xoff = -1; xoff <= 1; xoff++){
-                    for(let yoff = -1; yoff <= 1; yoff++){
-                        occupiedSpaces.push({ x: otherBody.pos.x + xoff, y: otherBody.pos.y - yoff } )
+            if (otherBody.robotType == schema.RobotType.RAT_KING) {
+                for (let xoff = -1; xoff <= 1; xoff++) {
+                    for (let yoff = -1; yoff <= 1; yoff++) {
+                        occupiedSpaces.push({ x: otherBody.pos.x + xoff, y: otherBody.pos.y - yoff })
                     }
-                } 
+                }
             }
         }
         // check occupied spaces
         for (const space of occupiedSpaces) {
             // console.log(`Checking occupied space at (${space.x}, ${space.y}) against new body at (${pos.x}, ${pos.y}) with size ${bodySize}`) ;
-            if(type == schema.RobotType.RAT){
-                if(space.x == pos.x && space.y == pos.y){
+            if (type == schema.RobotType.RAT) {
+                if (space.x == pos.x && space.y == pos.y) {
                     return true
                 }
-            } 
-            if(type == schema.RobotType.CAT){
-                for(let xoff = 0; xoff <= 1; xoff++){
-                    for(let yoff = 0; yoff <= 1; yoff++){
-                        if(space.x == pos.x + xoff && space.y == pos.y + yoff){
-                            return true
-                        }
-                    }                    
-                }
             }
-            if(type == schema.RobotType.RAT_KING){
-                for(let xoff = -1; xoff <= 1; xoff++){
-                    for(let yoff = -1; yoff <= 1; yoff++){
-                        if(space.x == pos.x + xoff && space.y == pos.y - yoff){
+            if (type == schema.RobotType.CAT) {
+                for (let xoff = 0; xoff <= 1; xoff++) {
+                    for (let yoff = 0; yoff <= 1; yoff++) {
+                        if (space.x == pos.x + xoff && space.y == pos.y + yoff) {
                             return true
                         }
                     }
-                } 
+                }
+            }
+            if (type == schema.RobotType.RAT_KING) {
+                for (let xoff = -1; xoff <= 1; xoff++) {
+                    for (let yoff = -1; yoff <= 1; yoff++) {
+                        if (space.x == pos.x + xoff && space.y == pos.y - yoff) {
+                            return true
+                        }
+                    }
+                }
             }
         }
         return false
@@ -237,36 +236,35 @@ export default class Bodies {
     getBodyAtLocation(x: number, y: number, team?: Team): Body | undefined {
         let foundDead: Body | undefined = undefined
 
-
         for (const body of this.bodies.values()) {
             const teamMatches = !team || body.team === team
             // this is a bit gross but oh well, we should really make a better way to handle body shapes
 
-            if(body.robotType == schema.RobotType.CAT){
-                for(let xoff = 0; xoff <= 1; xoff++){
-                    for(let yoff = 0; yoff <= 1; yoff++){
-                        if(teamMatches && body.pos.x + xoff === x && body.pos.y + yoff === y){
+            if (body.robotType == schema.RobotType.CAT) {
+                for (let xoff = 0; xoff <= 1; xoff++) {
+                    for (let yoff = 0; yoff <= 1; yoff++) {
+                        if (teamMatches && body.pos.x + xoff === x && body.pos.y + yoff === y) {
                             if (!body.dead) return body
                             foundDead = body
                         }
                     }
                 }
             }
-            if(body.robotType == schema.RobotType.RAT){
-                if(teamMatches && body.pos.x === x && body.pos.y === y){
+            if (body.robotType == schema.RobotType.RAT) {
+                if (teamMatches && body.pos.x === x && body.pos.y === y) {
                     if (!body.dead) return body
                     foundDead = body
                 }
             }
-            if(body.robotType == schema.RobotType.RAT_KING){
-                for(let xoff = -1; xoff <= 1; xoff++){
-                    for(let yoff = -1; yoff <= 1; yoff++){
-                        if(teamMatches && body.pos.x + xoff === x && body.pos.y - yoff === y){
+            if (body.robotType == schema.RobotType.RAT_KING) {
+                for (let xoff = -1; xoff <= 1; xoff++) {
+                    for (let yoff = -1; yoff <= 1; yoff++) {
+                        if (teamMatches && body.pos.x + xoff === x && body.pos.y - yoff === y) {
                             if (!body.dead) return body
                             foundDead = body
                         }
                     }
-                } 
+                }
             }
             //     // If dead, keep iterating in case there is an alive body
             //     // that will take priority
@@ -327,6 +325,7 @@ export class Body {
     public moveCooldown: number = 0
     public actionCooldown: number = 0
     public bytecodesUsed: number = 0
+    public cheese: number = 0
 
     constructor(
         private game: Game,
@@ -540,7 +539,13 @@ export class Body {
         ctx.beginPath()
         ctx.strokeStyle = 'blue'
         ctx.lineWidth = 0.1
-        const squares2 = this.getAllLocationsWithinFOVAndRadiusSquared(match, pos, this.metadata.visionConeRadiusSquared(), this.direction, this.metadata.visionConeAngle())
+        const squares2 = this.getAllLocationsWithinFOVAndRadiusSquared(
+            match,
+            pos,
+            this.metadata.visionConeRadiusSquared(),
+            this.direction,
+            this.metadata.visionConeAngle()
+        )
         this.drawEdges(match, ctx, lightly, squares2)
 
         // Currently vision/message radius are always the same
@@ -688,6 +693,7 @@ export const BODY_DEFINITIONS: Record<schema.RobotType, typeof Body> = {
             this.robotType = schema.RobotType.RAT
             this.imgPath = `robots/${this.team.colorName.toLowerCase()}/rat_64x64.png`
             this.size = 1
+            this.cheese = 0
         }
 
         public draw(match: Match, ctx: CanvasRenderingContext2D): void {

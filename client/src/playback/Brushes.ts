@@ -13,6 +13,7 @@ import { Vector } from './Vector'
 import { Team } from './Game'
 import Round from './Round'
 import { GameRenderer } from './GameRenderer'
+import { dir } from 'console'
 
 const applyInRadius = (
     map: CurrentMap | StaticMap,
@@ -77,7 +78,14 @@ const checkValidCatPlacement = (check: Vector, map: StaticMap, bodies: Bodies) =
 
 // Create minimal editor-only action data so the real Action
 // subclasses in ACTION_DEFINITIONS can draw their visuals.
-const makeEditorActionData = (map: StaticMap, atype: schema.Action, tx: number, ty: number, targetId?: number) => {
+const makeEditorActionData = (
+    map: StaticMap,
+    atype: schema.Action,
+    tx: number,
+    ty: number,
+    targetId?: number,
+    bodies?: Bodies
+) => {
     const mapWidth = map.width
     const mapHeight = map.height
 
@@ -112,15 +120,15 @@ const makeEditorActionData = (map: StaticMap, atype: schema.Action, tx: number, 
         case schema.Action.CatScratch:
             return { loc: () => loc }
         case schema.Action.CheesePickup:
-            return { id: () => targetId, amount: () => 1 }
-        case schema.Action.CheeseSpawn:
-            return { id0: () => targetId, id1: () => 0, id2: () => 0 }
-        case schema.Action.DamageAction:
-            return { id: () => targetId, loc: () => loc }
-        case schema.Action.DieAction:
-            return { id: () => targetId }
-        case schema.Action.PlaceTrap:
             return { loc: () => loc }
+        case schema.Action.CheeseSpawn:
+            return { loc: () => loc, amount: () => 1 }
+        case schema.Action.DamageAction:
+            return { id: () => targetId, damage: () => 1 }
+        case schema.Action.DieAction:
+            return { id: () => targetId, dieType: () => 0 }
+        case schema.Action.PlaceTrap:
+            return { loc: () => loc, team: () => 0 }
         case schema.Action.PlaceDirt:
             return { loc: () => loc }
         case schema.Action.RatAttack:
@@ -129,10 +137,8 @@ const makeEditorActionData = (map: StaticMap, atype: schema.Action, tx: number, 
             return { loc: () => loc }
         case schema.Action.RatNap:
             return { id: () => targetId }
-        case schema.Action.SpawnAction:
-            return { loc: () => loc, id: () => targetId }
         case schema.Action.TriggerTrap:
-            return { id: () => targetId }
+            return { loc: () => loc, team: () => 0 }
         default:
             return {}
     }
@@ -197,7 +203,6 @@ export class RobotBrush extends SinglePointMapEditorBrush<StaticMap> {
                 { value: schema.Action.RatAttack, label: 'Rat Attack' },
                 { value: schema.Action.RatCollision, label: 'Rat Collision' },
                 { value: schema.Action.RatNap, label: 'Rat Nap' },
-                { value: schema.Action.SpawnAction, label: 'Spawn Action' },
                 { value: schema.Action.TriggerTrap, label: 'Trigger Trap' }
             ]
         }
@@ -244,7 +249,7 @@ export class RobotBrush extends SinglePointMapEditorBrush<StaticMap> {
                 const ActionCtor = ACTION_DEFINITIONS[actionType]
                 if (ActionCtor) {
                     const targetIdToUse = findNearestRobotId(this.bodies, id, x, y) ?? id
-                    const adata = makeEditorActionData(this.map, actionType, x, y, targetIdToUse)
+                    const adata = makeEditorActionData(this.map, actionType, x, y, targetIdToUse, this.bodies)
                     const actionInstance = new ActionCtor(id, adata as any)
                     const actionsArray = this.bodies.game?.currentMatch?.currentRound?.actions?.actions
                     const currentRound = this.bodies.game?.currentMatch?.currentRound
