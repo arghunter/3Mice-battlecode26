@@ -590,9 +590,6 @@ public final class RobotControllerImpl implements RobotController {
         if (this.robot.isBeingThrown())
             throw new GameActionException(IS_NOT_READY,
                     "This robot is currently being carried!");
-        if (this.robot.isBeingThrown())
-            throw new GameActionException(IS_NOT_READY,
-                    "This robot is currently being thrown!"); 
     }
 
     @Override

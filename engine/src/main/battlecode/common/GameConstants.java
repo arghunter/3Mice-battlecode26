@@ -139,12 +139,12 @@ public class GameConstants {
     /** The maximum squared radius a robot can squeak to */
     public static final int SQUEAK_RADIUS_SQUARED = 16;
 
-    /** The damage a thrown rat takes upon hitting the ground or a target */
+    /** The base damage a thrown rat takes upon hitting the ground */
     public static final int THROW_DAMAGE = 20;
 
     /**
      * The damage a thrown rat takes per tile it impacts early (i.e. rats that hit a
-     * wall after 1 turn take 45 damage)
+     * wall after 1 turn take 20+3*5=35 damage)
      * */
     public static final int THROW_DAMAGE_PER_TILE = 5;
 
@@ -268,10 +268,10 @@ public class GameConstants {
      * */
     public static final int THROW_DURATION = 4;
 
-    /** The total time a rat is stunned after hitting a target */
-    public static final int HIT_GROUND_COOLDOWN = 30;
+    /** The stun cooldown after hitting the ground after being thrown */
+    public static final int HIT_GROUND_COOLDOWN = 10;
 
-    /** The total time a rat is stunned after hitting the ground */
-    public static final int HIT_TARGET_COOLDOWN = 10;
+    /** The stun cooldown after hitting the target after being thrown */
+    public static final int HIT_TARGET_COOLDOWN = 30;
 
 }

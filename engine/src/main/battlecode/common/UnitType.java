@@ -21,8 +21,14 @@ public enum UnitType {
     // robot's vision cone angle (in degrees)
     public final int visionConeAngle;
 
-    // amount action cooldown gets incremented for taking an action
+    // amount action cooldown gets incremented for taking an action (i.e. attacking)
     public final int actionCooldown;
+
+    // amount movement cooldown gets incremented for moving
+    // TODO
+
+    // amount turning cooldown gets incremented for turning
+    // TODO
 
     // robot's bytecode limit
     public final int bytecodeLimit;

@@ -700,6 +700,11 @@ public class InternalRobot implements Comparable<InternalRobot> {
     public void hitGround() {
         this.thrownDir = null;
         this.remainingThrowDuration = 0;
+
+        int damage = GameConstants.THROW_DAMAGE;
+        this.addHealth(-damage);
+        this.gameWorld.getMatchMaker().addDamageAction(this.ID, damage);
+
         setMovementCooldownTurns(this.movementCooldownTurns + GameConstants.HIT_GROUND_COOLDOWN);
         setActionCooldownTurns(this.actionCooldownTurns + GameConstants.HIT_GROUND_COOLDOWN);
         setTurningCooldownTurns(this.turningCooldownTurns + GameConstants.HIT_GROUND_COOLDOWN);
