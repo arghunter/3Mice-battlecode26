@@ -217,7 +217,7 @@ public class GameConstants {
     /**
      * The amount added to the turning cooldown counter when turning
      */
-    public static final int TURNING_COOLDOWN = 10;
+    public static final int TURNING_COOLDOWN = 5; // TODO not sure
 
     /**
      * The amount added to the movement cooldown counter when a king moves
