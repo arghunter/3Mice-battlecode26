@@ -44,12 +44,13 @@ public class InternalRobot implements Comparable<InternalRobot> {
     private int roundsAlive;
     private int actionCooldownTurns;
     private int movementCooldownTurns;
+    private int turningCooldownTurns;
 
     private InternalRobot carryingRobot; // robot being carried by this robot, if any
     private InternalRobot grabbedByRobot; // robot that is carrying this robot, if any
     private Direction thrownDir;
-    private int throwDuration;
-    private int remainingCarriedDuration; // Time before we wriggle free from enemy robot
+    private int remainingThrowDuration; // how much longer robot should be thrown for
+    private int remainingCarriedDuration; // Number of turns before we wriggle free from enemy robot
 
     private Queue<Message> incomingMessages;
 
@@ -75,7 +76,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
     private MapLocation catTargetLoc;
     private int catTurns;
     private InternalRobot catTarget;
-    private boolean hasTurned;
 
     /**
      * Create a new internal representation of a robot
@@ -111,11 +111,12 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.roundsAlive = 0;
         this.actionCooldownTurns = type.actionCooldown;
         this.movementCooldownTurns = GameConstants.COOLDOWN_LIMIT;
+        this.turningCooldownTurns = GameConstants.COOLDOWN_LIMIT;
 
         this.carryingRobot = null;
         this.grabbedByRobot = null;
         this.thrownDir = null;
-        this.throwDuration = 0;
+        this.remainingThrowDuration = 0;
         this.remainingCarriedDuration = 0;
 
         this.indicatorString = "";
@@ -250,6 +251,10 @@ public class InternalRobot implements Comparable<InternalRobot> {
         return movementCooldownTurns;
     }
 
+    public int getTurningCooldownTurns(){
+        return turningCooldownTurns;
+    }
+
     public InternalRobot getCarryingRobot() {
         return carryingRobot;
     }
@@ -303,6 +308,13 @@ public class InternalRobot implements Comparable<InternalRobot> {
     }
 
     /**
+     * Returns whether the robot can turn, based on cooldowns.
+     */
+    public boolean canTurnCooldown() {
+        return this.turningCooldownTurns < GameConstants.COOLDOWN_LIMIT;
+    }
+
+    /**
      * Returns whether the robot is currently carrying another robot.
      */
     public boolean isCarryingRobot() {
@@ -330,13 +342,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
         return this.type.getVisionAngle();
     }
 
-    public boolean hasTurned() {
-        return hasTurned;
-    }
-
-    public void setHasTurned(boolean hasTurned) {
-        this.hasTurned = hasTurned;
-    }
 
     /**
      * Returns whether this robot can sense the given location.
@@ -439,6 +444,14 @@ public class InternalRobot implements Comparable<InternalRobot> {
     }
 
     /**
+     * Resets the turning cooldown.
+     */
+    public void addTurningCooldownTurns() {
+        int turningCooldown = GameConstants.TURNING_COOLDOWN * (int)(this.carryingRobot != null ? GameConstants.CARRY_COOLDOWN_MULTIPLIER : 1); // TODO add support for rat towers???
+        this.setTurningCooldownTurns(this.turningCooldownTurns + turningCooldown);
+    }
+
+    /**
      * Sets the action cooldown given the number of turns.
      * 
      * @param newActionTurns the number of action cooldown turns
@@ -454,6 +467,15 @@ public class InternalRobot implements Comparable<InternalRobot> {
      */
     public void setMovementCooldownTurns(int newMovementTurns) {
         this.movementCooldownTurns = newMovementTurns;
+    }
+
+     /**
+     * Sets the turning cooldown given the number of turns.
+     * 
+     * @param newMovementTurns the number of turning cooldown turns
+     */
+    public void setTurningCooldownTurns(int newTurningTurns) {
+        this.turningCooldownTurns = newTurningTurns;
     }
 
     /**
@@ -619,8 +641,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
     private void getGrabbed(InternalRobot grabber) {
         this.grabbedByRobot = grabber;
-        this.movementCooldownTurns += GameConstants.THROW_DURATION + GameConstants.THROW_STUN_DURATION;
-        this.actionCooldownTurns += GameConstants.THROW_DURATION + GameConstants.THROW_STUN_DURATION;
         this.gameWorld.removeRobot(getLocation());
         if (this.isCarryingRobot()) { // If we were carrying a robot, drop it
             this.carryingRobot.getDropped(getLocation()); // TODO rat tower???
@@ -658,7 +678,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.grabbedByRobot = null;
         this.remainingCarriedDuration = 0;
         this.thrownDir = dir;
-        this.throwDuration = GameConstants.THROW_DURATION/10;
         this.setInternalLocationOnly(this.getLocation().add(dir));
         this.gameWorld.addRobot(this.getLocation(), this);
     }
@@ -673,34 +692,38 @@ public class InternalRobot implements Comparable<InternalRobot> {
         }
         this.grabbedByRobot = null;
         this.remainingCarriedDuration = 0;
-        this.movementCooldownTurns -= GameConstants.THROW_DURATION + GameConstants.THROW_STUN_DURATION;
-        this.actionCooldownTurns -= GameConstants.THROW_DURATION + GameConstants.THROW_STUN_DURATION;
+        // TODO: is there a stun if youre dropped?
         this.setInternalLocationOnly(loc);
         this.gameWorld.addRobot(this.getLocation(), this);
     }
 
     public void hitGround() {
         this.thrownDir = null;
-        this.throwDuration = 0;
-        this.movementCooldownTurns -= GameConstants.THROW_STUN_DURATION - GameConstants.THROW_SAFE_LANDING_STUN_DURATION;
-        this.actionCooldownTurns -= GameConstants.THROW_STUN_DURATION - GameConstants.THROW_SAFE_LANDING_STUN_DURATION;
+        this.remainingThrowDuration = 0;
+        setMovementCooldownTurns(this.movementCooldownTurns + GameConstants.HIT_GROUND_COOLDOWN);
+        setActionCooldownTurns(this.actionCooldownTurns + GameConstants.HIT_GROUND_COOLDOWN);
+        setTurningCooldownTurns(this.turningCooldownTurns + GameConstants.HIT_GROUND_COOLDOWN);
+
+        this.gameWorld.getMatchMaker().addStunAction(this.ID, GameConstants.HIT_TARGET_COOLDOWN);
     }
 
     public void hitTarget(boolean isSecondMove) {
         if (this.gameWorld.getRobot(this.getLocation().add(this.thrownDir)) != null) {
             InternalRobot robot = this.gameWorld.getRobot(this.getLocation().add(this.thrownDir));
-            robot.addHealth(-GameConstants.THROW_DAMAGE-GameConstants.THROW_DAMAGE_PER_TILE * (2 * this.throwDuration + (isSecondMove ? 0 : 1)));
-            robot.movementCooldownTurns += GameConstants.THROW_STUN_DURATION;
-            robot.actionCooldownTurns += GameConstants.THROW_STUN_DURATION;
+            robot.addHealth(-GameConstants.THROW_DAMAGE-GameConstants.THROW_DAMAGE_PER_TILE * (2 * (GameConstants.THROW_DURATION - this.remainingThrowDuration) + (isSecondMove ? 0 : 1)));
+            robot.movementCooldownTurns += GameConstants.HIT_GROUND_COOLDOWN;
+            robot.actionCooldownTurns += GameConstants.HIT_GROUND_COOLDOWN;
         }
         this.thrownDir = null;
-        this.throwDuration = 0;
-        int damage = GameConstants.THROW_DAMAGE-GameConstants.THROW_DAMAGE_PER_TILE * (2 * this.throwDuration + (isSecondMove ? 0 : 1));
+        this.remainingThrowDuration = 0;
+        int damage = GameConstants.THROW_DAMAGE-GameConstants.THROW_DAMAGE_PER_TILE * (2 * this.remainingThrowDuration + (isSecondMove ? 0 : 1));
         this.addHealth(-damage);
-        this.movementCooldownTurns -= (this.throwDuration-1) * 10;
-        this.actionCooldownTurns -= (this.throwDuration-1) * 10;
+        setMovementCooldownTurns(this.movementCooldownTurns + GameConstants.HIT_GROUND_COOLDOWN);
+        setActionCooldownTurns(this.actionCooldownTurns + GameConstants.HIT_GROUND_COOLDOWN);
+        setTurningCooldownTurns(this.turningCooldownTurns + GameConstants.HIT_GROUND_COOLDOWN);
         this.gameWorld.getMatchMaker().addDamageAction(this.ID, damage);
-        this.gameWorld.getMatchMaker().addStunAction(this.ID, GameConstants.THROW_STUN_DURATION);
+        
+        this.gameWorld.getMatchMaker().addStunAction(this.ID, GameConstants.HIT_GROUND_COOLDOWN);
     }
 
     public void travelFlying(boolean isSecondMove) {
@@ -714,10 +737,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
         }
 
         this.setLocation(this.thrownDir.dx, this.thrownDir.dy);
-        
-        if (this.throwDuration == 1 && isSecondMove) { // TODO == 1 is a kludge, this should be tied to GameConstants
-            this.hitGround();
-        }
     }
 
     /**
@@ -914,11 +933,13 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
     public void processBeginningOfTurn() {
         this.sentMessagesCount = 0;
-        if (!this.isGrabbedByRobot()) {
-            this.actionCooldownTurns = Math.max(0, this.actionCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
-            this.movementCooldownTurns = Math.max(0, this.movementCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
-            this.remainingCarriedDuration = Math.max(0, this.remainingCarriedDuration - GameConstants.COOLDOWNS_PER_TURN);
-            if (this.isGrabbedByRobot() && this.remainingCarriedDuration == 0 && this.getGrabbedByRobot().getTeam() != this.getTeam()) {
+        
+        // if rat is being carried 
+        if (this.getType() == UnitType.RAT && this.isGrabbedByRobot() && this.getGrabbedByRobot().getTeam() != this.getTeam()) {
+            // decrement first since we include the round where carrying was initiated?
+            remainingCarriedDuration -= 1;
+
+            if(this.remainingCarriedDuration == 0 ){ // max carry time reached
                 MapLocation dropLoc = this.getGrabbedByRobot().getLocation().add(this.getDirection());
                 if (this.gameWorld.getGameMap().onTheMap(dropLoc)
                         && this.gameWorld.isPassable(dropLoc)
@@ -932,17 +953,30 @@ public class InternalRobot implements Comparable<InternalRobot> {
                 InternalRobot grabber = this.getGrabbedByRobot();
                 this.getDropped(grabber.getLocation());
                 grabber.carryingRobot = null;
-            }
-            if (this.isBeingThrown()) {
-                this.travelFlying(false); // This will call hitTarget or hitGround if we hit something or run out of time
-                if (this.isBeingThrown()) {
-                    this.travelFlying(true); // Thrown robots move 2x per turn
-                    if (this.isBeingThrown()) {
-                        this.throwDuration -= 1;
-                    }
-                }
+                //TODO: swap locations
             }
         }
+
+        // if baby rat is being thrown
+        if (this.getType() == UnitType.RAT && this.isBeingThrown()) {
+            // decrement first since we already moved once on the round where throwing was initiated?
+            this.remainingThrowDuration -= 1;
+            if (this.remainingThrowDuration == 0){ // max throw time reached
+                this.hitGround();
+            }
+            else{
+                this.travelFlying(false);
+                this.travelFlying(true); // This will call hitTarget or hitGround if we hit something
+            }
+        }
+
+        // if robot is being carried or thrown, skip cooldown resets
+        if (!this.isGrabbedByRobot() && !this.isBeingThrown()) {
+            this.actionCooldownTurns = Math.max(0, this.actionCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
+            this.turningCooldownTurns = Math.max(0, this.actionCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
+            this.movementCooldownTurns = Math.max(0, this.movementCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
+        }
+        
         this.currentBytecodeLimit = this.getType().bytecodeLimit;
         this.gameWorld.getMatchMaker().startTurn(this.ID);
     }

@@ -437,6 +437,15 @@ public interface RobotController {
     boolean isMovementReady();
 
     /**
+     * Tests whether the robot can turn.
+     * 
+     * @return true if the robot can turn
+     *
+     * @battlecode.doc.costlymethod
+     */
+    boolean isTurningReady();
+
+    /**
      * Returns the number of movement cooldown turns remaining before this unit can
      * move again.
      * When this number is strictly less than {@link GameConstants#COOLDOWN_LIMIT},
@@ -450,6 +459,21 @@ public interface RobotController {
      * @battlecode.doc.costlymethod
      */
     int getMovementCooldownTurns();
+
+    /**
+     * Returns the number of turning cooldown turns remaining before this unit can
+     * move again.
+     * When this number is strictly less than {@link GameConstants#COOLDOWN_LIMIT},
+     * isTurningReady()
+     * is true and the robot can turn again. This number decreases by
+     * {@link GameConstants#COOLDOWNS_PER_TURN} every turn.
+     *
+     * @return the number of cooldown turns remaining before this unit can move
+     *         again
+     *
+     * @battlecode.doc.costlymethod
+     */
+    int getTurningCooldownTurns();
 
     // ***********************************
     // ****** MOVEMENT METHODS ***********
@@ -482,38 +506,26 @@ public interface RobotController {
     void moveForward() throws GameActionException;
 
     /**
-     * Checks whether this robot can turn a certain number of 45 degree steps
-     * clockwise.
+     * Checks whether this robot can turn 45 degrees.
      * 
-     * @param steps
      * @return
      */
-    boolean canTurnCW(int steps);
+    boolean canTurn();
 
     /**
-     * Turns a certain number of 45 degree steps clockwise.
+     * Turns 45 degrees clockwise.
      * 
      * @param steps
      * @throws GameActionException
      */
-    void turnCW(int steps) throws GameActionException;
+    void turnCW() throws GameActionException;
 
     /**
-     * Checks whether this robot can turn a certain number of 45 degree steps
-     * counter-clockwise.
+     * Turns a certain number of 45 degrees counter-clockwise.
      * 
-     * @param steps
-     * @return
-     */
-    boolean canTurnCCW(int steps);
-
-    /**
-     * Turns a certain number of 45 degree steps counter-clockwise.
-     * 
-     * @param steps
      * @throws GameActionException
      */
-    void turnCCW(int steps) throws GameActionException;
+    void turnCCW() throws GameActionException;
 
     // ***********************************
     // *********** BUILDING **************
