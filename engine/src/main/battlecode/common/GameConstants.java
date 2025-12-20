@@ -31,7 +31,7 @@ public class GameConstants {
     public static final int MIN_CHEESE_MINE_SPACING_SQUARED = 25;
 
     /** The maximum percentage of the map that can be dirt */
-    public static final int MAX_DIRT_PERCENTAGE = 20;
+    public static final int MAX_DIRT_PERCENTAGE = 25;
 
     /** The maximum percentage of the map that can be walls */
     public static final int MAX_WALL_PERCENTAGE = 10; // TODO remove if not using walls
@@ -139,12 +139,12 @@ public class GameConstants {
     /** The maximum squared radius a robot can squeak to */
     public static final int SQUEAK_RADIUS_SQUARED = 16;
 
-    /** The damage a thrown rat takes upon hitting the ground or a target */
+    /** The base damage a thrown rat takes upon hitting the ground */
     public static final int THROW_DAMAGE = 20;
 
     /**
      * The damage a thrown rat takes per tile it impacts early (i.e. rats that hit a
-     * wall after 1 turn take 45 damage)
+     * wall after 1 turn take 20+3*5=35 damage)
      * */
     public static final int THROW_DAMAGE_PER_TILE = 5;
 
@@ -210,14 +210,9 @@ public class GameConstants {
     public static final int COOLDOWNS_PER_TURN = 10;
 
     /**
-     * The amount added to the movement cooldown counter when moving
+     * The amount added to the turning cooldown counter when turning
      */
-    public static final int MOVEMENT_COOLDOWN = 10;
-
-    /**
-     * The amount added to the movement cooldown counter when a king moves
-     */
-    public static final int RAT_KING_MOVEMENT_COOLDOWN = 100; // TODO need to specify!
+    public static final int TURNING_COOLDOWN = 5; // TODO not sure
 
     /**
      * The amount added to the movement cooldown counter when a king moves
@@ -254,19 +249,23 @@ public class GameConstants {
     /** The maximum number of robots a rat can carry */
     public static final int MAX_CARRY_TOWER_HEIGHT = 2;
 
-    /** The maximum number of robots a rat can carry */
-    public static final int MAX_CARRY_DURATION = 100;
+    /** The maximum number of turns of robots a rat can carry another rat */
+    public static final int MAX_CARRY_DURATION = 10;
 
     /**
-     * The total time a rat can travel for while thrown (rats are stunned while
+     * The total number turns a rat can travel for while thrown (rats are stunned while
      * thrown)
      * */
-    public static final int THROW_DURATION = 20;
+    public static final int THROW_DURATION = 4;
 
-    /** The total time a rat is stunned after hitting a target */
-    public static final int THROW_STUN_DURATION = 30;
+    /** The stun cooldown after hitting the ground after being thrown */
+    public static final int HIT_GROUND_COOLDOWN = 10;
 
-    /** The total time a rat is stunned after hitting the ground */
-    public static final int THROW_SAFE_LANDING_STUN_DURATION = 10;
+    /** The stun cooldown after hitting the target after being thrown */
+    public static final int HIT_TARGET_COOLDOWN = 30;
+
+
+    /** Amount of rounds a cat sleeps for when fed */
+    public static final int CAT_SLEEP_TIME = 2;
 
 }

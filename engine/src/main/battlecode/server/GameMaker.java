@@ -2,6 +2,7 @@ package battlecode.server;
 
 import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
+import battlecode.common.Direction;
 import battlecode.common.UnitType;
 import battlecode.common.Team;
 import battlecode.common.TrapType;
@@ -309,7 +310,7 @@ public class GameMaker {
             RobotTypeMetadata.addActionCooldown(builder, type.actionCooldown);
             RobotTypeMetadata.addBaseHealth(builder, type.health);
             RobotTypeMetadata.addBytecodeLimit(builder, type.bytecodeLimit);
-            RobotTypeMetadata.addMovementCooldown(builder, GameConstants.MOVEMENT_COOLDOWN);
+            RobotTypeMetadata.addMovementCooldown(builder, type.movementCooldown);
             RobotTypeMetadata.addVisionConeRadiusSquared(builder, type.visionConeRadiusSquared);
             RobotTypeMetadata.addVisionConeAngle(builder, type.visionConeAngle);
             RobotTypeMetadata.addMessageRadiusSquared(builder, GameConstants.MESSAGE_RADIUS_SQUARED);
@@ -487,7 +488,7 @@ public class GameMaker {
             return;
         }
 
-        public void endTurn(int robotID, int health, int cheese, int movementCooldown, int actionCooldown,
+        public void endTurn(int robotID, int health, int cheese, int movementCooldown, int actionCooldown, int turningCooldown,
                 int bytecodesUsed, MapLocation loc) {
             applyToBuilders((builder) -> {
                 builder.startTurn();
@@ -497,6 +498,7 @@ public class GameMaker {
                 Turn.addCheese(builder, cheese);
                 Turn.addMoveCooldown(builder, movementCooldown);
                 Turn.addActionCooldown(builder, actionCooldown);
+                Turn.addTurningCooldown(builder, turningCooldown);
                 Turn.addBytecodesUsed(builder, bytecodesUsed);
                 Turn.addX(builder, loc.x);
                 Turn.addY(builder, loc.y);
@@ -526,6 +528,14 @@ public class GameMaker {
                 builder.addAction(action, Action.RatNap);
             });
         }
+
+        public void addCatFeedAction(int sacrificedRatID){
+            applyToBuilders((builder) -> {
+                int action = CatFeed.createCatFeed(builder, sacrificedRatID);
+                builder.addAction(action, Action.CatFeed);
+            });
+        }
+
 
         public void addThrowAction(int thrownRobotID, MapLocation throwDirLocation){
             applyToBuilders((builder) -> {
@@ -607,11 +617,12 @@ public class GameMaker {
         }
 
         /// Indicate that this robot was spawned on this turn
-        public void addSpawnAction(int id, MapLocation loc, Team team, UnitType type) {
+        public void addSpawnAction(int id, MapLocation loc, Direction dir, Team team, UnitType type) {
             applyToBuilders((builder) -> {
                 byte teamID = TeamMapping.id(team);
                 byte robotType = FlatHelpers.getRobotTypeFromUnitType(type);
-                int action = SpawnAction.createSpawnAction(builder, id, loc.x, loc.y, teamID, robotType);
+                int dirOrdinal = FlatHelpers.getOrdinalFromDirection(dir);
+                int action = SpawnAction.createSpawnAction(builder, id, loc.x, loc.y, dirOrdinal, teamID, robotType);
                 builder.addAction(action, Action.SpawnAction);
             });
         }

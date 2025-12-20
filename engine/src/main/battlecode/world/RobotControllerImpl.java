@@ -560,6 +560,12 @@ public final class RobotControllerImpl implements RobotController {
         if (!this.robot.canActCooldown())
             throw new GameActionException(IS_NOT_READY,
                     "This robot's action cooldown has not expired.");
+        if (this.robot.isBeingThrown())
+            throw new GameActionException(IS_NOT_READY,
+                    "This robot is currently being thrown!");
+        if (this.robot.isGrabbedByRobot())
+            throw new GameActionException(IS_NOT_READY,
+                    "This robot is currently being carried!");
     }
 
     @Override
@@ -581,6 +587,24 @@ public final class RobotControllerImpl implements RobotController {
         if (!this.robot.canMoveCooldown())
             throw new GameActionException(IS_NOT_READY,
                     "This robot's movement cooldown has not expired.");
+        if (this.robot.isBeingThrown())
+            throw new GameActionException(IS_NOT_READY,
+                    "This robot is currently being thrown!");
+        if (this.robot.isGrabbedByRobot())
+            throw new GameActionException(IS_NOT_READY,
+                    "This robot is currently being carried!");
+    }
+
+    private void assertIsTurningReady() throws GameActionException {
+        if (!this.robot.canTurnCooldown())
+            throw new GameActionException(IS_NOT_READY,
+                    "This robot's turning cooldown has not expired.");
+        if (this.robot.isBeingThrown())
+            throw new GameActionException(IS_NOT_READY,
+                    "This robot is currently being thrown!");
+        if (this.robot.isGrabbedByRobot())
+            throw new GameActionException(IS_NOT_READY,
+                    "This robot is currently being carried!");
     }
 
     @Override
@@ -594,9 +618,25 @@ public final class RobotControllerImpl implements RobotController {
     }
 
     @Override
+    public boolean isTurningReady() {
+        try {
+            assertIsTurningReady();
+            return true;
+        } catch (GameActionException e) {
+            return false;
+        }
+    }
+
+    @Override
     public int getMovementCooldownTurns() {
         return this.robot.getMovementCooldownTurns();
     }
+
+    @Override
+    public int getTurningCooldownTurns() {
+        return this.robot.getTurningCooldownTurns();
+    }
+
 
     // ***********************************
     // ****** MOVEMENT METHODS ***********
@@ -681,25 +721,14 @@ public final class RobotControllerImpl implements RobotController {
         this.robot.addMovementCooldownTurns();
     }
 
-    private void assertCanTurn(int steps) throws GameActionException {
-        if (steps < 0) {
-            throw new GameActionException(CANT_DO_THAT,
-                    "Number of steps to turn must be non-negative");
-        }
-        if (steps > 2) {
-            throw new GameActionException(CANT_DO_THAT,
-                    "Can only turn up to 2 steps (90 degrees) at a time");
-        }
-        if (this.robot.hasTurned()) {
-            throw new GameActionException(CANT_DO_THAT,
-                    "This robot has already turned this turn");
-        }
+    private void assertCanTurn() throws GameActionException {
+        assertIsTurningReady();
     }
 
     @Override
-    public boolean canTurnCW(int steps) {
+    public boolean canTurn() {
         try {
-            assertCanTurn(steps);
+            assertCanTurn();
             return true;
         } catch (GameActionException e) {
             return false;
@@ -707,35 +736,23 @@ public final class RobotControllerImpl implements RobotController {
     }
 
     @Override
-    public void turnCW(int steps) throws GameActionException {
-        assertCanTurn(steps);
+    public void turnCW() throws GameActionException {
+        assertCanTurn();
         Direction newDir = this.robot.getDirection();
-        for (int i = 0; i < steps; i++) {
-            newDir = newDir.rotateRight();
-        }
+        newDir = newDir.rotateRight();
         this.robot.setDirection(newDir);
-        this.robot.setHasTurned(true);
+        
+        this.robot.addTurningCooldownTurns();
     }
 
     @Override
-    public boolean canTurnCCW(int steps) {
-        try {
-            assertCanTurn(steps);
-            return true;
-        } catch (GameActionException e) {
-            return false;
-        }
-    }
-
-    @Override
-    public void turnCCW(int steps) throws GameActionException {
-        assertCanTurn(steps);
+    public void turnCCW() throws GameActionException {
+        assertCanTurn();
         Direction newDir = this.robot.getDirection();
-        for (int i = 0; i < steps; i++) {
-            newDir = newDir.rotateLeft();
-        }
+        newDir = newDir.rotateLeft();
         this.robot.setDirection(newDir);
-        this.robot.setHasTurned(true);
+
+        this.robot.addTurningCooldownTurns();
     }
 
     // ***********************************
@@ -795,7 +812,7 @@ public final class RobotControllerImpl implements RobotController {
         int cost = getCurrentRatCost();
         this.robot.addCheese(-cost);
         InternalRobot robotSpawned = this.gameWorld.getRobot(loc);
-        this.gameWorld.getMatchMaker().addSpawnAction(robotSpawned.getID(), loc, getTeam(), UnitType.RAT);
+        this.gameWorld.getMatchMaker().addSpawnAction(robotSpawned.getID(), loc, this.robot.getDirection(), getTeam(), UnitType.RAT);
     }
 
     public void assertCanBuildTrap(TrapType type, MapLocation loc) throws GameActionException {
