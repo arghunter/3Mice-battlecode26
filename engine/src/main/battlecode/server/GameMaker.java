@@ -277,15 +277,7 @@ public class GameMaker {
             TeamData.addTeamId(builder, TeamMapping.id(Team.B));
             int teamBOffset = TeamData.endTeamData(builder);
 
-            name = builder.createString("neutral");
-            packageName = builder.createString("placeholder");
-            TeamData.startTeamData(builder);
-            TeamData.addName(builder, name);
-            TeamData.addPackageName(builder, packageName);
-            TeamData.addTeamId(builder, TeamMapping.id(Team.NEUTRAL));
-            int teamNeutralOffset = TeamData.endTeamData(builder);
-
-            int[] teamsVec = {teamNeutralOffset, teamAOffset, teamBOffset };
+            int[] teamsVec = {teamAOffset, teamBOffset};
 
             int teamsOffset = GameHeader.createTeamsVector(builder, teamsVec);
             int robotTypeMetaDataOffset = makeRobotTypeMetadata(builder);
