@@ -311,14 +311,6 @@ public final class GameMapIO {
             for (RobotInfo robot : gameMap.getInitialBodies()) {
                 bodyIDs.add(robot.ID);
                 bodyDirs.add(FlatHelpers.getOrdinalFromDirection(robot.direction));
-
-                //TODO: this is a temporary fix 
-                // if (robot.type == UnitType.CAT){
-                //     bodyTeamIDs.add(TeamMapping.id(Team.A)); // put on a random team for now to avoid bugs in client
-                // }
-                // else{
-                //     bodyTeamIDs.add(TeamMapping.id(robot.team));
-                // }
                 bodyTeamIDs.add(TeamMapping.id(robot.team));
                 System.out.println("DEBUGGING: " + "serializing " + TeamMapping.id(robot.team));
                 bodyTypes.add(FlatHelpers.getRobotTypeFromUnitType(robot.type));
@@ -389,12 +381,6 @@ public final class GameMapIO {
                 int dirOrdinal = curSpawnAction.dir();
                 Direction dir = FlatHelpers.getDirectionFromOrdinal(dirOrdinal);
                 System.out.println("Direction is " + curSpawnAction.dir());
-
-                if(bodyType==UnitType.RAT_KING){
-                    //translate from top left corner to center
-                    bodyX += 1;
-                    bodyY -= 1;
-                }
 
                 Team bodyTeam = TeamMapping.team(curSpawnAction.team());
 
