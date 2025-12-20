@@ -241,15 +241,32 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
         apply(round: Round): void {
             // remove cheese from map and increment body cheese count
             const body = round.bodies.getById(this.robotId)
-            const pos = round.map.indexToLocation(this.actionData.loc())
-
             const amt = round.map.cheeseData[this.actionData.loc()]
+            round.map.cheeseData[this.actionData.loc()] = 0
+            body.cheese += amt
         }
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
             // cheese pickup animation
+            const map = match.currentRound.map
             const body = match.currentRound.bodies.getById(this.robotId)
-            const pos = match.map.indexToLocation(this.actionData.loc())
-            const coords = renderUtils.getRenderCoords(pos.x, pos.y, match.map.dimension, true)
+            const coords = renderUtils.getRenderCoords(body.pos.x, body.pos.y, map.dimension, false)
+            const factor = match.getInterpolationFactor()
+            const isEndpoint = factor == 0 || factor == 1
+            const size = isEndpoint ? 1 : Math.max(factor * 1.5, 0.3)
+            const alpha = isEndpoint ? 1 : (factor < 0.5 ? factor : 1 - factor) * 2
+
+            ctx.globalAlpha = alpha
+            ctx.shadowBlur = 4
+            ctx.shadowColor = 'black'
+            renderUtils.renderCenteredImageOrLoadingIndicator(
+                ctx,
+                getImageIfLoaded('icons/cheese_64x64.png'),
+                coords,
+                size
+            )
+            ctx.shadowBlur = 0
+            ctx.shadowColor = ''
+            ctx.globalAlpha = 1
         }
     },
     [schema.Action.CheeseSpawn]: class CheeseSpawnAction extends Action<schema.CheeseSpawn> {
@@ -325,8 +342,11 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             const gravity: number = -10
             const interpolationFactor = match.getInterpolationFactor()
             const catX = startPos.x + interpolationFactor * (endPos.x - startPos.x)
-            const catY = gravity * interpolationFactor * interpolationFactor + interpolationFactor * (endPos.y - startPos.y - gravity) + startPos.y
-            body.pos = {x: catX, y: catY}
+            const catY =
+                gravity * interpolationFactor * interpolationFactor +
+                interpolationFactor * (endPos.y - startPos.y - gravity) +
+                startPos.y
+            body.pos = { x: catX, y: catY }
         }
         finish(round: Round): void {
             const body = round.bodies.getById(this.robotId)
@@ -371,13 +391,131 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
         }
     },
     [schema.Action.ThrowRat]: class ThrowRatAction extends Action<schema.ThrowRat> {
-        // TODO
+        apply(round: Round): void {
+            // maybe move rat to target loc
+            const body = round.bodies.getById(this.robotId)
+            const endLoc = round.map.indexToLocation(this.actionData.loc())
+        }
+        draw(match: Match, ctx: CanvasRenderingContext2D): void {
+            const body = match.currentRound.bodies.getById(this.robotId)
+            const pos = body.getInterpolatedCoords(match)
+            const coords = renderUtils.getRenderCoords(pos.x, pos.y, match.map.dimension, true)
+            const interp = match.getInterpolationFactor()
+
+            const from = pos
+            const to = match.currentRound.map.indexToLocation(this.actionData.loc())
+
+            const dx = to.x - from.x
+            const dy = to.y - from.y
+            const mag = Math.hypot(dx, dy)
+            if (mag < 1e-3) return
+
+            const ux = dx / mag
+            const uy = dy / mag
+            const px = -uy
+            const py = ux
+
+            // deterministic jitter
+            const r = ((from.x * 317 + from.y * 911 + match.currentRound.roundNumber * 271) / 100) % 1
+
+            ctx.save()
+
+            ctx.globalAlpha = 0.6 * (1 - interp)
+            ctx.strokeStyle = '#000000'
+            ctx.lineCap = 'round'
+            ctx.lineWidth = 0.1
+
+            const baseLength = 0.6 + 0.3 * interp
+            const spacing = 0.2
+
+            for (let i = -1; i <= 1; i++) {
+                const offset = i * spacing
+                const jitter = (r - 0.5) * 0.15
+
+                const endX = coords.x - ux * 0.3 + px * offset + px * jitter
+                const endY = coords.y - uy * 0.3 + py * offset + py * jitter
+
+                const startX = endX - ux * baseLength
+                const startY = endY - uy * baseLength
+
+                ctx.beginPath()
+                ctx.moveTo(startX, startY)
+                ctx.lineTo(endX, endY)
+                ctx.stroke()
+            }
+
+            ctx.restore()
+        }
     },
     [schema.Action.UpgradeToRatKing]: class UpgradeToRatKingAction extends Action<schema.UpgradeToRatKing> {
-        // TODO
+        apply(round: Round): void {
+            // change body type to RatKing
+            const body = round.bodies.getById(this.robotId)
+            body.robotType = schema.RobotType.RAT_KING
+        }
+        draw(match: Match, ctx: CanvasRenderingContext2D): void {
+            const body = match.currentRound.bodies.getById(this.robotId)
+            const pos = body.getInterpolatedCoords(match)
+            const coords = renderUtils.getRenderCoords(pos.x, pos.y, match.map.dimension, true)
+
+            const interp = match.getInterpolationFactor()
+            const pop = Math.sin(interp * Math.PI)
+
+            const radius = 0.5
+            const alpha = 0.5 * (1 - interp)
+
+            const seed = ((pos.x * 413 + pos.y * 619 + match.currentRound.roundNumber * 911) / 100) % 1
+
+            ctx.save()
+            ctx.globalAlpha = alpha
+            ctx.fillStyle = '#ffffff'
+            ctx.beginPath()
+            ctx.arc(coords.x, coords.y, radius, 0, Math.PI * 2)
+
+            const spikeCount = 30
+            const baseSpikeLen = 0.1 + 0.1 * pop
+
+            ctx.strokeStyle = '#ffffff'
+            ctx.lineWidth = 0.06
+            ctx.lineCap = 'round'
+
+            for (let i = 0; i < spikeCount; i++) {
+                const angle = (i / spikeCount) * Math.PI * 2 + seed * Math.PI * 0.4
+
+                const len = baseSpikeLen * (0.6 + 0.6 * Math.abs(Math.sin(i * 73.1 + seed * 19)))
+
+                const x1 = coords.x + Math.cos(angle) * radius
+                const y1 = coords.y + Math.sin(angle) * radius
+                const x2 = coords.x + Math.cos(angle) * (radius + len)
+                const y2 = coords.y + Math.sin(angle) * (radius + len)
+
+                ctx.beginPath()
+                ctx.moveTo(x1, y1)
+                ctx.lineTo(x2, y2)
+                ctx.stroke()
+            }
+
+            ctx.restore()
+        }
     },
     [schema.Action.RatSqueak]: class RatSqueakAction extends Action<schema.RatSqueak> {
         // TODO
+
+        draw(match: Match, ctx: CanvasRenderingContext2D): void {
+            const body = match.currentRound.bodies.getById(this.robotId)
+            const renderCoords = renderUtils.getRenderCoords(
+                body.pos.x - 1 + body.size / 2,
+                body.pos.y + body.size / 2,
+                match.map.dimension,
+                true
+            )
+            renderUtils.renderCenteredImageOrLoadingIndicator(
+                ctx,
+                getImageIfLoaded('robots/squeak.png'),
+                renderCoords,
+                1
+            )
+        }
     },
     [schema.Action.DamageAction]: class DamageAction extends Action<schema.DamageAction> {
         apply(round: Round): void {
