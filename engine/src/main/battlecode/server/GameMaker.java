@@ -276,7 +276,16 @@ public class GameMaker {
             TeamData.addPackageName(builder, packageName);
             TeamData.addTeamId(builder, TeamMapping.id(Team.B));
             int teamBOffset = TeamData.endTeamData(builder);
-            int[] teamsVec = { teamAOffset, teamBOffset };
+
+            name = builder.createString("neutral");
+            packageName = builder.createString("placeholder");
+            TeamData.startTeamData(builder);
+            TeamData.addName(builder, name);
+            TeamData.addPackageName(builder, packageName);
+            TeamData.addTeamId(builder, TeamMapping.id(Team.NEUTRAL));
+            int teamNeutralOffset = TeamData.endTeamData(builder);
+
+            int[] teamsVec = {teamNeutralOffset, teamAOffset, teamBOffset };
 
             int teamsOffset = GameHeader.createTeamsVector(builder, teamsVec);
             int robotTypeMetaDataOffset = makeRobotTypeMetadata(builder);
@@ -528,6 +537,14 @@ public class GameMaker {
                 builder.addAction(action, Action.RatNap);
             });
         }
+
+        public void addCatFeedAction(int sacrificedRatID){
+            applyToBuilders((builder) -> {
+                int action = CatFeed.createCatFeed(builder, sacrificedRatID);
+                builder.addAction(action, Action.CatFeed);
+            });
+        }
+
 
         public void addThrowAction(int thrownRobotID, MapLocation throwDirLocation){
             applyToBuilders((builder) -> {

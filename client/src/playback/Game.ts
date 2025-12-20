@@ -71,10 +71,13 @@ export default class Game {
             )
         }
 
-        this.teams = [
-            Team.fromSchema(gameHeader.teams(0) ?? assert.fail('Team 0 was null')),
-            Team.fromSchema(gameHeader.teams(1) ?? assert.fail('Team 1 was null'))
-        ]
+        const foundTeams: (Team | undefined)[] = [undefined, undefined]
+        for (let i = 0; i < gameHeader.teamsLength(); i++) {
+            const t = Team.fromSchema(gameHeader.teams(i) ?? assert.fail(`Team ${i} null`))
+            if (t.id === 1) foundTeams[0] = t
+            else if (t.id === 2) foundTeams[1] = t
+        }
+        this.teams = [ foundTeams[0] ?? assert.fail('Team A missing'), foundTeams[1] ?? assert.fail('Team B missing') ]
 
         // load constants
         this.constants = gameHeader.constants() ?? assert.fail('Constants was null')

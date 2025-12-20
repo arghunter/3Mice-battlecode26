@@ -313,12 +313,13 @@ public final class GameMapIO {
                 bodyDirs.add(FlatHelpers.getOrdinalFromDirection(robot.direction));
 
                 //TODO: this is a temporary fix 
-                if (robot.type == UnitType.CAT){
-                    bodyTeamIDs.add(TeamMapping.id(Team.A)); // put on a random team for now to avoid bugs in client
-                }
-                else{
-                    bodyTeamIDs.add(TeamMapping.id(robot.team));
-                }
+                // if (robot.type == UnitType.CAT){
+                //     bodyTeamIDs.add(TeamMapping.id(Team.A)); // put on a random team for now to avoid bugs in client
+                // }
+                // else{
+                //     bodyTeamIDs.add(TeamMapping.id(robot.team));
+                // }
+                bodyTeamIDs.add(TeamMapping.id(robot.team));
                 System.out.println("DEBUGGING: " + "serializing " + TeamMapping.id(robot.team));
                 bodyTypes.add(FlatHelpers.getRobotTypeFromUnitType(robot.type));
                 
