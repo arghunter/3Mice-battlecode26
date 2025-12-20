@@ -448,7 +448,12 @@ public class GameWorld {
             this.teamInfo.addDamageToCats(trap.getTeam(), type.damage);
         }
         //TODO once the cat exists, alert cat of trap trigger
-        //TODO once backstab status exists, update that
+        
+        if(trap.getType() != TrapType.CAT_TRAP){
+            // initiate backstab
+            this.isCooperation = false;
+            // TODO: make any changes that need to happen with switch to cooperation
+        }
 
         for (MapLocation adjLoc : getAllLocationsWithinRadiusSquared(loc, type.triggerRadiusSquared)) {
             this.trapTriggers[locationToIndex(adjLoc)].remove(trap);
@@ -613,7 +618,7 @@ public class GameWorld {
      * @return whether all cats dead
      */
     public boolean setWinnerifAllCatsDead() {        
-        if(this.getNumCats() == 0){
+        if(this.getNumCats() == 0 && this.isCooperation){ // only end game if no more cats in cooperation mode
             // find out which team won via points
             if (setWinnerIfMorePoints())
                 return true;
@@ -751,7 +756,6 @@ public class GameWorld {
             return;
         }
         
-        // TODO: if cooperation, even if cat dies, game continues?    
         throw new InternalError("Reporting incorrect win");
     }
 

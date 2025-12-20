@@ -35,6 +35,11 @@ public class RobotInfo {
     public final MapLocation location;
 
     /**
+     * The current location of the robot.
+     */
+    public final Direction direction;
+
+    /**
      * The current cheese this robot holds
      */
     public final int cheeseAmount;
@@ -49,13 +54,14 @@ public class RobotInfo {
      */
     public final RobotInfo carryingRobot;
 
-    public RobotInfo(int ID, Team team, UnitType type, int health, MapLocation location, int cheeseAmount, RobotInfo carryingRobot, boolean crouching) {
+    public RobotInfo(int ID, Team team, UnitType type, int health, MapLocation location, Direction direction, int cheeseAmount, RobotInfo carryingRobot, boolean crouching) {
         super();
         this.ID = ID;
         this.team = team;
         this.type = type;
         this.health = health;
         this.location = location;
+        this.direction = direction;
         this.cheeseAmount = cheeseAmount;
         this.crouching = !type.isRatType() && crouching;
         this.carryingRobot = carryingRobot;
@@ -95,6 +101,15 @@ public class RobotInfo {
      */
     public MapLocation getLocation() {
         return this.location;
+    }
+
+    /**
+     * Returns the direction of this robot.
+     *
+     * @return the direction of this robot
+     */
+    public Direction getDirection() {
+        return this.direction;
     }
 
     /**

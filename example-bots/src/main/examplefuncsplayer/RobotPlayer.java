@@ -96,8 +96,8 @@ public class RobotPlayer {
                     // If we can't move forward, try to turn a random direction.
                     int randomDirection = rng.nextInt(8);
                     
-                    if (rc.canTurnCW(randomDirection)) {
-                        rc.turnCW(randomDirection);
+                    if (rc.canTurn()) {
+                        rc.turnCW();
                     }
                 }
             } catch (GameActionException e) {
