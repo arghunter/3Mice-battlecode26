@@ -282,6 +282,43 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
     [schema.Action.CheeseTransfer]: class CheeseTransferAction extends Action<schema.CheeseTransfer> {
         apply(round: Round): void {
             // transfer cheese between bots
+            const body = round.bodies.getById(this.robotId)
+            const target = round.bodies.getById(this.actionData.id())
+            const amount = this.actionData.amount()
+
+            body.cheese -= amount
+            target.cheese += amount
+        }
+        draw(match: Match, ctx: CanvasRenderingContext2D): void {
+            const srcBody = match.currentRound.bodies.getById(this.robotId)
+            const targetBody = match.currentRound.bodies.getById(this.actionData.id())
+
+            const from = srcBody.getInterpolatedCoords(match)
+            const to = targetBody.getInterpolatedCoords(match)
+
+            const progress = match.getInterpolationFactor()
+
+            const currentX = from.x + (to.x - from.x) * progress
+            const currentY = from.y + (to.y - from.y) * progress
+
+            const coords = renderUtils.getRenderCoords(currentX, currentY, match.map.dimension)
+
+            const cheeseImage = getImageIfLoaded('icons/cheese_64x64.png')
+            if (cheeseImage) {
+                const size = 0.8
+                renderUtils.renderCenteredImageOrLoadingIndicator(ctx, cheeseImage, coords, size)
+            }
+
+            renderUtils.renderLine(
+                ctx,
+                renderUtils.getRenderCoords(from.x, from.y, match.currentRound.map.staticMap.dimension),
+                renderUtils.getRenderCoords(to.x, to.y, match.currentRound.map.staticMap.dimension),
+                {
+                    color: '#f7df47',
+                    lineWidth: 0.06,
+                    opacity: 0.8
+                }
+            )
         }
     },
     [schema.Action.CatScratch]: class CatScratchAction extends Action<schema.CatScratch> {

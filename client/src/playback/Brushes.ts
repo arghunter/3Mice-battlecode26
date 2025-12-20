@@ -123,6 +123,8 @@ const makeEditorActionData = (
             return { loc: () => loc }
         case schema.Action.CheeseSpawn:
             return { loc: () => loc, amount: () => 1 }
+        case schema.Action.CheeseTransfer:
+            return { id: () => targetId, amount: () => 1 }
         case schema.Action.DamageAction:
             return { id: () => targetId, damage: () => 1 }
         case schema.Action.DieAction:
@@ -200,6 +202,7 @@ export class RobotBrush extends SinglePointMapEditorBrush<StaticMap> {
                 { value: schema.Action.CatScratch, label: 'Cat Scratch' },
                 { value: schema.Action.CheesePickup, label: 'Cheese Pickup' },
                 { value: schema.Action.CheeseSpawn, label: 'Cheese Spawn' },
+                { value: schema.Action.CheeseTransfer, label: 'Cheese Transfer' },
                 { value: schema.Action.DamageAction, label: 'Damage' },
                 { value: schema.Action.DieAction, label: 'Die' },
                 { value: schema.Action.PlaceDirt, label: 'Place Dirt' },
