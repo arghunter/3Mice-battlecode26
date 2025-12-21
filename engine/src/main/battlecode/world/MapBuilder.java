@@ -23,6 +23,7 @@ public class MapBuilder {
     private boolean[] dirtArray;
     private boolean[] cheeseMineArray;
     private int[] cheeseArray;
+    private ArrayList<Integer> catIDs;
     private ArrayList<int[]> catWaypoints;
 
     private int idCounter;
@@ -50,6 +51,7 @@ public class MapBuilder {
         this.dirtArray = new boolean[numSquares];
         this.cheeseMineArray = new boolean[numSquares];
         this.cheeseArray = new int[numSquares];
+        this.catIDs = new ArrayList<Integer>();
         this.catWaypoints = new ArrayList<int[]>();
     }
 
@@ -178,7 +180,7 @@ public class MapBuilder {
 
     public LiveMap build() {
         return new LiveMap(width, height, origin, seed, 2000, name, symmetry,
-            wallArray, dirtArray, cheeseMineArray, cheeseArray, catWaypoints,
+            wallArray, dirtArray, cheeseMineArray, cheeseArray, catIDs, catWaypoints,
             bodies.toArray(new RobotInfo[bodies.size()]));
     }
 

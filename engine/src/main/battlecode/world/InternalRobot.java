@@ -129,38 +129,12 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.catState = CatStateType.EXPLORE;
         sleepTimeRemaining = 0;
 
-        if (this.type.isCatType()) {
-            // TODO fix this: are cat index and cat id the same? if not, change this line
-            // this.catWaypoints = gw.getGameMap().getCatWaypointsOrdered(id);
-            // TODO temporarily we will just find the nearest waypoint
-
-            int minDist = Integer.MAX_VALUE;
-
-            for (int i = 0; i < gw.getGameMap().getNumCats(); i++) {
-                MapLocation[] allWaypoints = gw.getGameMap().getCatWaypointsOrdered(i);
-
-                for (MapLocation waypoint : allWaypoints) {
-                    if (waypoint != null) {
-                        int dist = waypoint.distanceSquaredTo(this.location);
-
-                        if (dist < minDist) {
-                            minDist = dist;
-                            this.catWaypoints = allWaypoints;
-                        }
-                    }
-                }
-
-                ArrayList<MapLocation> validWaypoints = new ArrayList<>();
-
-                for (MapLocation waypoint : this.catWaypoints) {
-                    if (waypoint != null) {
-                        validWaypoints.add(waypoint);
-                    }
-                }
-
-                this.catWaypoints = validWaypoints.toArray(new MapLocation[validWaypoints.size()]);
-            }
-
+        if (this.type.isCatType()) { 
+            // set waypoints
+            int[] waypointIndexLocations = gw.getGameMap().getCatWaypoints(this.ID);
+            for (int i=0; i<waypointIndexLocations.length; i++)
+                catWaypoints[i] = this.gameWorld.indexToLocation(waypointIndexLocations[i]);
+            
             this.catTargetLoc = this.catWaypoints[0];
 
         } else {
@@ -169,7 +143,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
         }
 
         this.catTurns = 0;
-
     }
 
     // ******************************************
@@ -1041,7 +1014,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.roundsAlive++;
 
         // cat algo
-        // TODO: cat does not care about rats that attack it over other rats, also nothing about feeding has been added
+        // TODO: cat does not care about rats that attack it over other rats
         
         if (this.type == UnitType.CAT) {
             if (this.sleepTimeRemaining>0){

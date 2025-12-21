@@ -233,6 +233,7 @@ public final class GameMapIO {
             boolean[] dirtArray = new boolean[size];
             boolean[] cheeseMineArray = new boolean[size];
             ArrayList<int[]> catWaypoints = new ArrayList<int[]>();
+            ArrayList<Integer> catIds = new ArrayList<Integer>();
             int[] cheeseArray = new int[size];
 
             for (int i = 0; i < wallArray.length; i++) {
@@ -254,6 +255,7 @@ public final class GameMapIO {
             int numCats = raw.catWaypointVecsLength();
 
             for (int i = 0; i < numCats; i++) {
+                int catId = raw.catWaypointIds(i);
                 VecTable waypointTable = raw.catWaypointVecs(i);
                 int numWaypoints = waypointTable.xsLength();
                 int[] waypoints = new int[numWaypoints];
@@ -264,6 +266,7 @@ public final class GameMapIO {
                     waypoints[j] = x + width * y;
                 }
 
+                catIds.add(catId);
                 catWaypoints.add(waypoints);
             }
 
@@ -276,7 +279,7 @@ public final class GameMapIO {
 
             return new LiveMap(
                     width, height, origin, seed, rounds, mapName, symmetry, wallArray, dirtArray,
-                    cheeseMineArray, cheeseArray, catWaypoints, initialBodies);
+                    cheeseMineArray, cheeseArray, catIds, catWaypoints, initialBodies);
         }
 
         /**
@@ -329,7 +332,7 @@ public final class GameMapIO {
                     ArrayUtils.toPrimitive(wallArrayList.toArray(new Boolean[wallArrayList.size()])));
             int dirtArrayInt = battlecode.schema.GameMap.createDirtVector(builder,
                     ArrayUtils.toPrimitive(dirtArrayList.toArray(new Boolean[dirtArrayList.size()])));
-
+            
             int spawnActionVectorOffset = createSpawnActionsVector(builder, bodyIDs, bodyLocsXs, bodyLocsYs, bodyDirs,
                     bodyTeamIDs, bodyTypes);
             int initialBodyOffset = InitialBodyTable.createInitialBodyTable(builder, spawnActionVectorOffset);
