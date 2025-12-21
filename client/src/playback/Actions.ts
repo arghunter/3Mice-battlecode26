@@ -282,6 +282,43 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
     [schema.Action.CheeseTransfer]: class CheeseTransferAction extends Action<schema.CheeseTransfer> {
         apply(round: Round): void {
             // transfer cheese between bots
+            const body = round.bodies.getById(this.robotId)
+            const target = round.bodies.getById(this.actionData.id())
+            const amount = this.actionData.amount()
+
+            body.cheese -= amount
+            target.cheese += amount
+        }
+        draw(match: Match, ctx: CanvasRenderingContext2D): void {
+            const srcBody = match.currentRound.bodies.getById(this.robotId)
+            const targetBody = match.currentRound.bodies.getById(this.actionData.id())
+
+            const from = srcBody.getInterpolatedCoords(match)
+            const to = targetBody.getInterpolatedCoords(match)
+
+            const progress = match.getInterpolationFactor()
+
+            const currentX = from.x + (to.x - from.x) * progress
+            const currentY = from.y + (to.y - from.y) * progress
+
+            const coords = renderUtils.getRenderCoords(currentX, currentY, match.map.dimension)
+
+            const cheeseImage = getImageIfLoaded('icons/cheese_64x64.png')
+            if (cheeseImage) {
+                const size = 0.8
+                renderUtils.renderCenteredImageOrLoadingIndicator(ctx, cheeseImage, coords, size)
+            }
+
+            renderUtils.renderLine(
+                ctx,
+                renderUtils.getRenderCoords(from.x, from.y, match.currentRound.map.staticMap.dimension),
+                renderUtils.getRenderCoords(to.x, to.y, match.currentRound.map.staticMap.dimension),
+                {
+                    color: '#f7df47',
+                    lineWidth: 0.06,
+                    opacity: 0.8
+                }
+            )
         }
     },
     [schema.Action.CatScratch]: class CatScratchAction extends Action<schema.CatScratch> {
@@ -374,20 +411,42 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
         }
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
             // trap triggering animation
-            const body = match.currentRound.bodies.getById(this.robotId)
-            const pos = match.map.indexToLocation(this.actionData.loc())
-            const coords = renderUtils.getRenderCoords(pos.x, pos.y, match.map.dimension, true)
-            const teamId = body.team.id
+            const body = match.currentRound.bodies.getById(this.robotId);
+            const pos = match.map.indexToLocation(this.actionData.loc());
+            const coords = renderUtils.getRenderCoords(pos.x, pos.y, match.map.dimension, true);
 
-            ctx.strokeStyle = body.team.color
-            ctx.globalAlpha = 0.3
-            ctx.fillStyle = body.team.color
-            ctx.beginPath()
-            ctx.arc(coords.x, coords.y - 0.25, 0.5, Math.PI, (1 + 0.5 * match.getInterpolationFactor()) * Math.PI)
-            ctx.arc(coords.x, coords.y - 0.25, 0.5, 0, 0.5 * match.getInterpolationFactor() * Math.PI, true)
-            ctx.fill()
-            ctx.stroke()
-            ctx.globalAlpha = 1
+            const size = body.size-1;
+
+            const t = match.getInterpolationFactor(); 
+            const snap = Math.pow(t, .25);
+            const rotation = (-snap) * (Math.PI / 2);
+
+            ctx.save();
+            ctx.translate(coords.x+size*.5, coords.y+.5);
+            ctx.strokeStyle = body.team.color;
+            ctx.lineWidth = 0.08;
+            ctx.lineCap = "round";
+
+            ctx.beginPath();
+            ctx.moveTo(-0.1, 0);
+            ctx.lineTo(0.1, 0);
+            ctx.stroke();
+
+            ctx.save();
+            ctx.rotate(-rotation);
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(-0.6-size*.5, 0); ctx.lineTo(-0.6-size*.5, -0.1); 
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.save();
+            ctx.rotate(rotation);
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(0.6+size*.5, 0); ctx.lineTo(0.6+size*.5, -0.1);
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.restore();
         }
     },
     [schema.Action.ThrowRat]: class ThrowRatAction extends Action<schema.ThrowRat> {
