@@ -132,7 +132,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
         if (this.type.isCatType()) { 
             
             // set waypoints
-            int[] waypointIndexLocations = gw.getGameMap().getCatWaypoints(this.ID);
+            int[] waypointIndexLocations = gw.getGameMap().getCatWaypointsByID(this.ID);
             catWaypoints = new MapLocation[waypointIndexLocations.length];
             for (int i=0; i<waypointIndexLocations.length; i++)
                 catWaypoints[i] = this.gameWorld.indexToLocation(waypointIndexLocations[i]);
