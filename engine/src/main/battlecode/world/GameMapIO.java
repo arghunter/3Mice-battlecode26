@@ -335,10 +335,12 @@ public final class GameMapIO {
             }
 
             int[] catWaypointTableOffsets = new int[gameMap.getNumCats()];
+            int[] catIDs = new int[gameMap.getNumCats()];
 
             for (int i = 0; i < gameMap.getNumCats(); i++) {
-                //TODO handle cat IDs properly. This assumes they are sequential?
-                int[] rawWaypoints = gameMap.getCatWaypoints(i);
+                int catID = gameMap.getCatWaypointIDs().get(i);
+                catIDs[i] = catID;
+                int[] rawWaypoints = gameMap.getCatWaypointsByID(catID);
                 int[] waypointsXs = new int[rawWaypoints.length];
                 int[] waypointsYs = new int[rawWaypoints.length];
                 for (int w = 0; w < rawWaypoints.length; w++) {
@@ -356,10 +358,14 @@ public final class GameMapIO {
             int dirtArrayInt = battlecode.schema.GameMap.createDirtVector(builder,
                     ArrayUtils.toPrimitive(dirtArrayList.toArray(new Boolean[dirtArrayList.size()])));
 
+            int wayPointOffsets = battlecode.schema.GameMap.createCatWaypointVecsVector(builder, catWaypointTableOffsets);
+            int catIDOffsets = battlecode.schema.GameMap.createCatWaypointIdsVector(builder, catIDs);
+
             //convert cheese mine x and y array list to arrays
             TIntArrayList cheeseMineXsList = new TIntArrayList(cheeseMineXs.stream().mapToInt(i -> i).toArray());
             TIntArrayList cheeseMineYsList = new TIntArrayList(cheeseMineYs.stream().mapToInt(i -> i).toArray());
             int cheeseMinesOffset = FlatHelpers.createVecTable(builder, cheeseMineXsList, cheeseMineYsList);
+            
             
             int spawnActionVectorOffset = createSpawnActionsVector(builder, bodyIDs, bodyLocsXs, bodyLocsYs, bodyDirs,
                     bodyTeamIDs, bodyTypes);
@@ -378,9 +384,9 @@ public final class GameMapIO {
             battlecode.schema.GameMap.addDirt(builder, dirtArrayInt);
             battlecode.schema.GameMap.addInitialBodies(builder, initialBodyOffset);
             battlecode.schema.GameMap.addCheeseMines(builder, cheeseMinesOffset);
-            battlecode.schema.GameMap.createCatWaypointVecsVector(builder, catWaypointTableOffsets);
-            battlecode.schema.GameMap.addCatWaypointVecs(builder, initialBodyOffset);
-            battlecode.schema.GameMap.addCatWaypointIds(builder, initialBodyOffset);
+            
+            battlecode.schema.GameMap.addCatWaypointVecs(builder, wayPointOffsets);
+            battlecode.schema.GameMap.addCatWaypointIds(builder, catIDOffsets);
             return battlecode.schema.GameMap.endGameMap(builder);
         }
 
