@@ -1,6 +1,7 @@
 package battlecode.util;
 
 import battlecode.common.TrapType;
+import battlecode.common.Direction;
 import battlecode.common.UnitType;
 import battlecode.schema.VecTable;
 import battlecode.schema.WinType;
@@ -14,6 +15,7 @@ import gnu.trove.TIntArrayList;
 // import gnu.trove.TCharList;
 // import gnu.trove.TByteArrayList;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.ObjIntConsumer;
 
@@ -70,6 +72,57 @@ public class FlatHelpers {
                 return 3;
             default:
                 throw new RuntimeException("Cannot find byte encoding for " + type);
+        }
+    }
+
+    public static Direction getDirectionFromOrdinal(int ordinal){
+        switch (ordinal){
+            case 0:
+                return Direction.CENTER;
+            case 1:
+                return Direction.WEST;
+            case 2:
+                return Direction.SOUTHWEST;
+            case 3:
+                return Direction.SOUTH;
+            case 4:
+                return Direction.SOUTHEAST;
+            case 5:
+                return Direction.EAST;
+            case 6:
+                return Direction.SOUTHEAST;
+            case 7:
+                return Direction.NORTH;
+            case 8:
+                return Direction.NORTHWEST;
+            default:
+                throw new RuntimeException("Invalid direcitonal ordinal " + ordinal);
+        }
+    }
+
+    public static int getOrdinalFromDirection(Direction dir){
+        // TODO: double check this
+        switch (dir){
+            case CENTER:
+                return 0;
+            case WEST:
+                return 1;
+            case SOUTHWEST:
+                return 2;
+            case SOUTH:
+                return 3;
+            case SOUTHEAST:
+                return 4;
+            case EAST:
+                return 5;
+            case NORTHEAST:
+                return 6;
+            case NORTH:
+                return 7;
+            case NORTHWEST:
+                return 8;
+            default:
+                throw new RuntimeException("Invalid diretion " + dir);
         }
     }
 

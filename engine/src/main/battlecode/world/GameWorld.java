@@ -163,7 +163,7 @@ public class GameWorld {
         for (int i = 0; i < initialBodies.length; i++) {
             RobotInfo robotInfo = initialBodies[i];
             MapLocation newLocation = robotInfo.location.translate(gm.getOrigin().x, gm.getOrigin().y);
-            spawnRobot(robotInfo.ID, robotInfo.type, newLocation, robotInfo.team);
+            spawnRobot(robotInfo.ID, robotInfo.type, newLocation, robotInfo.direction, robotInfo.team);
             System.out.println("Has cheese amount" + robotInfo.cheeseAmount);
         }
     }
@@ -788,11 +788,16 @@ public class GameWorld {
     // ****** SPAWNING *****************
     // *********************************
 
-    public int spawnRobot(int ID, UnitType type, MapLocation location, Team team) {
-        // TODO: what direction should robots start facing?
-        // IMO, towards center of the map to be fair
+    public int spawnRobot(int ID, UnitType type, MapLocation location, Direction dir, Team team) {
+        // if direction is CENTER, the robot doesn't have a preset direction; set the robot to face the middle of the map
+        // subtract 1 before dividing since cats use bottom left corner as center so we will use the bottom left corner of the center 2x2 of the map as the point of comparison
 
-        InternalRobot robot = new InternalRobot(this, ID, team, type, location, Direction.NORTH);
+        if (dir == Direction.CENTER){
+            MapLocation mapCenter = new MapLocation((this.getGameMap().getWidth()-1)/2, (this.getGameMap().getHeight()-1)/2);
+            dir = location.directionTo(mapCenter);
+        }
+
+        InternalRobot robot = new InternalRobot(this, ID, team, type, location, dir);
 
         for (MapLocation loc : type.getAllLocations(location)) {
             addRobot(loc, robot);
@@ -815,10 +820,10 @@ public class GameWorld {
         return ID;
     }
 
-    public int spawnRobot(UnitType type, MapLocation location, Team team) {
+    public int spawnRobot(UnitType type, MapLocation location, Direction dir, Team team) {
         int ID = idGenerator.nextID();
 
-        return spawnRobot(ID, type, location, team);
+        return spawnRobot(ID, type, location, dir, team);
     }
 
     public void squeak(InternalRobot robot, Message message) {

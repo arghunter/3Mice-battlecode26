@@ -1,4 +1,4 @@
-package examplefuncsplayer;
+package turningplayer;
 
 import battlecode.common.*;
 
@@ -79,26 +79,23 @@ public class RobotPlayer {
                 // this into a different control structure!
                 
                 // Every 10 turns, print out what type of robot we are.
-                if (turnCount % 100 == 0) {
-                    System.out.println("Turn " + turnCount + ": I am a " + rc.getType().toString());
-                }
-
-                if (turnCount >= 11){
-                    continue;
-                }
-                                
+                             
                 // Try to move forward one step.
                 if (rc.canMoveForward()) {
-                    System.out.println("Turn " + turnCount + "Trying to move " + rc.getDirection());
+                    System.out.println("Turn " + turnCount + "MOVING" + rc.getDirection());
                     rc.moveForward();
                 } else {
                     System.out.println("couldn't move forward on turn " + turnCount + " at location " + rc.getLocation() + rc.getDirection());
                     // If we can't move forward, try to turn a random direction.
                     int randomDirection = rng.nextInt(8);
                     
-                    if (rc.canTurn()) {
-                        rc.turnCW();
-                    }
+                }
+                if (rc.canTurn()) {
+                    System.out.println("Turn " + turnCount + "TURNING Clockwise");
+                    rc.turnCW();
+                }
+                else{
+                    System.out.println("couldn't turn on turn" + turnCount);
                 }
             } catch (GameActionException e) {
                 // Oh no! It looks like we did something illegal in the Battlecode world. You should

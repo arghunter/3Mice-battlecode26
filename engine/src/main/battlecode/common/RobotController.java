@@ -437,6 +437,15 @@ public interface RobotController {
     boolean isMovementReady();
 
     /**
+     * Tests whether the robot can turn.
+     * 
+     * @return true if the robot can turn
+     *
+     * @battlecode.doc.costlymethod
+     */
+    boolean isTurningReady();
+
+    /**
      * Returns the number of movement cooldown turns remaining before this unit can
      * move again.
      * When this number is strictly less than {@link GameConstants#COOLDOWN_LIMIT},
@@ -450,6 +459,21 @@ public interface RobotController {
      * @battlecode.doc.costlymethod
      */
     int getMovementCooldownTurns();
+
+    /**
+     * Returns the number of turning cooldown turns remaining before this unit can
+     * move again.
+     * When this number is strictly less than {@link GameConstants#COOLDOWN_LIMIT},
+     * isTurningReady()
+     * is true and the robot can turn again. This number decreases by
+     * {@link GameConstants#COOLDOWNS_PER_TURN} every turn.
+     *
+     * @return the number of cooldown turns remaining before this unit can move
+     *         again
+     *
+     * @battlecode.doc.costlymethod
+     */
+    int getTurningCooldownTurns();
 
     // ***********************************
     // ****** MOVEMENT METHODS ***********
@@ -482,32 +506,26 @@ public interface RobotController {
     void moveForward() throws GameActionException;
 
     /**
-     * Checks whether this robot can turn a certain number of 45 degree steps clockwise.
-     * @param steps 
+     * Checks whether this robot can turn 45 degrees.
+     * 
      * @return
      */
-    boolean canTurnCW(int steps);
+    boolean canTurn();
 
     /**
-     * Turns a certain number of 45 degree steps clockwise.
+     * Turns 45 degrees clockwise.
+     * 
      * @param steps
      * @throws GameActionException
      */
-    void turnCW(int steps) throws GameActionException;
+    void turnCW() throws GameActionException;
 
     /**
-     * Checks whether this robot can turn a certain number of 45 degree steps counter-clockwise.
-     * @param steps 
-     * @return
-     */
-    boolean canTurnCCW(int steps);
-
-    /**
-     * Turns a certain number of 45 degree steps counter-clockwise.
-     * @param steps
+     * Turns a certain number of 45 degrees counter-clockwise.
+     * 
      * @throws GameActionException
      */
-    void turnCCW(int steps) throws GameActionException;
+    void turnCCW() throws GameActionException;
 
     // ***********************************
     // *********** BUILDING **************
@@ -526,7 +544,7 @@ public interface RobotController {
      * Checks if a rat king can spawn a robot at the given location.
      * Robots can spawn within a circle of radius of sqrt(4) of the rat king.
      * 
-     * @param loc  the location to spawn the robot at
+     * @param loc the location to spawn the robot at
      * @return true if robot can be built at loc
      * 
      * @battlecode.doc.costlymethod
@@ -537,15 +555,16 @@ public interface RobotController {
      * Spawns a robot at the given location.
      * Robots can spawn within a circle of radius of sqrt(4) of the rat king.
      * 
-     * @param loc  the location to spawn the robot at
+     * @param loc the location to spawn the robot at
      * 
      * @battlecode.doc.costlymethod
      */
     void buildRobot(MapLocation loc) throws GameActionException;
 
     /**
-     * Checks if a rat can become a rat king, when 7 allied rats are in the 3x3 square
-     * centered at this rat's location and the ally team has 50 cheese. 
+     * Checks if a rat can become a rat king, when 7 allied rats are in the 3x3
+     * square
+     * centered at this rat's location and the ally team has 50 cheese.
      * All tiles in the 3x3 square must be passible.
      * 
      * @return true if this rat can become a rat king
@@ -555,7 +574,8 @@ public interface RobotController {
     boolean canBecomeRatKing();
 
     /**
-     * Upgrades this rat into a rat king if possible, when 7 allied rats are in the 3x3 square
+     * Upgrades this rat into a rat king if possible, when 7 allied rats are in the
+     * 3x3 square
      * centered at this rat's location and the ally team has 50 cheese.
      * 
      * Other rats in the 3x3 square will be killed.
@@ -583,7 +603,7 @@ public interface RobotController {
      */
     void placeDirt(MapLocation loc) throws GameActionException;
 
-     /**
+    /**
      * Tests whether this robot can place dirt at the given location.
      * 
      * @param loc
@@ -604,6 +624,7 @@ public interface RobotController {
 
     /**
      * Tests whether this robot can place a rat trap at the given location.
+     * 
      * @param loc
      * 
      * @battlecode.doc.costlymethod
@@ -612,6 +633,7 @@ public interface RobotController {
 
     /**
      * Places a rat trap at the given location.
+     * 
      * @param loc
      * 
      * @battlecode.doc.costlymethod
@@ -620,6 +642,7 @@ public interface RobotController {
 
     /**
      * Tests whether this robot can remove a rat trap at the given location.
+     * 
      * @param loc
      * @throws GameActionException
      * 
@@ -629,6 +652,7 @@ public interface RobotController {
 
     /**
      * Removes the rat trap at the given location.
+     * 
      * @param loc
      * @throws GameActionException
      * 
@@ -638,18 +662,21 @@ public interface RobotController {
 
     /**
      * Tests whether this robot can place a cat trap at the given location.
+     * 
      * @param loc
      */
     public boolean canPlaceCatTrap(MapLocation loc);
 
     /**
      * Places a cat trap at the given location.
+     * 
      * @param loc
      */
     public void placeCatTrap(MapLocation loc) throws GameActionException;
 
     /**
      * Tests whether this robot can remove a cat trap at the given location.
+     * 
      * @param loc
      * @throws GameActionException
      */
@@ -657,6 +684,7 @@ public interface RobotController {
 
     /**
      * Removes the cat trap at the given location.
+     * 
      * @param loc
      * @throws GameActionException
      */
@@ -667,9 +695,7 @@ public interface RobotController {
     // ****************************
 
     /**
-     * Tests whether this robot can attack the given location. Types of
-     * attacks for specific units determine whether or not towers, other
-     * robots, or empty tiles can be attacked.
+     * Tests whether this robot can attack the given location.
      *
      * @param loc target location to attack
      * @return whether it is possible to attack the given location
@@ -678,35 +704,47 @@ public interface RobotController {
      */
     boolean canAttack(MapLocation loc);
 
-    // TODO: updaate docstrings from paint related stuff to rat related stuff
+    // TODO: update docstrings from paint related stuff to rat related stuff
     /**
-     * Performs the specific attack for this robot type, defaulting to the
-     * primary color
+     * Performs the specific attack for this robot type, defaulting to a bite with 
+     * no cheese for rats and a scratch for cats
      *
      * @param loc the target location to attack (for splashers, the center location)
-     *            Note: for a tower, leaving loc null represents an area attack
      * @throws GameActionException if conditions for attacking are not satisfied
      *
      * @battlecode.doc.costlymethod
      */
     void attack(MapLocation loc) throws GameActionException;
 
+    /**
+     * Performs the specific attack for this robot type, defaulting to a bite with 
+     * no cheese for rats and a scratch for cats
+     *
+     * @param loc the target location to attack (for splashers, the center location)
+     * @throws GameActionException if conditions for attacking are not satisfied
+     *
+     * @battlecode.doc.costlymethod
+     */
+    void attack(MapLocation loc, int cheese) throws GameActionException;
+
     // ***********************************
     // ****** COMMUNICATION METHODS ******
     // ***********************************
 
     /**
-     * Sends a message (contained in an int, so 4 bytes) to all locations within squeaking range.
+     * Sends a message (contained in an int, so 4 bytes) to all locations within
+     * squeaking range.
      * 
      * @param messageContent an int representing the content of the
-     * message (up to 4 bytes)
+     *                       message (up to 4 bytes)
      * 
      * @battlecode.doc.costlymethod
      */
     void squeak(int messageContent);
 
     /**
-     * Reads all squeaks sent to this unit within the past 5 rounds if roundNum = -1, or only
+     * Reads all squeaks sent to this unit within the past 5 rounds if roundNum =
+     * -1, or only
      * squeaks sent from the specified round otherwise
      * 
      * @param roundNum the round number to read messages from, or -1 to read all
@@ -806,7 +844,8 @@ public interface RobotController {
     void dropRat(Direction dir) throws GameActionException;
 
     /**
-     * Tests whether the robot can safely drop a carried robot in the specified direction.
+     * Tests whether the robot can safely drop a carried robot in the specified
+     * direction.
      * 
      * @throws GameActionException if the robot is not able to drop to the
      *                             location
@@ -901,4 +940,5 @@ public interface RobotController {
      */
     void setTimelineMarker(String label, int red, int green, int blue);
 }
-// TODO: update bytecode costs, particularly for new methods + methods that got renamed from last year
+// TODO: update bytecode costs, particularly for new methods + methods that got
+// renamed from last year
