@@ -16,6 +16,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -307,9 +308,9 @@ public final class GameMapIO {
 
             ArrayList<Boolean> wallArrayList = new ArrayList<>();
             ArrayList<Boolean> dirtArrayList = new ArrayList<>();
-            ArrayList<Boolean> cheeseMineArrayList = new ArrayList<>();
+            ArrayList<Integer> cheeseMineXs = new ArrayList<>();
+            ArrayList<Integer> cheeseMineYs = new ArrayList<>();
             ArrayList<Integer> cheeseArrayList = new ArrayList<>();
-
 
             for (RobotInfo robot : gameMap.getInitialBodies()) {
                 bodyIDs.add(robot.ID);
@@ -324,8 +325,30 @@ public final class GameMapIO {
             for (int i = 0; i < gameMap.getWidth() * gameMap.getHeight(); i++) {
                 wallArrayList.add(wallArray[i]);
                 dirtArrayList.add(dirtArray[i]);
-                cheeseMineArrayList.add(cheeseMineArray[i]);
+                if(cheeseMineArray[i]) {
+                    int x = i % gameMap.getWidth();
+                    int y = i / gameMap.getWidth();
+                    cheeseMineXs.add(x);
+                    cheeseMineYs.add(y);
+                }
                 cheeseArrayList.add(cheeseArray[i]);
+            }
+
+            int[] catWaypointTableOffsets = new int[gameMap.getNumCats()];
+
+            for (int i = 0; i < gameMap.getNumCats(); i++) {
+                //TODO handle cat IDs properly. This assumes they are sequential?
+                int[] rawWaypoints = gameMap.getCatWaypoints(i);
+                int[] waypointsXs = new int[rawWaypoints.length];
+                int[] waypointsYs = new int[rawWaypoints.length];
+                for (int w = 0; w < rawWaypoints.length; w++) {
+                    int x = rawWaypoints[w] % gameMap.getWidth();
+                    int y = rawWaypoints[w] / gameMap.getWidth();
+                    waypointsXs[w] = x;
+                    waypointsYs[w] = y;
+                }
+                int vecTableOffset = FlatHelpers.createVecTable(builder, new TIntArrayList(waypointsXs), new TIntArrayList(waypointsYs));
+                catWaypointTableOffsets[i] = vecTableOffset;
             }
 
             int wallArrayInt = battlecode.schema.GameMap.createWallsVector(builder,
@@ -333,6 +356,10 @@ public final class GameMapIO {
             int dirtArrayInt = battlecode.schema.GameMap.createDirtVector(builder,
                     ArrayUtils.toPrimitive(dirtArrayList.toArray(new Boolean[dirtArrayList.size()])));
 
+            //convert cheese mine x and y array list to arrays
+            TIntArrayList cheeseMineXsList = new TIntArrayList(cheeseMineXs.stream().mapToInt(i -> i).toArray());
+            TIntArrayList cheeseMineYsList = new TIntArrayList(cheeseMineYs.stream().mapToInt(i -> i).toArray());
+            int cheeseMinesOffset = FlatHelpers.createVecTable(builder, cheeseMineXsList, cheeseMineYsList);
             
             int spawnActionVectorOffset = createSpawnActionsVector(builder, bodyIDs, bodyLocsXs, bodyLocsYs, bodyDirs,
                     bodyTeamIDs, bodyTypes);
@@ -350,7 +377,8 @@ public final class GameMapIO {
             battlecode.schema.GameMap.addWalls(builder, wallArrayInt);
             battlecode.schema.GameMap.addDirt(builder, dirtArrayInt);
             battlecode.schema.GameMap.addInitialBodies(builder, initialBodyOffset);
-            battlecode.schema.GameMap.addCheeseMines(builder, initialBodyOffset);
+            battlecode.schema.GameMap.addCheeseMines(builder, cheeseMinesOffset);
+            battlecode.schema.GameMap.createCatWaypointVecsVector(builder, catWaypointTableOffsets);
             battlecode.schema.GameMap.addCatWaypointVecs(builder, initialBodyOffset);
             battlecode.schema.GameMap.addCatWaypointIds(builder, initialBodyOffset);
             return battlecode.schema.GameMap.endGameMap(builder);

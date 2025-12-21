@@ -57,7 +57,7 @@ public class LiveMap {
     private int[] cheeseArray;
 
     /**
-     * The list of waypoints for the cats accessed by ID.
+     * The list of waypoints for the cats accessed by ID. Waypoints locations expressed as map indices.
      */
     private HashMap<Integer, int[]> allCatWaypoints;
 
