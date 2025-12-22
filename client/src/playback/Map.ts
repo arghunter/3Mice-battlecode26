@@ -11,6 +11,7 @@ import { getImageIfLoaded } from '../util/ImageLoader'
 import { ClientConfig } from '../client-config'
 import { Colors, getTeamColors } from '../colors'
 import Round from './Round'
+import { render } from 'react-dom'
 
 export type Dimension = {
     minCorner: Vector
@@ -161,6 +162,11 @@ export class CurrentMap {
                         ctx.fillStyle = Colors.DIRT_COLOR.get()
                         ctx.fillRect(coords.x, coords.y, 1.0, 1.0)
                     }
+                }
+
+                const cheese = this.cheeseData[schemaIdx]
+                if (cheese) {
+                    renderUtils.renderCenteredImageOrLoadingIndicator(ctx, getImageIfLoaded('cheese.png'), coords, 1.0)
                 }
 
                 if (config.showPaintMarkers) {
@@ -315,9 +321,7 @@ export class CurrentMap {
             builder,
             Array.from(this.staticMap.initialDirt).map((x) => !!x)
         )
-        const cheeseOffset = schema.GameMap.createCheeseVector(
-            builder, Array.from(this.staticMap.cheese)
-        )
+        const cheeseOffset = schema.GameMap.createCheeseVector(builder, Array.from(this.staticMap.cheese))
         const cheeseMinesOffset = packVecTable(builder, this.staticMap.cheeseMines)
         const catWaypointIdsOffset = schema.GameMap.createCatWaypointIdsVector(
             builder,
@@ -415,7 +419,17 @@ export class StaticMap {
             )
         })
 
-        return new StaticMap(name, randomSeed, symmetry, dimension, walls, cheese, cheeseMines, initialDirt, catWaypoints)
+        return new StaticMap(
+            name,
+            randomSeed,
+            symmetry,
+            dimension,
+            walls,
+            cheese,
+            cheeseMines,
+            initialDirt,
+            catWaypoints
+        )
     }
 
     static fromParams(width: number, height: number, symmetry: Symmetry) {
@@ -436,7 +450,17 @@ export class StaticMap {
         const cheeseMines: Vector[] = []
         const initialDirt = new Int8Array(width * height)
         const catWaypoints = new Map<number, Vector[]>()
-        return new StaticMap(name, randomSeed, symmetry, dimension, walls, cheese, cheeseMines, initialDirt, catWaypoints)
+        return new StaticMap(
+            name,
+            randomSeed,
+            symmetry,
+            dimension,
+            walls,
+            cheese,
+            cheeseMines,
+            initialDirt,
+            catWaypoints
+        )
     }
 
     get width(): number {
