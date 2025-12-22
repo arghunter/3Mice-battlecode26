@@ -40,6 +40,11 @@ public class RobotInfo {
     public final Direction direction;
 
     /**
+     * Robot chirality (used by cat only).
+     */
+    public final int chirality;
+
+    /**
      * The current cheese this robot holds
      */
     public final int cheeseAmount;
@@ -54,7 +59,7 @@ public class RobotInfo {
      */
     public final RobotInfo carryingRobot;
 
-    public RobotInfo(int ID, Team team, UnitType type, int health, MapLocation location, Direction direction, int cheeseAmount, RobotInfo carryingRobot, boolean crouching) {
+    public RobotInfo(int ID, Team team, UnitType type, int health, MapLocation location, Direction direction, int chirality, int cheeseAmount, RobotInfo carryingRobot, boolean crouching) {
         super();
         this.ID = ID;
         this.team = team;
@@ -62,6 +67,7 @@ public class RobotInfo {
         this.health = health;
         this.location = location;
         this.direction = direction;
+        this.chirality = chirality;
         this.cheeseAmount = cheeseAmount;
         this.crouching = !type.isRatType() && crouching;
         this.carryingRobot = carryingRobot;
@@ -110,6 +116,15 @@ public class RobotInfo {
      */
     public Direction getDirection() {
         return this.direction;
+    }
+
+    /**
+     * Returns the chirality of this robot.
+     *
+     * @return the chirality of this robot
+     */
+    public int getChirality() {
+        return this.chirality;
     }
 
     /**

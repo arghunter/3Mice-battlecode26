@@ -87,7 +87,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
      * @param loc  the location of the robot
      * @param team the team of the robot
      */
-    public InternalRobot(GameWorld gw, int id, Team team, UnitType type, MapLocation loc, Direction dir) {
+    public InternalRobot(GameWorld gw, int id, Team team, UnitType type, MapLocation loc, Direction dir, int chirality) {
         this.gameWorld = gw;
 
         this.ID = id;
@@ -127,7 +127,8 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
         this.currentWaypoint = 0;
         this.catState = CatStateType.EXPLORE;
-        sleepTimeRemaining = 0;
+        this.sleepTimeRemaining = 0;
+        this.chirality = chirality;
 
         if (this.type.isCatType()) { 
             
@@ -177,6 +178,10 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
     public Direction getDirection() {
         return dir;
+    }
+
+    public int getChirality() {
+        return chirality;
     }
 
     public void setDirection(Direction newDir) {
@@ -257,13 +262,18 @@ public class InternalRobot implements Comparable<InternalRobot> {
         if (cachedRobotInfo != null
                 && cachedRobotInfo.ID == ID
                 && cachedRobotInfo.team == team
+                && cachedRobotInfo.type == type
                 && cachedRobotInfo.health == health
                 && cachedRobotInfo.cheeseAmount == cheeseAmount
+                && cachedRobotInfo.crouching == crouching
+                && cachedRobotInfo.chirality == chirality
+                && cachedRobotInfo.direction == dir
+                && ((cachedRobotInfo.carryingRobot==null && carryingRobot==null)||(carryingRobot!=null && cachedRobotInfo.carryingRobot == carryingRobot.getRobotInfo()))
                 && cachedRobotInfo.location.equals(location)) {
             return cachedRobotInfo;
         }
 
-        this.cachedRobotInfo = new RobotInfo(ID, team, type, health, location, dir, cheeseAmount,
+        this.cachedRobotInfo = new RobotInfo(ID, team, type, health, location, dir, chirality, cheeseAmount,
                 carryingRobot != null ? carryingRobot.getRobotInfo() : null, crouching);
         return this.cachedRobotInfo;
     }
@@ -373,7 +383,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
      */
     public void setLocation(int dx, int dy) {
         for (MapLocation partLoc : this.getAllPartLocations()) {
-            System.out.println("Moving part " + partLoc.x + ", " + partLoc.y + " to " + partLoc.translate(dx, dy).x + " " + partLoc.translate(dx, dy).y); 
             this.gameWorld.moveRobot(partLoc, partLoc.translate(dx, dy));
         }
         // this.gameWorld.getObjectInfo().moveRobot(this, loc);

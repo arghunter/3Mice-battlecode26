@@ -627,12 +627,12 @@ public class GameMaker {
         }
 
         /// Indicate that this robot was spawned on this turn
-        public void addSpawnAction(int id, MapLocation loc, Direction dir, Team team, UnitType type) {
+        public void addSpawnAction(int id, MapLocation loc, Direction dir, int chirality, Team team, UnitType type) {
             applyToBuilders((builder) -> {
                 byte teamID = TeamMapping.id(team);
                 byte robotType = FlatHelpers.getRobotTypeFromUnitType(type);
                 int dirOrdinal = FlatHelpers.getOrdinalFromDirection(dir);
-                int action = SpawnAction.createSpawnAction(builder, id, loc.x, loc.y, dirOrdinal, teamID, robotType);
+                int action = SpawnAction.createSpawnAction(builder, id, loc.x, loc.y, dirOrdinal, chirality, teamID, robotType);
                 builder.addAction(action, Action.SpawnAction);
             });
         }

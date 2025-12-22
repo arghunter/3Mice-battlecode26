@@ -163,8 +163,7 @@ public class GameWorld {
         for (int i = 0; i < initialBodies.length; i++) {
             RobotInfo robotInfo = initialBodies[i];
             MapLocation newLocation = robotInfo.location.translate(gm.getOrigin().x, gm.getOrigin().y);
-            spawnRobot(robotInfo.ID, robotInfo.type, newLocation, robotInfo.direction, robotInfo.team);
-            System.out.println("Has cheese amount" + robotInfo.cheeseAmount);
+            spawnRobot(robotInfo.ID, robotInfo.type, newLocation, robotInfo.direction, robotInfo.chirality, robotInfo.team);
         }
     }
 
@@ -795,7 +794,7 @@ public class GameWorld {
     // ****** SPAWNING *****************
     // *********************************
 
-    public int spawnRobot(int ID, UnitType type, MapLocation location, Direction dir, Team team) {
+    public int spawnRobot(int ID, UnitType type, MapLocation location, Direction dir, int chirality, Team team) {
         // if direction is CENTER, the robot doesn't have a preset direction; set the robot to face the middle of the map
         // subtract 1 before dividing since cats use bottom left corner as center so we will use the bottom left corner of the center 2x2 of the map as the point of comparison
 
@@ -804,7 +803,7 @@ public class GameWorld {
             dir = location.directionTo(mapCenter);
         }
 
-        InternalRobot robot = new InternalRobot(this, ID, team, type, location, dir);
+        InternalRobot robot = new InternalRobot(this, ID, team, type, location, dir, chirality);
 
         for (MapLocation loc : type.getAllLocations(location)) {
             addRobot(loc, robot);
@@ -827,10 +826,10 @@ public class GameWorld {
         return ID;
     }
 
-    public int spawnRobot(UnitType type, MapLocation location, Direction dir, Team team) {
+    public int spawnRobot(UnitType type, MapLocation location, Direction dir, int chirality, Team team) {
         int ID = idGenerator.nextID();
 
-        return spawnRobot(ID, type, location, dir, team);
+        return spawnRobot(ID, type, location, dir, chirality, team);
     }
 
     public void squeak(InternalRobot robot, Message message) {

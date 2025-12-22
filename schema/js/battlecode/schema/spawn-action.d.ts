@@ -14,8 +14,9 @@ export declare class SpawnAction {
     x(): number;
     y(): number;
     dir(): number;
+    chirality(): number;
     team(): number;
     robotType(): RobotType;
     static sizeOf(): number;
-    static createSpawnAction(builder: flatbuffers.Builder, id: number, x: number, y: number, dir: number, team: number, robotType: RobotType): flatbuffers.Offset;
+    static createSpawnAction(builder: flatbuffers.Builder, id: number, x: number, y: number, dir: number, chirality: number, team: number, robotType: RobotType): flatbuffers.Offset;
 }
