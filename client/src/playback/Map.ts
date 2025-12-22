@@ -75,7 +75,6 @@ export class CurrentMap {
         }
 
         this.trapData = new Int8Array(this.width * this.height)
-        this.cheeseData = new Int8Array(this.width * this.height)
     }
 
     indexToLocation(index: number): { x: number; y: number } {
