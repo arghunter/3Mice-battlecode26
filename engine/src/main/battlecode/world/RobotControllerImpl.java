@@ -187,7 +187,14 @@ public final class RobotControllerImpl implements RobotController {
         int distance = (this.getType().usesTopRightLocationForDistance())
                 ? (getLocation().bottomLeftDistanceSquaredTo(loc))
                 : (getLocation().distanceSquaredTo(loc));
-        if (distance > maxRadiusSquared)
+
+        int addDistance = (this.getType().size > 1)
+                ? (int) Math.ceil((this.getType().size + Math.sqrt((double) maxRadiusSquared))
+                        * (this.getType().size + Math.sqrt((double) maxRadiusSquared)))
+                : maxRadiusSquared;
+
+
+        if (distance > (addDistance))
             throw new GameActionException(OUT_OF_RANGE,
                     "Target location not within action range");
     }
@@ -226,9 +233,11 @@ public final class RobotControllerImpl implements RobotController {
         assertIsRobotType(this.robot.getType());
         assertCanActLocation(loc, GameConstants.BUILD_DISTANCE_SQUARED);
 
-        if (this.robot.getType().isRatType()
-                || this.robot.getType().isRatKingType() && (this.getAllCheese() < GameConstants.DIG_DIRT_CHEESE_COST))
+        if ((this.robot.getType().isRatType()
+                || this.robot.getType().isRatKingType()) && (this.getAllCheese() < GameConstants.DIG_DIRT_CHEESE_COST))
             throw new GameActionException(CANT_DO_THAT, "Insufficient cheese to remove dirt!");
+
+        System.out.println(loc);
         if (!this.gameWorld.getDirt(loc))
             throw new GameActionException(CANT_DO_THAT, "No dirt to remove at that location!");
 
@@ -637,7 +646,6 @@ public final class RobotControllerImpl implements RobotController {
         return this.robot.getTurningCooldownTurns();
     }
 
-
     // ***********************************
     // ****** MOVEMENT METHODS ***********
     // ***********************************
@@ -741,7 +749,7 @@ public final class RobotControllerImpl implements RobotController {
         Direction newDir = this.robot.getDirection();
         newDir = newDir.rotateRight();
         this.robot.setDirection(newDir);
-        
+
         this.robot.addTurningCooldownTurns();
     }
 
@@ -808,11 +816,13 @@ public final class RobotControllerImpl implements RobotController {
     public void buildRobot(MapLocation loc) throws GameActionException {
         assertCanBuildRobot(loc);
         this.robot.addActionCooldownTurns(GameConstants.BUILD_ROBOT_COOLDOWN);
-        this.gameWorld.spawnRobot(UnitType.RAT, loc, this.getDirection(), this.robot.getChirality(), this.robot.getTeam());
+        this.gameWorld.spawnRobot(UnitType.RAT, loc, this.getDirection(), this.robot.getChirality(),
+                this.robot.getTeam());
         int cost = getCurrentRatCost();
         this.robot.addCheese(-cost);
         InternalRobot robotSpawned = this.gameWorld.getRobot(loc);
-        this.gameWorld.getMatchMaker().addSpawnAction(robotSpawned.getID(), loc, this.robot.getDirection(), this.robot.getChirality(), getTeam(), UnitType.RAT);
+        this.gameWorld.getMatchMaker().addSpawnAction(robotSpawned.getID(), loc, this.robot.getDirection(),
+                this.robot.getChirality(), getTeam(), UnitType.RAT);
     }
 
     public void assertCanBuildTrap(TrapType type, MapLocation loc) throws GameActionException {
