@@ -139,6 +139,11 @@ public final class RobotControllerImpl implements RobotController {
     }
 
     @Override
+    public MapLocation[] getAllPartLocations() {
+        return this.robot.getAllPartLocations();
+    }
+
+    @Override
     public Direction getDirection() {
         return this.robot.getDirection();
     }
@@ -398,7 +403,7 @@ public final class RobotControllerImpl implements RobotController {
 
         if (this.gameWorld.getCheeseAmount(loc) <= 0)
             throw new GameActionException(CANT_DO_THAT, "No cheese at this location!");
-        if (this.robot.getType() != UnitType.RAT || this.robot.getType() != UnitType.RAT_KING)
+        if (this.robot.getType() != UnitType.RAT && this.robot.getType() != UnitType.RAT_KING)
             throw new GameActionException(CANT_DO_THAT, "Only rats can pick up cheese");
     }
 
@@ -418,6 +423,7 @@ public final class RobotControllerImpl implements RobotController {
         int amountCheeseAvail = this.gameWorld.getCheeseAmount(loc);
         this.gameWorld.addCheese(loc, -amountCheeseAvail);
         this.robot.addCheese(amountCheeseAvail);
+        this.gameWorld.getMatchMaker().addCheesePickUpAction(loc);
     }
 
     @Override
