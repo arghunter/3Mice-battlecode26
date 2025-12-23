@@ -315,7 +315,13 @@ public final class GameMapIO {
 
             for (RobotInfo robot : gameMap.getInitialBodies()) {
                 bodyIDs.add(robot.ID);
-                bodyDirs.add(FlatHelpers.getOrdinalFromDirection(robot.direction));
+
+                // start all robots facing map center 
+                MapLocation mapCenter = new MapLocation((gameMap.getWidth() - 1) / 2,
+                        (gameMap.getHeight() - 1) / 2);
+                Direction robotDir = robot.location.directionTo(mapCenter);
+                
+                bodyDirs.add(FlatHelpers.getOrdinalFromDirection(robotDir));
                 bodyTeamIDs.add(TeamMapping.id(robot.team));
                 bodyTypes.add(FlatHelpers.getRobotTypeFromUnitType(robot.type));
                 bodyChiralities.add((byte)robot.chirality);
