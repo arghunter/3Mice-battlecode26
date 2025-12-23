@@ -440,10 +440,12 @@ public class InternalRobot implements Comparable<InternalRobot> {
     /**
      * Resets the movement cooldown.
      */
-    public void addMovementCooldownTurns() {
-        int movementCooldown = this.getType().movementCooldown
-                * (int) (this.carryingRobot != null ? GameConstants.CARRY_COOLDOWN_MULTIPLIER : 1); // TODO add support
-                                                                                                    // for rat towers???
+    public void addMovementCooldownTurns(Direction d) {
+        int movementCooldown = this.getType().movementCooldown;
+        if (getType() == UnitType.RAT && this.dir != d) {
+            movementCooldown = GameConstants.MOVE_STRAFE_COOLDOWN;
+        }
+        movementCooldown *= (int) (this.carryingRobot != null ? GameConstants.CARRY_COOLDOWN_MULTIPLIER : 1); // TODO add support for rat towers???
         this.setMovementCooldownTurns(this.movementCooldownTurns + movementCooldown);
     }
 

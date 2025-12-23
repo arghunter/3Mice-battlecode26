@@ -76,6 +76,9 @@ public class GameConstants {
     // ****** GAME MECHANICS ***********
     // *********************************
 
+    /** The default cooldown applied when moving in one of the 7 non-forward directions (forward is 10 ticks) */
+    public static final int MOVE_STRAFE_COOLDOWN = 18;
+
     /** The amount of cheese the ratking consumes each round. */
     public static final int RATKING_CHEESE_CONSUMPTION = 10;
 

@@ -504,6 +504,18 @@ public interface RobotController {
     boolean canMoveForward();
 
     /**
+     * Checks whether this robot can move one step in the target direction.
+     * Returns false if the robot is not in a mode that can move, if the target
+     * location is not on the map, if the target location is occupied, if the target
+     * location is impassible, or if there are cooldown turns remaining.
+     *
+     * @return true if it is possible to call <code>move</code> without an exception
+     *
+     * @battlecode.doc.costlymethod
+     */
+    boolean canMove(Direction d);
+
+    /**
      * Moves one step in the direction the robot is facing.
      *
      * @throws GameActionException if the robot cannot move one step in this
@@ -516,6 +528,20 @@ public interface RobotController {
      * @battlecode.doc.costlymethod
      */
     void moveForward() throws GameActionException;
+
+    /**
+     * Moves one step in the specified direction. If not facing that direction, a longer cooldown is applied.
+     *
+     * @throws GameActionException if the robot cannot move one step in this
+     *                             direction, such as cooldown being too high, the
+     *                             target location being
+     *                             off the map, or the target destination being
+     *                             occupied by another robot,
+     *                             or the target destination being impassible.
+     *
+     * @battlecode.doc.costlymethod
+     */
+    void move(Direction d) throws GameActionException;
 
     /**
      * Checks whether this robot can turn.

@@ -684,12 +684,16 @@ public final class RobotControllerImpl implements RobotController {
     // ***********************************
 
     private void assertCanMoveForward() throws GameActionException {
+        assertCanMove(robot.getDirection());
+    }
+
+    private void assertCanMove(Direction d) throws GameActionException {
         assertIsMovementReady();
         MapLocation[] curLocs = robot.getAllPartLocations();
 
         MapLocation[] newLocs = new MapLocation[curLocs.length];
         for (int i = 0; i < newLocs.length; i++) {
-            newLocs[i] = curLocs[i].add(robot.getDirection());
+            newLocs[i] = curLocs[i].add(d);
         }
 
         for (MapLocation loc : newLocs) {
@@ -728,19 +732,33 @@ public final class RobotControllerImpl implements RobotController {
     }
 
     @Override
+    public boolean canMove(Direction d) {
+        try {
+            assertCanMove(d);
+            return true;
+        } catch (GameActionException e) {
+            return false;
+        }
+    }
+
+    @Override
     public void moveForward() throws GameActionException {
-        assertCanMoveForward();
+        move(robot.getDirection());
+    }
+
+        @Override
+    public void move(Direction d) throws GameActionException {
+        assertCanMove(d);
 
         // calculate set of next map locations
         MapLocation[] curLocs = robot.getAllPartLocations();
         MapLocation[] newLocs = new MapLocation[curLocs.length];
-        Direction dir = robot.getDirection();
         for (int i = 0; i < newLocs.length; i++) {
             MapLocation curLoc = curLocs[i];
-            newLocs[i] = curLoc.add(dir);
+            newLocs[i] = curLoc.add(d);
             this.gameWorld.removeRobot(curLoc);
         }
-        this.robot.setLocation(dir.dx, dir.dy);
+        this.robot.setLocation(d.dx, d.dy);
         for (int i = 0; i < newLocs.length; i++) {
             MapLocation newLoc = newLocs[i];
             this.gameWorld.addRobot(newLoc, this.robot);
@@ -757,7 +775,7 @@ public final class RobotControllerImpl implements RobotController {
             }
         }
 
-        this.robot.addMovementCooldownTurns();
+        this.robot.addMovementCooldownTurns(d);
     }
 
     private void assertCanTurn() throws GameActionException {
