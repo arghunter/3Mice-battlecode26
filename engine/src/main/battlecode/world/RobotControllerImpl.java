@@ -736,22 +736,9 @@ public final class RobotControllerImpl implements RobotController {
     }
 
     @Override
-    public void turnCW() throws GameActionException {
+    public void turn(Direction d) throws GameActionException {
         assertCanTurn();
-        Direction newDir = this.robot.getDirection();
-        newDir = newDir.rotateRight();
-        this.robot.setDirection(newDir);
-        
-        this.robot.addTurningCooldownTurns();
-    }
-
-    @Override
-    public void turnCCW() throws GameActionException {
-        assertCanTurn();
-        Direction newDir = this.robot.getDirection();
-        newDir = newDir.rotateLeft();
-        this.robot.setDirection(newDir);
-
+        this.robot.setDirection(d);
         this.robot.addTurningCooldownTurns();
     }
 

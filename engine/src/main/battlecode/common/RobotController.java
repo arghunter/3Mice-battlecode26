@@ -506,26 +506,19 @@ public interface RobotController {
     void moveForward() throws GameActionException;
 
     /**
-     * Checks whether this robot can turn 45 degrees.
+     * Checks whether this robot can turn.
      * 
      * @return
      */
     boolean canTurn();
 
     /**
-     * Turns 45 degrees clockwise.
+     * Turns to the specified direction.
      * 
      * @param steps
      * @throws GameActionException
      */
-    void turnCW() throws GameActionException;
-
-    /**
-     * Turns a certain number of 45 degrees counter-clockwise.
-     * 
-     * @throws GameActionException
-     */
-    void turnCCW() throws GameActionException;
+    void turn(Direction d) throws GameActionException;
 
     // ***********************************
     // *********** BUILDING **************
