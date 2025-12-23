@@ -9,6 +9,7 @@ import battlecode.server.GameMaker;
 import battlecode.server.GameState;
 import battlecode.util.FlatHelpers;
 import battlecode.world.control.RobotControlProvider;
+import battlecode.world.Trap;
 
 import java.util.*;
 
@@ -105,6 +106,7 @@ public class GameWorld {
         this.walls = gm.getWallArray();
         this.dirt = gm.getDirtArray();
         this.cheeseAmounts = gm.getCheeseArray();
+        this.trapLocations = new Trap[numSquares]; // We guarantee that no maps will contain traps at t = 0
         this.robots = new InternalRobot[width][height]; // if represented in cartesian, should be height-width, but this
                                                         // should allow us to index x-y
         this.currentRound = 0;
