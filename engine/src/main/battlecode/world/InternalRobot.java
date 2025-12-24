@@ -651,6 +651,30 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.carryingRobot = null;
     }
 
+    private void swapGrabber() {
+        if (!this.isGrabbedByRobot()) {
+            throw new RuntimeException("Must be grabbed to swap");
+        }
+        InternalRobot grabber = this.getGrabbedByRobot();
+        MapLocation dropLoc = grabber.getLocation();
+
+        this.carryingRobot = grabber;
+        grabber.grabbedByRobot = this;
+
+        this.grabbedByRobot = null;
+        grabber.carryingRobot = null;
+
+        grabber.setInternalLocationOnly(dropLoc);
+        this.setInternalLocationOnly(dropLoc);
+
+        this.gameWorld.removeRobot(dropLoc);
+        this.gameWorld.addRobot(dropLoc, this);
+
+        if (grabber.getTeam() != this.getTeam()) {
+            grabber.remainingCarriedDuration = GameConstants.MAX_CARRY_DURATION;
+        }
+    }
+
     private void getGrabbed(InternalRobot grabber) {
         this.grabbedByRobot = grabber;
         this.gameWorld.removeRobot(getLocation());
@@ -980,7 +1004,11 @@ public class InternalRobot implements Comparable<InternalRobot> {
         // if rat is being carried
         if (this.getType() == UnitType.RAT && this.isGrabbedByRobot()
                 && this.getGrabbedByRobot().getTeam() != this.getTeam()) {
-            if (this.remainingCarriedDuration == 0) { // max carry time reached
+
+            // check if grabber has died
+            if (this.getGrabbedByRobot().getHealth() <= 0) {
+                this.getDropped(this.getGrabbedByRobot().getLocation());
+            } else if (this.remainingCarriedDuration == 0) { // max carry time reached
                 MapLocation dropLoc = this.getGrabbedByRobot().getLocation().add(this.getDirection());
                 if (this.gameWorld.getGameMap().onTheMap(dropLoc)
                         && this.gameWorld.isPassable(dropLoc)
@@ -989,13 +1017,12 @@ public class InternalRobot implements Comparable<InternalRobot> {
                     InternalRobot grabber = this.getGrabbedByRobot();
                     this.getDropped(dropLoc);
                     grabber.carryingRobot = null;
+                } else {
+                    swapGrabber();
+
+                    // TODO: do we want to add a ratnap action to matchmaker
                 }
-                // swap locations
-                InternalRobot grabber = this.getGrabbedByRobot();
-                this.getDropped(grabber.getLocation()); // drop carried robot
-                this.carryingRobot = grabber; // dropped robot now carries its original carrier
-                grabber.getGrabbed(this); // notify original carrier it has been grabbed
-                // TODO: do we want to add a ratnap action to matchmaker
+
             } else {
                 remainingCarriedDuration -= 1;
             }
