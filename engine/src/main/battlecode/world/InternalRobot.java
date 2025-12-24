@@ -1149,7 +1149,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
                                 try {
                                     this.controller.removeDirt(nextLoc);
-                                    this.addActionCooldownTurns(GameConstants.CAT_DIG_COOLDOWN);
+                                    this.addActionCooldownTurns(GameConstants.CAT_DIG_ADDITIONAL_COOLDOWN);
                                 } catch (GameActionException e) {
                                     continue;
                                 }
@@ -1178,9 +1178,13 @@ public class InternalRobot implements Comparable<InternalRobot> {
                         for (MapLocation partLoc : this.getAllPartLocations()) {
                             MapLocation nextLoc = partLoc.add(this.dir);
 
-                            if (this.actionCooldownTurns == 0 && (this.gameWorld.getDirt(nextLoc))) {
-                                this.gameWorld.setDirt(nextLoc, false);
-                                this.addActionCooldownTurns(GameConstants.CAT_DIG_COOLDOWN);
+                            if (this.controller.canRemoveDirt(nextLoc)) {
+                                try {
+                                    this.controller.removeDirt(nextLoc);
+                                    this.addActionCooldownTurns(GameConstants.CAT_DIG_ADDITIONAL_COOLDOWN);
+                                } catch (GameActionException e) {
+                                    continue;
+                                }
                             }
                         }
                     }
@@ -1238,7 +1242,12 @@ public class InternalRobot implements Comparable<InternalRobot> {
                     // step 2: try to attack it and move towards it
 
                     if (this.controller.canAttack(this.catTarget.getLocation())) {
-                        this.attack(this.catTarget.getLocation());
+                        try{
+                            this.controller.attack(this.catTarget.getLocation());
+                        } catch(GameActionException e){
+                        }
+                        
+
                     }
 
                     this.dir = this.location.directionTo(this.catTargetLoc);
@@ -1257,7 +1266,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
                             if (this.controller.canRemoveDirt(nextLoc)) {
                                 try {
                                     this.controller.removeDirt(nextLoc);
-                                    this.addActionCooldownTurns(GameConstants.CAT_DIG_COOLDOWN);
+                                    this.addActionCooldownTurns(GameConstants.CAT_DIG_ADDITIONAL_COOLDOWN);
                                 } catch (GameActionException e) {
                                     continue;
                                 }

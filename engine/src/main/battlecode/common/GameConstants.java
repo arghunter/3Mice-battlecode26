@@ -172,7 +172,7 @@ public class GameConstants {
      */
     public static final int CAT_POUNCE_ADJACENT_DAMAGE_PERCENT = 50;
 
-    public static final int CAT_DIG_COOLDOWN = 30;
+    public static final int CAT_DIG_ADDITIONAL_COOLDOWN = 5;
 
     /**
      * The minimum gap between an enemy robot's health and our own before we can
