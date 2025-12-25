@@ -1090,6 +1090,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
             switch (this.catState) {
                 case EXPLORE:
+
                     MapLocation waypoint = catWaypoints[currentWaypoint];
 
                     if (this.location.equals(waypoint)) {
@@ -1130,14 +1131,16 @@ public class InternalRobot implements Comparable<InternalRobot> {
                     Direction toWaypoint = this.location.directionTo(this.catTargetLoc);
                     this.dir = this.location.directionTo(this.catTargetLoc);
 
-                    if (this.movementCooldownTurns == 0 && canMove(toWaypoint.getDeltaX(), toWaypoint.getDeltaY())) {
+                    System.out.println(this.ID + " exploring " + this.catTargetLoc);
+
+                    if (this.controller.canMove(toWaypoint)) {
                         setLocation(toWaypoint.getDeltaX(), toWaypoint.getDeltaY());
                     } else {
                         for (MapLocation partLoc : this.getAllPartLocations()) {
                             MapLocation nextLoc = partLoc.add(toWaypoint);
 
                             if (this.controller.canRemoveDirt(nextLoc)) {
-                                System.out.println("stuck more here cuz of dirt");
+                                System.out.println("stuck more here cuz of dirt " + this.gameWorld.currentRound);
 
                                 try {
                                     this.controller.removeDirt(nextLoc);
@@ -1145,6 +1148,16 @@ public class InternalRobot implements Comparable<InternalRobot> {
                                 } catch (GameActionException e) {
                                     continue;
                                 }
+
+                            } else {
+                                System.out.println("Cat " + this.ID + " is stuck on " + nextLoc + " cooldown "
+                                        + this.getMovementCooldownTurns());
+
+                                // try {
+                                // this.controller.move(toWaypoint);
+                                // } catch (GameActionException e) {
+                                // System.out.println(e);
+                                // }
 
                             }
                         }
@@ -1158,6 +1171,8 @@ public class InternalRobot implements Comparable<InternalRobot> {
                     if (this.location.equals(this.catTargetLoc)) {
                         this.catState = CatStateType.SEARCH;
                     }
+
+                    System.out.println("What are we doing here MEOW");
 
                     // pounce towards target if possible
                     pounceTraj = canPounce(this.catTargetLoc);
@@ -1183,6 +1198,8 @@ public class InternalRobot implements Comparable<InternalRobot> {
                     break;
 
                 case SEARCH:
+                    System.out.println(this.ID + " searching for rat " + this.gameWorld.getCurrentRound());
+
                     if (this.catTurns >= 4) {
                         this.catTurns = 0;
                         this.catState = CatStateType.EXPLORE;
@@ -1213,6 +1230,8 @@ public class InternalRobot implements Comparable<InternalRobot> {
                     break;
 
                 case ATTACK:
+
+                    System.out.println(this.ID + " attacking a rat " + this.gameWorld.getCurrentRound());
                     // step 1: try to find the rat it was attacking, if cannot find it go back to
                     // explore
                     nearbyRobots = this.controller.senseNearbyRobots();
@@ -1234,11 +1253,10 @@ public class InternalRobot implements Comparable<InternalRobot> {
                     // step 2: try to attack it and move towards it
 
                     if (this.controller.canAttack(this.catTarget.getLocation())) {
-                        try{
+                        try {
                             this.controller.attack(this.catTarget.getLocation());
-                        } catch(GameActionException e){
+                        } catch (GameActionException e) {
                         }
-                        
 
                     }
 

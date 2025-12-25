@@ -690,27 +690,38 @@ public final class RobotControllerImpl implements RobotController {
         }
 
         for (MapLocation loc : newLocs) {
-            if (!onTheMap(loc))
+            if (!onTheMap(loc)) {
+                System.out.println("DEBUGGING: " + loc + " not on map");
                 throw new GameActionException(OUT_OF_RANGE,
                         "Can only move to locations on the map; " + loc + " is not on the map. Currently at location "
                                 + this.getLocation());
-            if ((this.gameWorld.getRobot(loc) != null) && (this.gameWorld.getRobot(loc).getID() != robot.getID())) {
-                System.out.println("DEBUGGING: " + " collision with robot of type "
-                        + this.gameWorld.getRobot(loc).getType() + " with part locations at ");
-                MapLocation[] partLocs = robot.getAllPartLocations();
-                System.out.print("Part locations: [");
-                for (int i = 0; i < partLocs.length; i++) {
-                    System.out.print("(" + partLocs[i].x + ", " + partLocs[i].y + ")");
-                    if (i < partLocs.length - 1)
-                        System.out.print(", ");
-                }
-                System.out.println("]");
-                throw new GameActionException(CANT_MOVE_THERE,
-                        "Cannot move to an occupied location; " + loc + " is occupied by a different robot.");
             }
-            if (!this.gameWorld.isPassable(loc))
+
+            if ((this.gameWorld.getRobot(loc) != null) && (this.gameWorld.getRobot(loc).getID() != robot.getID())) {
+
+                if (this.gameWorld.getRobot(loc).getType().isRatType() && this.getType().isCatType()) {
+                    System.out.println("Cat killed a rat by stepping on it");
+                } else {
+                    System.out.println("DEBUGGING: " + this.robot.getID() + " collision with robot of type "
+                            + this.gameWorld.getRobot(loc).getType() + " with part locations at ");
+                    MapLocation[] partLocs = robot.getAllPartLocations();
+                    System.out.print("Part locations: [");
+                    for (int i = 0; i < partLocs.length; i++) {
+                        System.out.print("(" + partLocs[i].x + ", " + partLocs[i].y + ")");
+                        if (i < partLocs.length - 1)
+                            System.out.print(", ");
+                    }
+                    System.out.println("]");
+                    throw new GameActionException(CANT_MOVE_THERE,
+                            "Cannot move to an occupied location; " + loc + " is occupied by a different robot.");
+                }
+            }
+            if (!this.gameWorld.isPassable(loc)) {
+                System.out.println("DEBUGGING: " + " impassable at location (" + loc.x + ", " + loc.y + ")");
                 throw new GameActionException(CANT_MOVE_THERE,
                         "Cannot move to an impassable location; " + loc + " is impassable.");
+            }
+
         }
     }
 
@@ -754,6 +765,12 @@ public final class RobotControllerImpl implements RobotController {
         this.robot.setLocation(d.dx, d.dy);
         for (int i = 0; i < newLocs.length; i++) {
             MapLocation newLoc = newLocs[i];
+            if (this.gameWorld.getRobot(newLoc) != null && this.getType().isCatType()
+                    && this.gameWorld.getRobot(newLoc).getType().isRatType()) {
+                // kill this rat
+                this.gameWorld.removeRobot(newLoc);
+            }
+
             this.gameWorld.addRobot(newLoc, this.robot);
 
             for (int j = this.gameWorld.getTrapTriggers(newLoc).size() - 1; j >= 0; j--) {
