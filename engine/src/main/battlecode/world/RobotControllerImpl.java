@@ -690,12 +690,12 @@ public final class RobotControllerImpl implements RobotController {
 
             newLocs[i] = curLocs[i].add(d);
 
-            System.out.println("Moving " + d + " from " + curLocs[i] + " " + newLocs[i]);
+            // System.out.println("Moving " + d + " from " + curLocs[i] + " " + newLocs[i]);
         }
 
         for (MapLocation loc : newLocs) {
             if (!onTheMap(loc)) {
-                System.out.println("DEBUGGING: " + loc + " not on map");
+                // System.out.println("DEBUGGING: " + loc + " not on map");
                 throw new GameActionException(OUT_OF_RANGE,
                         "Can only move to locations on the map; " + loc + " is not on the map. Currently at location "
                                 + this.getLocation());
@@ -999,10 +999,10 @@ public final class RobotControllerImpl implements RobotController {
         int health = 0;
         for (Direction d : Direction.allDirections()) {
             InternalRobot currentRobot = this.gameWorld.getRobot(this.adjacentLocation(d));
-            if (robot.getTeam() == currentRobot.getTeam()) {
+            if (currentRobot != null && robot.getTeam() == currentRobot.getTeam()) {
                 health += currentRobot.getHealth();
             }
-            if (d != Direction.CENTER) {
+            if (currentRobot != null && d != Direction.CENTER) {
                 // all their raw cheese is taken
                 this.gameWorld.getTeamInfo().addCheese(this.getTeam(), currentRobot.getCheese());
                 currentRobot.addCheese(-currentRobot.getCheese());
@@ -1011,10 +1011,13 @@ public final class RobotControllerImpl implements RobotController {
                 currentRobot.addHealth(-currentRobot.getHealth());
             }
         }
+
         this.gameWorld.getTeamInfo().addCheese(this.getTeam(), -GameConstants.RAT_KING_UPGRADE_CHEESE_COST);
         health = Math.min(health, UnitType.RAT_KING.health);
 
         robot.becomeRatKing(health);
+
+        // System.out.println("IM ALIVE (RATKING)");
 
         for (Direction d : Direction.allDirections()) {
             if (d != Direction.CENTER) {
