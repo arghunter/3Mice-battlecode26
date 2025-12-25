@@ -57,9 +57,19 @@ public class LiveMap {
     private int[] cheeseArray;
 
     /**
-     * The waypoints for the cats.
+     * The list of cat ids.
      */
-    private ArrayList<int[]> catWaypoints;
+    private ArrayList<Integer> catWayPointIDs;
+
+    /**
+     * The list of cat waypoints.
+     */
+    private ArrayList<int[]> catWayPoints;
+
+    /**
+     * The map of waypoints for the cats accessed by ID. Waypoints locations expressed as map indices.
+     */
+    private HashMap<Integer, int[]> allCatWaypoints;
 
     /**
      * The random seed contained in the map file.
@@ -103,7 +113,9 @@ public class LiveMap {
         this.wallArray = new boolean[numSquares];
         this.cheeseMineArray = new boolean[numSquares];
         this.cheeseArray = new int[numSquares];
-        this.catWaypoints = new ArrayList<int[]>();
+        this.catWayPoints = new ArrayList<int[]>();
+        this.catWayPointIDs = new ArrayList<Integer>();
+        this.allCatWaypoints = new HashMap<Integer, int[]>();
 
         // invariant: bodies is sorted by id
         Arrays.sort(this.initialBodies, (a, b) -> Integer.compare(a.getID(), b.getID()));
@@ -120,6 +132,7 @@ public class LiveMap {
             boolean[] dirtArray,
             boolean[] cheeseMineArray,
             int[] cheeseArray,
+            ArrayList<Integer> catIDs,
             ArrayList<int[]> catWaypoints,
             RobotInfo[] initialBodies) {
         this.width = width;
@@ -135,10 +148,18 @@ public class LiveMap {
         this.dirtArray = Arrays.copyOf(dirtArray, dirtArray.length);
         this.cheeseMineArray = Arrays.copyOf(cheeseMineArray, cheeseMineArray.length);
         this.cheeseArray = Arrays.copyOf(cheeseArray, cheeseArray.length);
-        this.catWaypoints = new ArrayList<int[]>();
 
-        for (int i = 0; i < catWaypoints.size(); i++) {
-            this.catWaypoints.add(Arrays.copyOf(catWaypoints.get(i), catWaypoints.get(i).length));
+        this.catWayPoints = new ArrayList<int[]>();
+        this.catWayPointIDs = new ArrayList<Integer>();
+        this.allCatWaypoints = new HashMap<Integer, int[]>();
+        
+        int numCats = catIDs.size();
+        for (int i = 0; i < numCats; i++) {
+            int catID = catIDs.get(i);
+            int[] catWaypointList = Arrays.copyOf(catWaypoints.get(i), catWaypoints.get(i).length);
+            this.catWayPoints.add(catWaypointList);
+            this.catWayPointIDs.add(catID);
+            this.allCatWaypoints.put(catID, catWaypointList);
         }
 
         // invariant: bodies is sorted by id
@@ -152,8 +173,8 @@ public class LiveMap {
      */
     public LiveMap(LiveMap gm) {
         this(gm.width, gm.height, gm.origin, gm.seed, gm.rounds, gm.mapName, gm.symmetry,
-                gm.wallArray, gm.dirtArray, gm.cheeseMineArray, gm.cheeseArray,
-                gm.catWaypoints,
+                gm.wallArray, gm.dirtArray, gm.cheeseMineArray, gm.cheeseArray, gm.catWayPointIDs,
+                gm.catWayPoints,
                 gm.initialBodies);
     }
 
@@ -354,39 +375,33 @@ public class LiveMap {
      * @return the number of cats on the map
      */
     public int getNumCats() {
-        return catWaypoints.size();
+        return allCatWaypoints.size();
     }
 
     /**
-     * @param catIndex
-     * @return the waypoints for the cat with the given index
+     * @return the waypoints for a given cat id
      */
-    public int[] getCatWaypoints(int catIndex) {
-        return catWaypoints.get(catIndex);
-    }
-
-    /**
-     * @param catIndex
-     * @return the waypoints for the cat with the given index
-     */
-    public MapLocation[] getCatWaypointsOrdered(int catIndex) {
-        int max_len = 0;
+    public int[] getCatWaypointsByID(int catID) {
+        int[] waypoints = allCatWaypoints.get(catID);
         
-        for (int i = 0; i < (catWaypoints.get(catIndex)).length; i++) {
-            if (catWaypoints.get(catIndex)[i] > max_len) {
-                max_len = catWaypoints.get(catIndex)[i];
-            }
-        }
+        if (waypoints == null)
+            throw new RuntimeException("Cannot find waypoints for cat with ID" + catID);
+        else
+            return waypoints;
+    }
 
-        MapLocation[] ordered = new MapLocation[max_len];
+    /**
+     * @return the full list of cat waypoints
+     */
+    public ArrayList<int[]> getCatWaypoints() {
+        return catWayPoints;
+    }
 
-        for (int i = 0; i < (catWaypoints.get(catIndex)).length; i++) {
-            if (catWaypoints.get(catIndex)[i] > 0) {
-                ordered[catWaypoints.get(catIndex)[i] - 1] = indexToLocation(i);
-            }
-        }
-
-        return ordered;
+    /**
+     * @return the full list of cat ids
+     */
+    public ArrayList<Integer> getCatWaypointIDs() {
+        return catWayPointIDs;
     }
 
     /**

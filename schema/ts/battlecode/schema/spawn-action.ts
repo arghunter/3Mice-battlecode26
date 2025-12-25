@@ -38,23 +38,27 @@ dir():number {
   return this.bb!.readUint8(this.bb_pos + 4);
 }
 
+chirality():number {
+  return this.bb!.readUint8(this.bb_pos + 5);
+}
+
 team():number {
-  return this.bb!.readInt8(this.bb_pos + 5);
+  return this.bb!.readInt8(this.bb_pos + 6);
 }
 
 robotType():RobotType {
-  return this.bb!.readInt8(this.bb_pos + 6);
+  return this.bb!.readInt8(this.bb_pos + 7);
 }
 
 static sizeOf():number {
   return 8;
 }
 
-static createSpawnAction(builder:flatbuffers.Builder, id: number, x: number, y: number, dir: number, team: number, robotType: RobotType):flatbuffers.Offset {
+static createSpawnAction(builder:flatbuffers.Builder, id: number, x: number, y: number, dir: number, chirality: number, team: number, robotType: RobotType):flatbuffers.Offset {
   builder.prep(2, 8);
-  builder.pad(1);
   builder.writeInt8(robotType);
   builder.writeInt8(team);
+  builder.writeInt8(chirality);
   builder.writeInt8(dir);
   builder.writeInt8(y);
   builder.writeInt8(x);

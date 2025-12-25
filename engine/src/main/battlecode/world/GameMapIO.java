@@ -16,6 +16,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -233,12 +234,13 @@ public final class GameMapIO {
             boolean[] dirtArray = new boolean[size];
             boolean[] cheeseMineArray = new boolean[size];
             ArrayList<int[]> catWaypoints = new ArrayList<int[]>();
+            ArrayList<Integer> catIds = new ArrayList<Integer>();
             int[] cheeseArray = new int[size];
 
             for (int i = 0; i < wallArray.length; i++) {
                 wallArray[i] = raw.walls(i);
                 dirtArray[i] = raw.dirt(i);
-                cheeseArray[i] = 0; // raw.cheese(i);
+                cheeseArray[i] = raw.cheese(i); // raw.cheese(i);
             }
 
             VecTable cheeseMinesTable = raw.cheeseMines();
@@ -254,6 +256,7 @@ public final class GameMapIO {
             int numCats = raw.catWaypointVecsLength();
 
             for (int i = 0; i < numCats; i++) {
+                int catId = raw.catWaypointIds(i);
                 VecTable waypointTable = raw.catWaypointVecs(i);
                 int numWaypoints = waypointTable.xsLength();
                 int[] waypoints = new int[numWaypoints];
@@ -264,6 +267,7 @@ public final class GameMapIO {
                     waypoints[j] = x + width * y;
                 }
 
+                catIds.add(catId);
                 catWaypoints.add(waypoints);
             }
 
@@ -276,7 +280,7 @@ public final class GameMapIO {
 
             return new LiveMap(
                     width, height, origin, seed, rounds, mapName, symmetry, wallArray, dirtArray,
-                    cheeseMineArray, cheeseArray, catWaypoints, initialBodies);
+                    cheeseMineArray, cheeseArray, catIds, catWaypoints, initialBodies);
         }
 
         /**
@@ -301,52 +305,81 @@ public final class GameMapIO {
             ArrayList<Integer> bodyLocsXs = new ArrayList<>();
             ArrayList<Integer> bodyLocsYs = new ArrayList<>();
             ArrayList<Integer> bodyDirs = new ArrayList<>();
+            ArrayList<Byte> bodyChiralities = new ArrayList<>();
 
             ArrayList<Boolean> wallArrayList = new ArrayList<>();
             ArrayList<Boolean> dirtArrayList = new ArrayList<>();
-            ArrayList<Boolean> cheeseMineArrayList = new ArrayList<>();
-            ArrayList<Integer> cheeseArrayList = new ArrayList<>();
-
+            ArrayList<Integer> cheeseMineXs = new ArrayList<>();
+            ArrayList<Integer> cheeseMineYs = new ArrayList<>();
+            ArrayList<Byte> cheeseArrayList = new ArrayList<>();
 
             for (RobotInfo robot : gameMap.getInitialBodies()) {
                 bodyIDs.add(robot.ID);
-                bodyDirs.add(FlatHelpers.getOrdinalFromDirection(robot.direction));
-                bodyTeamIDs.add(TeamMapping.id(robot.team));
-                System.out.println("DEBUGGING: " + "serializing " + TeamMapping.id(robot.team));
-                bodyTypes.add(FlatHelpers.getRobotTypeFromUnitType(robot.type));
+
+                // start all robots facing map center 
+                MapLocation mapCenter = new MapLocation((gameMap.getWidth() - 1) / 2,
+                        (gameMap.getHeight() - 1) / 2);
+                Direction robotDir = robot.location.directionTo(mapCenter);
                 
-                if(robot.type == UnitType.RAT_KING){
-                    // client wants top left of rat king
-                    MapLocation top_left = robot.location.translate(-1, +1);
-                    bodyLocsXs.add(top_left.x);
-                    bodyLocsYs.add(top_left.y);
-                }
-                else{
-                    bodyLocsXs.add(robot.location.x);
-                    bodyLocsYs.add(robot.location.y);
-                }
+                bodyDirs.add(FlatHelpers.getOrdinalFromDirection(robotDir));
+                bodyTeamIDs.add(TeamMapping.id(robot.team));
+                bodyTypes.add(FlatHelpers.getRobotTypeFromUnitType(robot.type));
+                bodyChiralities.add((byte)robot.chirality);
+ 
+                bodyLocsXs.add(robot.location.x);
+                bodyLocsYs.add(robot.location.y);
             }
 
             for (int i = 0; i < gameMap.getWidth() * gameMap.getHeight(); i++) {
                 wallArrayList.add(wallArray[i]);
                 dirtArrayList.add(dirtArray[i]);
-                cheeseMineArrayList.add(cheeseMineArray[i]);
-                cheeseArrayList.add(cheeseArray[i]);
+                if(cheeseMineArray[i]) {
+                    int x = i % gameMap.getWidth();
+                    int y = i / gameMap.getWidth();
+                    cheeseMineXs.add(x);
+                    cheeseMineYs.add(y);
+                }
+                cheeseArrayList.add((byte)cheeseArray[i]);
+            }
+
+            int[] catWaypointTableOffsets = new int[gameMap.getNumCats()];
+            int[] catIDs = new int[gameMap.getNumCats()];
+
+            for (int i = 0; i < gameMap.getNumCats(); i++) {
+                int catID = gameMap.getCatWaypointIDs().get(i);
+                catIDs[i] = catID;
+                int[] rawWaypoints = gameMap.getCatWaypointsByID(catID);
+                int[] waypointsXs = new int[rawWaypoints.length];
+                int[] waypointsYs = new int[rawWaypoints.length];
+                for (int w = 0; w < rawWaypoints.length; w++) {
+                    int x = rawWaypoints[w] % gameMap.getWidth();
+                    int y = rawWaypoints[w] / gameMap.getWidth();
+                    waypointsXs[w] = x;
+                    waypointsYs[w] = y;
+                }
+                int vecTableOffset = FlatHelpers.createVecTable(builder, new TIntArrayList(waypointsXs), new TIntArrayList(waypointsYs));
+                catWaypointTableOffsets[i] = vecTableOffset;
             }
 
             int wallArrayInt = battlecode.schema.GameMap.createWallsVector(builder,
                     ArrayUtils.toPrimitive(wallArrayList.toArray(new Boolean[wallArrayList.size()])));
             int dirtArrayInt = battlecode.schema.GameMap.createDirtVector(builder,
                     ArrayUtils.toPrimitive(dirtArrayList.toArray(new Boolean[dirtArrayList.size()])));
+            int cheeseArrayInt = battlecode.schema.GameMap.createCheeseVector(builder,
+                    ArrayUtils.toPrimitive(cheeseArrayList.toArray(new Byte[cheeseArrayList.size()])));
 
-            //TODO: need to fix this stuff
-            // int paintArrayInt = battlecode.schema.GameMap.createPaintVector(builder,
-            //         ArrayUtils.toPrimitive(paintArrayList.toArray(new Byte[paintArrayList.size()])));
-            //         ArrayUtils.toPrimitive(patternArrayList.toArray(new Integer[patternArrayList.size()])));
-            // int ruinLocations = FlatHelpers.createVecTable(builder, ruinXsList, ruinYsList);
+            int wayPointOffsets = battlecode.schema.GameMap.createCatWaypointVecsVector(builder, catWaypointTableOffsets);
+            int catIDOffsets = battlecode.schema.GameMap.createCatWaypointIdsVector(builder, catIDs);
 
-            int spawnActionVectorOffset = createSpawnActionsVector(builder, bodyIDs, bodyLocsXs, bodyLocsYs, bodyDirs,
+            //convert cheese mine x and y array list to arrays
+            TIntArrayList cheeseMineXsList = new TIntArrayList(cheeseMineXs.stream().mapToInt(i -> i).toArray());
+            TIntArrayList cheeseMineYsList = new TIntArrayList(cheeseMineYs.stream().mapToInt(i -> i).toArray());
+            int cheeseMinesOffset = FlatHelpers.createVecTable(builder, cheeseMineXsList, cheeseMineYsList);
+            
+            
+            int spawnActionVectorOffset = createSpawnActionsVector(builder, bodyIDs, bodyLocsXs, bodyLocsYs, bodyDirs, bodyChiralities,
                     bodyTeamIDs, bodyTypes);
+
             int initialBodyOffset = InitialBodyTable.createInitialBodyTable(builder, spawnActionVectorOffset);
 
             // Build LiveMap for flatbuffer
@@ -359,10 +392,12 @@ public final class GameMapIO {
             battlecode.schema.GameMap.addRandomSeed(builder, randomSeed);
             battlecode.schema.GameMap.addWalls(builder, wallArrayInt);
             battlecode.schema.GameMap.addDirt(builder, dirtArrayInt);
+            battlecode.schema.GameMap.addCheese(builder, cheeseArrayInt);
             battlecode.schema.GameMap.addInitialBodies(builder, initialBodyOffset);
-            battlecode.schema.GameMap.addCheeseMines(builder, initialBodyOffset);
-            battlecode.schema.GameMap.addCatWaypointVecs(builder, initialBodyOffset);
-            battlecode.schema.GameMap.addCatWaypointIds(builder, initialBodyOffset);
+            battlecode.schema.GameMap.addCheeseMines(builder, cheeseMinesOffset);
+            
+            battlecode.schema.GameMap.addCatWaypointVecs(builder, wayPointOffsets);
+            battlecode.schema.GameMap.addCatWaypointIds(builder, catIDOffsets);
             return battlecode.schema.GameMap.endGameMap(builder);
         }
 
@@ -379,8 +414,9 @@ public final class GameMapIO {
                 int bodyX = curSpawnAction.x();
                 int bodyY = curSpawnAction.y();
                 int dirOrdinal = curSpawnAction.dir();
-                Direction dir = FlatHelpers.getDirectionFromOrdinal(dirOrdinal);
-                System.out.println("Direction is " + curSpawnAction.dir());
+                int chirality = curSpawnAction.chirality();
+                
+                Direction dir = FlatHelpers.getDirectionFromOrdinal(dirOrdinal); 
 
                 Team bodyTeam = TeamMapping.team(curSpawnAction.team());
 
@@ -396,17 +432,17 @@ public final class GameMapIO {
                 boolean initialCrouching = false;
                 int initialCheese = GameConstants.INITIAL_TEAM_CHEESE;
                 RobotInfo carryingRobot = null;
-                initialBodies.add(new RobotInfo(curId, bodyTeam, bodyType, bodyType.health, new MapLocation(bodyX, bodyY), dir, initialCheese, carryingRobot, initialCrouching));
+                initialBodies.add(new RobotInfo(curId, bodyTeam, bodyType, bodyType.health, new MapLocation(bodyX, bodyY), dir, chirality, initialCheese, carryingRobot, initialCrouching));
                 
-                System.out.println("DEBUGGING: " + "Unit type " + bodyType + " on team " + bodyTeam + " at location " + bodyX + ", " + bodyY + " with initial angle " + dirOrdinal);
+                System.out.println("DEBUGGING: " + "Unit type " + bodyType + " on team " + bodyTeam + " at location " + bodyX + ", " + bodyY + " with initial angle " + dirOrdinal + " with chirality " + chirality);
             }
         }
 
         private static int createSpawnActionsVector(FlatBufferBuilder builder, ArrayList<Integer> ids,
-                ArrayList<Integer> xs, ArrayList<Integer> ys, ArrayList<Integer> dirs, ArrayList<Byte> teams, ArrayList<Byte> types) {
+                ArrayList<Integer> xs, ArrayList<Integer> ys, ArrayList<Integer> dirs, ArrayList<Byte> chiralities, ArrayList<Byte> teams, ArrayList<Byte> types) {
             InitialBodyTable.startSpawnActionsVector(builder, ids.size());
             for (int i = 0; i < ids.size(); i++) {
-                SpawnAction.createSpawnAction(builder, ids.get(i), xs.get(i), ys.get(i), dirs.get(i), teams.get(i), types.get(i));
+                SpawnAction.createSpawnAction(builder, ids.get(i), xs.get(i), ys.get(i), dirs.get(i), chiralities.get(i), teams.get(i), types.get(i));
             }
             return builder.endVector();
         }

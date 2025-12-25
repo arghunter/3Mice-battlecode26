@@ -197,9 +197,10 @@ public class GameMaker {
 
     /**
      * Write a match out to a file.
+     * 
      * @param saveFile the file to save to
      */
-    
+
     public void writeGame(File saveFile) {
         if (saveFile == null) {
             throw new RuntimeException("Null file provided to writeGame");
@@ -301,7 +302,7 @@ public class GameMaker {
         for (UnitType type : UnitType.values()) {
             // turns all types into level 1 to convert easily into RobotType
             UnitType levelOneType = FlatHelpers.getUnitTypeFromRobotType(FlatHelpers.getRobotTypeFromUnitType(type));
-            
+
             if (type != levelOneType) {
                 continue; // avoid double counting
             }
@@ -372,6 +373,14 @@ public class GameMaker {
             this.timelineMarkerRounds = new ArrayList<>();
             this.timelineMarkerLabels = new ArrayList<>();
             this.timelineMarkerColors = new ArrayList<>();
+            
+            this.trapAddedIds = new TIntArrayList();
+            this.trapAddedX = new TIntArrayList();
+            this.trapAddedY = new TIntArrayList();
+            this.trapAddedTypes = new TByteArrayList();
+            this.trapAddedTeams = new TByteArrayList();
+            this.trapTriggeredIds = new TIntArrayList();
+
         }
 
         public void makeMatchHeader(LiveMap gameMap) {
@@ -490,7 +499,7 @@ public class GameMaker {
         }
 
         public void endTurn(int robotID, int health, int cheese, int movementCooldown, int actionCooldown, int turningCooldown,
-                int bytecodesUsed, MapLocation loc) {
+                int bytecodesUsed, MapLocation loc, Direction dir) {
             applyToBuilders((builder) -> {
                 builder.startTurn();
 
@@ -503,6 +512,7 @@ public class GameMaker {
                 Turn.addBytecodesUsed(builder, bytecodesUsed);
                 Turn.addX(builder, loc.x);
                 Turn.addY(builder, loc.y);
+                Turn.addDir(builder, FlatHelpers.getOrdinalFromDirection(dir));
 
                 builder.finishTurn();
             });
@@ -523,7 +533,7 @@ public class GameMaker {
             });
         }
 
-        public void addRatNapAction(int grabbedRobotID){
+        public void addRatNapAction(int grabbedRobotID) {
             applyToBuilders((builder) -> {
                 int action = RatNap.createRatNap(builder, grabbedRobotID);
                 builder.addAction(action, Action.RatNap);
@@ -538,7 +548,7 @@ public class GameMaker {
         }
 
 
-        public void addThrowAction(int thrownRobotID, MapLocation throwDirLocation){
+        public void addThrowAction(int thrownRobotID, MapLocation throwDirLocation) {
             applyToBuilders((builder) -> {
                 int action = ThrowRat.createThrowRat(builder, thrownRobotID, locationToInt(throwDirLocation));
                 builder.addAction(action, Action.ThrowRat);
@@ -554,10 +564,10 @@ public class GameMaker {
         }
 
         /// Visually indicate an cat scratch
-        public void addScratchAction(int otherID) {
+        public void addScratchAction(int loc) {
             applyToBuilders((builder) -> {
-                int action = CatScratch.createCatScratch(builder, otherID);
-                builder.addAction(action, Action.RatAttack);
+                int action = CatScratch.createCatScratch(builder, loc);
+                builder.addAction(action, Action.CatScratch);
             });
         }
 
@@ -617,13 +627,27 @@ public class GameMaker {
             });
         }
 
+        public void addCheeseSpawnAction(MapLocation loc, int amount) {
+            applyToBuilders((builder) -> {
+                int action = CheeseSpawn.createCheeseSpawn(builder, locationToInt(loc), amount);
+                builder.addAction(action, Action.CheeseSpawn);
+            });
+        }
+
+        public void addCheesePickUpAction(MapLocation loc) {
+            applyToBuilders((builder) -> {
+                int action = CheesePickup.createCheesePickup(builder, locationToInt(loc));
+                builder.addAction(action, Action.CheesePickup);
+            });
+        }
+
         /// Indicate that this robot was spawned on this turn
-        public void addSpawnAction(int id, MapLocation loc, Direction dir, Team team, UnitType type) {
+        public void addSpawnAction(int id, MapLocation loc, Direction dir, int chirality, Team team, UnitType type) {
             applyToBuilders((builder) -> {
                 byte teamID = TeamMapping.id(team);
                 byte robotType = FlatHelpers.getRobotTypeFromUnitType(type);
                 int dirOrdinal = FlatHelpers.getOrdinalFromDirection(dir);
-                int action = SpawnAction.createSpawnAction(builder, id, loc.x, loc.y, dirOrdinal, teamID, robotType);
+                int action = SpawnAction.createSpawnAction(builder, id, loc.x, loc.y, dirOrdinal, chirality, teamID, robotType);
                 builder.addAction(action, Action.SpawnAction);
             });
         }

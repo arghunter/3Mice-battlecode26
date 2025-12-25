@@ -2,9 +2,9 @@ package battlecode.common;
 
 public enum UnitType {
     // health, size, speed, visionRadius, actionCooldown
-    RAT(20, 1, 5, 20, 90, 0, 17500, 10),
-    RAT_KING(150, 3, 1, 29, 90, -1, 20000, 40),
-    CAT(1000,2,10,37,180, 0, -1, 10);
+    RAT(100, 1, 5, 20, 90, 0, 10, 10000),
+    RAT_KING(500, 3, 1, 29, 90, -1, 40, 20000),
+    CAT(2000,2,10,37,180, 0, 10, 10);
 
     // amount of health robot initially starts with
     public final int health;
@@ -30,7 +30,7 @@ public enum UnitType {
     // robot's bytecode limit
     public final int bytecodeLimit;
 
-    public boolean usesTopRightLocationForDistance(){
+    public boolean usesBottomLeftLocationForDistance(){
         return this.size % 2 == 0;
     }
 

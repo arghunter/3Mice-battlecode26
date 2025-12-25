@@ -34,14 +34,15 @@ public final class SpawnAction extends Struct {
   public int x() { return bb.get(bb_pos + 2) & 0xFF; }
   public int y() { return bb.get(bb_pos + 3) & 0xFF; }
   public int dir() { return bb.get(bb_pos + 4) & 0xFF; }
-  public byte team() { return bb.get(bb_pos + 5); }
-  public byte robotType() { return bb.get(bb_pos + 6); }
+  public int chirality() { return bb.get(bb_pos + 5) & 0xFF; }
+  public byte team() { return bb.get(bb_pos + 6); }
+  public byte robotType() { return bb.get(bb_pos + 7); }
 
-  public static int createSpawnAction(FlatBufferBuilder builder, int id, int x, int y, int dir, byte team, byte robotType) {
+  public static int createSpawnAction(FlatBufferBuilder builder, int id, int x, int y, int dir, int chirality, byte team, byte robotType) {
     builder.prep(2, 8);
-    builder.pad(1);
     builder.putByte(robotType);
     builder.putByte(team);
+    builder.putByte((byte) chirality);
     builder.putByte((byte) dir);
     builder.putByte((byte) y);
     builder.putByte((byte) x);

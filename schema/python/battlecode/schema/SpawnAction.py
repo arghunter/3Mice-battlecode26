@@ -29,15 +29,17 @@ class SpawnAction(object):
     # SpawnAction
     def Dir(self): return self._tab.Get(flatbuffers.number_types.Uint8Flags, self._tab.Pos + flatbuffers.number_types.UOffsetTFlags.py_type(4))
     # SpawnAction
-    def Team(self): return self._tab.Get(flatbuffers.number_types.Int8Flags, self._tab.Pos + flatbuffers.number_types.UOffsetTFlags.py_type(5))
+    def Chirality(self): return self._tab.Get(flatbuffers.number_types.Uint8Flags, self._tab.Pos + flatbuffers.number_types.UOffsetTFlags.py_type(5))
     # SpawnAction
-    def RobotType(self): return self._tab.Get(flatbuffers.number_types.Int8Flags, self._tab.Pos + flatbuffers.number_types.UOffsetTFlags.py_type(6))
+    def Team(self): return self._tab.Get(flatbuffers.number_types.Int8Flags, self._tab.Pos + flatbuffers.number_types.UOffsetTFlags.py_type(6))
+    # SpawnAction
+    def RobotType(self): return self._tab.Get(flatbuffers.number_types.Int8Flags, self._tab.Pos + flatbuffers.number_types.UOffsetTFlags.py_type(7))
 
-def CreateSpawnAction(builder, id, x, y, dir, team, robotType):
+def CreateSpawnAction(builder, id, x, y, dir, chirality, team, robotType):
     builder.Prep(2, 8)
-    builder.Pad(1)
     builder.PrependInt8(robotType)
     builder.PrependInt8(team)
+    builder.PrependUint8(chirality)
     builder.PrependUint8(dir)
     builder.PrependUint8(y)
     builder.PrependUint8(x)

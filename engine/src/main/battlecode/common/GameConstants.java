@@ -59,7 +59,7 @@ public class GameConstants {
     public static final int EXCEPTION_BYTECODE_PENALTY = 500;
 
     /** The amount of cheese each team starts with. */
-    public static final int INITIAL_TEAM_CHEESE = 2500; 
+    public static final int INITIAL_TEAM_CHEESE = 2500;
 
     /** The maximum number of rat kings that a team can have. */
     public static final int MAX_NUMBER_OF_RAT_KINGS = 5; // TODO need to specify!
@@ -76,6 +76,12 @@ public class GameConstants {
     // ****** GAME MECHANICS ***********
     // *********************************
 
+    /**
+     * The default cooldown applied when moving in one of the 7 non-forward
+     * directions (forward is 10 ticks)
+     */
+    public static final int MOVE_STRAFE_COOLDOWN = 18;
+
     /** The amount of cheese the ratking consumes each round. */
     public static final int RATKING_CHEESE_CONSUMPTION = 10;
 
@@ -83,10 +89,10 @@ public class GameConstants {
     public static final int RATKING_HEALTH_LOSS = 10;
 
     /** Probability parameter for cheese spawn at a mine. **/
-    public static final float CHEESE_MINE_SPAWN_PROBABILITY = 0.15f;
+    public static final float CHEESE_MINE_SPAWN_PROBABILITY = 0.01f;
 
     /** Cheese will spawn within a [-radius, radius] square of the cheese mine **/
-    public static final int SQ_CHEESE_SPAWN_RADIUS = 5;
+    public static final int SQ_CHEESE_SPAWN_RADIUS = 4;
 
     /** How much cheese each mine spawns at once */
     public static final int CHEESE_SPAWN_AMOUNT = 2;
@@ -94,11 +100,11 @@ public class GameConstants {
     /** The number of rat kings a player starts with. */
     public static final int NUMBER_INITIAL_RAT_KINGS = 1;
 
-    /** The maximum distance for transferring cheese to an allied rat king or dropping it on the ground */
-    public static final int CHEESE_DROP_RADIUS_SQUARED = 2;
-
-    /** The maximum number of traps a team can have at a given time */
-    public static final int MAX_TRAP_COUNT = 25;
+    /**
+     * The maximum distance for transferring cheese to an allied rat king or
+     * dropping it on the ground
+     */
+    public static final int CHEESE_DROP_RADIUS_SQUARED = 9;
 
     /** The maximum distance from a rat king for building robots */
     public static final int BUILD_ROBOT_RADIUS_SQUARED = 4;
@@ -145,7 +151,7 @@ public class GameConstants {
     /**
      * The damage a thrown rat takes per tile it impacts early (i.e. rats that hit a
      * wall after 1 turn take 20+3*5=35 damage)
-     * */
+     */
     public static final int THROW_DAMAGE_PER_TILE = 5;
 
     /** The damage a robot takes after being bitten by a rat */
@@ -163,7 +169,7 @@ public class GameConstants {
      */
     public static final int CAT_POUNCE_ADJACENT_DAMAGE_PERCENT = 50;
 
-    public static final int CAT_DIG_COOLDOWN = 30;
+    public static final int CAT_DIG_ADDITIONAL_COOLDOWN = 5;
 
     /**
      * The minimum gap between an enemy robot's health and our own before we can
@@ -176,7 +182,7 @@ public class GameConstants {
 
     /** The cheese cost for upgrading a rat into a rat king */
     public static final int RAT_KING_UPGRADE_CHEESE_COST = 50;
-  
+
     /** The cheese cost to dig up a tile of dirt */
     public static final int DIG_DIRT_CHEESE_COST = 10;
 
@@ -242,7 +248,8 @@ public class GameConstants {
     public static final int BUILD_COOLDOWN = 35; // TODO need to specify!
 
     /**
-     * The multiplier to the cooldowns when carrying another robot; TODO increases exponentially when >1 robot is carried?
+     * The multiplier to the cooldowns when carrying another robot; TODO increases
+     * exponentially when >1 robot is carried?
      */
     public static final double CARRY_COOLDOWN_MULTIPLIER = 1.5;
 
@@ -253,9 +260,10 @@ public class GameConstants {
     public static final int MAX_CARRY_DURATION = 10;
 
     /**
-     * The total number turns a rat can travel for while thrown (rats are stunned while
+     * The total number turns a rat can travel for while thrown (rats are stunned
+     * while
      * thrown)
-     * */
+     */
     public static final int THROW_DURATION = 4;
 
     /** The stun cooldown after hitting the ground after being thrown */
@@ -263,5 +271,8 @@ public class GameConstants {
 
     /** The stun cooldown after hitting the target after being thrown */
     public static final int HIT_TARGET_COOLDOWN = 30;
+
+    /** Amount of rounds a cat sleeps for when fed */
+    public static final int CAT_SLEEP_TIME = 2;
 
 }
