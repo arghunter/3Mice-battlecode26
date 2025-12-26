@@ -4,6 +4,7 @@ import { Button, SmallButton } from '../../button'
 import { nativeAPI } from './native-api-wrapper'
 import { Select, TextInput } from '../../forms'
 import { InputDialog } from '../../input-dialog'
+import { ChevronUpIcon, ChevronDownIcon } from '../../../icons/chevron'
 import Tooltip from '../../tooltip'
 import { FixedSizeList, ListOnScrollProps } from 'react-window'
 import { BasicDialog } from '../../basic-dialog'
@@ -472,9 +473,28 @@ type Props = {
 
 export const Console: React.FC<Props> = ({ lines }) => {
     const consoleRef = useRef<HTMLDivElement>(null)
+    const listRef = useRef<FixedSizeList>(null);
 
     const [tail, setTail] = useState(true)
     const [popout, setPopout] = useState(false)
+
+    const [searchOpen, setSearchOpen] = useState(false)
+    const [query, setQuery] = useState('')
+    const [matches, setMatches] = useState<number[]>([])
+    const [activeMatch, setActiveMatch] = useState(0)
+
+    const goToNextMatch = () => {
+        if (!matches.length) return
+        setActiveMatch((prev) => (prev + 1) % matches.length)
+        listRef.current?.scrollToItem(matches[activeMatch], 'center');
+    }
+
+    const goToPrevMatch = () => {
+        if (!matches.length) return
+        setActiveMatch((prev) => (prev - 1 + matches.length) % matches.length)
+        listRef.current?.scrollToItem(matches[activeMatch], 'center');
+    }
+
 
     const getLineClass = (line: ConsoleLine) => {
         switch (line.type) {
@@ -500,10 +520,19 @@ export const Console: React.FC<Props> = ({ lines }) => {
             }
         }, 5)
     }
-
+    
     const ConsoleRow = (props: { index: number; style: any }) => {
         const row = lines.get(props.index)!
         const content = row.content
+
+        const isMatch = query.length > 0 && content.toLowerCase().includes(query.toLowerCase());
+        const isActive = isMatch && matches[activeMatch] === props.index;
+
+        const getHighlightClass = () => {
+            if (isActive) return ' bg-yellow-400/60 text-black';
+            if (isMatch) return ' bg-yellow-200/20';
+            return '';
+        };
 
         // Check if the printout is from a bot. If so, add a special click element
         // that selects the bot
@@ -529,7 +558,7 @@ export const Console: React.FC<Props> = ({ lines }) => {
         }
 
         return (
-            <span style={props.style} className={getLineClass(lines.get(props.index)!) + ' text-xs whitespace-nowrap'}>
+            <span style={props.style} className={getLineClass(row) + ' text-xs whitespace-nowrap' + getHighlightClass()}>
                 {content}
             </span>
         )
@@ -563,6 +592,7 @@ export const Console: React.FC<Props> = ({ lines }) => {
 
     const lineList = (
         <FixedSizeList
+            ref={listRef}
             outerRef={consoleRef}
             height={2000}
             itemCount={lines.length()}
@@ -575,19 +605,119 @@ export const Console: React.FC<Props> = ({ lines }) => {
             {ConsoleRow}
         </FixedSizeList>
     )
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        const isMac = window.navigator.platform.toUpperCase().includes('MAC')
+        const mod = isMac ? e.metaKey : e.ctrlKey
+
+        if (mod && e.key.toLowerCase() === 'a') {
+            e.preventDefault()
+
+            if (!consoleRef.current) return
+            const selection = window.getSelection()
+            if (!selection) return
+
+            const range = document.createRange()
+            range.selectNodeContents(consoleRef.current)
+            selection.removeAllRanges()
+            selection.addRange(range)
+        }
+
+        if (mod && e.key.toLowerCase() === 'f') {
+            e.preventDefault()
+            setSearchOpen(true)
+            return
+        }
+
+        if (mod && e.key.toLowerCase() === 'g') {
+            e.preventDefault()
+            if (matches.length === 0) return
+
+            const dir = e.shiftKey ? -1 : 1
+            setActiveMatch((prev) => (prev + dir + matches.length) % matches.length)
+        }
+    }
+
+    useEffect(() => {
+        if (!query) {
+            setMatches([])
+            setActiveMatch(0)
+            return
+        }
+
+        const q = query.toLowerCase()
+        const found: number[] = []
+        for (let i = 0; i < lines.length(); i++) {
+            if (lines.get(i)?.content.toLowerCase().includes(q)) {
+                found.push(i)
+            }
+        }
+        setMatches(found)
+        setActiveMatch(0)
+    }, [query, lines.effectiveLength()])
+
+
     return (
         <>
             <Tooltip location="bottom" text={'View output from running the game'}>
                 <Button onClick={() => updatePopout(true)}>Console</Button>
             </Tooltip>
             <BasicDialog open={popout} onCancel={() => updatePopout(false)} title="Console" width="lg">
+                <div className="relative flex flex-col grow h-full w-full min-h-[400px]">
+                {searchOpen && (
+                <div className="flex items-center gap-2 mb-1">
+                    <input
+                    autoFocus
+                    className="flex-grow px-2 py-1 text-xs bg-black border border-white rounded"
+                    placeholder="Find…"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                        setSearchOpen(false)
+                        setQuery('')
+                        }
+                        if (e.key === 'Enter') {
+                            e.shiftKey ? goToPrevMatch() : goToNextMatch()
+                        }
+                    }}
+                    />
+                    <button
+                    className="px-2 py-1 text-xs border border-white rounded disabled:opacity-40"
+                    onClick={goToPrevMatch}
+                    disabled={matches.length === 0}
+                    title="Previous match"
+                    >
+                        <ChevronUpIcon className="w-4 h-4" />
+                    </button>
+
+                    {/* Next */}
+                    <button
+                    className="px-2 py-1 text-xs border border-white rounded disabled:opacity-40"
+                    onClick={goToNextMatch}
+                    disabled={matches.length === 0}
+                    title="Next match"
+                    >
+                        <ChevronDownIcon className="w-4 h-4" />
+                    </button>
+                    <span className="text-xs opacity-70">
+                    {matches.length ? `${activeMatch + 1}/${matches.length}` : '0/0'}
+                    </span>
+                </div>
+
+                )}
+
                 <div className="flex flex-col grow h-full w-full">
                     <div
+                        ref={consoleRef}
+                        tabIndex={0}
                         className="flex-grow border border-white py-1 px-1 rounded-md overflow-auto flex flex-col min-h-[250px] w-full"
                         style={{ height: '80vh', maxHeight: '80vh' }}
+                        onKeyDown={handleKeyDown}
                     >
                         {popout && lineList}
                     </div>
+                </div>
                 </div>
             </BasicDialog>
         </>
