@@ -584,6 +584,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
                 this.gameWorld.getMatchMaker().addScratchAction(this.getGameWorld().locationToIndex(loc));
             }
         }
+        System.out.println("SCRATCHING");
 
     }
 
@@ -863,21 +864,21 @@ public class InternalRobot implements Comparable<InternalRobot> {
         // on the target location
         MapSymmetry symmetry = this.gameWorld.getGameMap().getSymmetry();
 
-        if (chirality == 0) {
+        if (chirality == 0) { // check in clockwise order
             cornerToTest = this.getLocation();
-            rotateDir = Direction.EAST;
+            rotateDir = Direction.NORTH;
         } else {
             switch (symmetry) {
                 case VERTICAL:
-                    cornerToTest = loc.add(Direction.EAST);
-                    rotateDir = Direction.WEST;
-                    break;
-                case HORIZONTAL:
-                    cornerToTest = loc.add(Direction.SOUTH);
+                    cornerToTest = this.getLocation().add(Direction.EAST);
                     rotateDir = Direction.NORTH;
                     break;
+                case HORIZONTAL:
+                    cornerToTest = this.getLocation().add(Direction.NORTH);
+                    rotateDir = Direction.SOUTH;
+                    break;
                 case ROTATIONAL:
-                    cornerToTest = loc.add(Direction.SOUTHEAST);
+                    cornerToTest = this.getLocation().add(Direction.NORTHEAST);
                     rotateDir = Direction.WEST;
                     break;
                 default:
@@ -885,14 +886,20 @@ public class InternalRobot implements Comparable<InternalRobot> {
             }
         }
 
+        System.out.println("Trying to POUNCE to " + loc);
+        System.out.println("Cat original at " + this.getLocation() + " with first corner " + cornerToTest);
+
         for (int i = 0; i < 4; i += 1) {
             // attempt pounce that matches cornerToTest to target location
             Direction directionFromCornerToTestToCenter = cornerToTest.directionTo(this.getLocation());
 
-            // dx and dy from top left corner
-            // assuming getLocation returns the top left corner of the cat
+
+            // dx and dy from bottom left corner
+            // assuming getLocation returns the bottom left corner of the cat
             int dx = directionFromCornerToTestToCenter.dx + (loc.x - this.getLocation().x);
             int dy = directionFromCornerToTestToCenter.dy + (loc.y - this.getLocation().y);
+
+            System.out.println("POUNCE testing corner " + cornerToTest + " requires dx=" + dx + " and dy=" + dy);
 
             boolean landingTilesPassable = true;
 
@@ -920,6 +927,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
     }
 
     public void pounce(int[] delta) {
+        System.out.println("POUNCING CAT");
         int dx = delta[0];
         int dy = delta[1];
         for (MapLocation partLoc : this.getAllPartLocations()) {
@@ -934,6 +942,10 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
         // actually translate the cat
         this.setLocation(dx, dy);
+
+        // incur double the movement cooldown 
+        this.addMovementCooldownTurns(this.dir);
+        this.addMovementCooldownTurns(this.dir);
 
     }
 

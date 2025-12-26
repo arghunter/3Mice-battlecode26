@@ -791,6 +791,7 @@ public final class RobotControllerImpl implements RobotController {
         }
 
         this.robot.addMovementCooldownTurns(d);
+        
     }
 
     private void assertCanTurn() throws GameActionException {
