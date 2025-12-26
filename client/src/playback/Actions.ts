@@ -399,6 +399,51 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
 
             round.map.trapData[this.actionData.loc()] = 1 + body.team.id // 1 for team 0, 2 for team 1
         }
+        draw(match: Match, ctx: CanvasRenderingContext2D): void {
+            // place trap animation
+            const body = match.currentRound.bodies.getById(this.robotId)
+            const pos = match.map.indexToLocation(this.actionData.loc())
+            const coords = renderUtils.getRenderCoords(pos.x, pos.y, match.map.dimension, true)
+
+            const size = body.size - 1
+
+            const t = match.getInterpolationFactor()
+            const oscillations = 3
+            const amplitude = Math.PI / 12
+            const envelope = Math.pow(1 - t, 0.6)
+            const rotation = Math.sin(t * oscillations * Math.PI * 2) * amplitude * envelope - Math.PI / 12
+
+            ctx.save()
+            ctx.translate(coords.x + size * 0.5, coords.y + 0.5)
+            ctx.strokeStyle = body.team.color
+            ctx.lineWidth = 0.08
+            ctx.lineCap = 'round'
+
+            ctx.beginPath()
+            ctx.moveTo(-0.1, 0)
+            ctx.lineTo(0.1, 0)
+            ctx.stroke()
+
+            ctx.save()
+            ctx.rotate(-rotation)
+            ctx.beginPath()
+            ctx.moveTo(0, 0)
+            ctx.lineTo(-0.6 - size * 0.5, 0)
+            ctx.lineTo(-0.6 - size * 0.5, -0.1)
+            ctx.stroke()
+            ctx.restore()
+
+            ctx.save()
+            ctx.rotate(rotation)
+            ctx.beginPath()
+            ctx.moveTo(0, 0)
+            ctx.lineTo(0.6 + size * 0.5, 0)
+            ctx.lineTo(0.6 + size * 0.5, -0.1)
+            ctx.stroke()
+            ctx.restore()
+
+            ctx.restore()
+        }
     },
     [schema.Action.TriggerTrap]: class TriggerTrapAction extends Action<schema.TriggerTrap> {
         apply(round: Round): void {
