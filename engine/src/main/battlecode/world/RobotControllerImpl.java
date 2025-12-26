@@ -771,10 +771,11 @@ public final class RobotControllerImpl implements RobotController {
         this.robot.setLocation(d.dx, d.dy);
         for (int i = 0; i < newLocs.length; i++) {
             MapLocation newLoc = newLocs[i];
-            if (this.gameWorld.getRobot(newLoc) != null && this.getType().isCatType()
-                    && this.gameWorld.getRobot(newLoc).getType().isRatType()) {
+            InternalRobot crushedRobot = this.gameWorld.getRobot(newLoc);
+            if (crushedRobot != null && this.getType().isCatType()
+                    && crushedRobot.getType().isRatType()) {
                 // kill this rat
-                this.gameWorld.removeRobot(newLoc);
+                crushedRobot.addHealth(-crushedRobot.getHealth());
             }
 
             this.gameWorld.addRobot(newLoc, this.robot);
