@@ -1,16 +1,27 @@
 package battlecode.crossplay;
 
-public class CrossPlayObject {
-    CrossPlayObjectType type;
-    int objectId;
+import org.json.*;
 
-    public CrossPlayObject(CrossPlayObjectType type, int objectId) {
+public class CrossPlayObject {
+    public final CrossPlayObjectType type;
+
+    public CrossPlayObject(CrossPlayObjectType type) {
         this.type = type;
-        this.objectId = objectId;
     }
 
     @Override
     public String toString() {
-        return "CrossPlayObject(type=" + type + ", objectId=" + objectId + ")";
+        return "CrossPlayObject(type=" + type + ")";
+    }
+
+    public JSONObject toJson() {
+        JSONObject json = new JSONObject();
+        json.put("type", this.type.ordinal());
+        return json;
+    }
+
+    public static CrossPlayObject fromJson(JSONObject json) {
+        CrossPlayObjectType type = CrossPlayObjectType.values[json.getInt("type")];
+        return new CrossPlayObject(type);
     }
 }

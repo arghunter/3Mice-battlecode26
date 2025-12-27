@@ -3,17 +3,34 @@ package battlecode.crossplay;
 import org.json.*;
 
 public class CrossPlayMessage extends CrossPlayObject {
-    CrossPlayMethod method;
-    CrossPlayObject[] params;
+    public final CrossPlayMethod method;
+    public final CrossPlayObject[] params;
 
-    public CrossPlayMessage(CrossPlayMethod method, CrossPlayObject[] params, int objectId) {
-        super(CrossPlayObjectType.CALL, objectId);
+    public CrossPlayMessage(CrossPlayMethod method, CrossPlayObject[] params) {
+        super(CrossPlayObjectType.CALL);
         this.method = method;
         this.params = params;
     }
 
-    public static CrossPlayMessage fromJson(JSONObject json, int nextObjectId) {
-        int nextObjectIdLocal = nextObjectId;
+    @Override
+    public JSONObject toJson() {
+        JSONObject json = new JSONObject();
+        json.put("type", this.type.ordinal());
+        json.put("method", this.method.ordinal());
+
+        JSONArray paramsJson = new JSONArray();
+
+        for (CrossPlayObject param : this.params) {
+            JSONObject paramJson = param.toJson();
+            paramsJson.put(paramJson);
+        }
+
+        json.put("params", paramsJson);
+
+        return json;
+    }
+
+    public static CrossPlayMessage fromJson(JSONObject json) {
         CrossPlayObjectType messageType = CrossPlayObjectType.values[json.getInt("type")];
 
         if (messageType != CrossPlayObjectType.CALL) {
@@ -34,18 +51,16 @@ public class CrossPlayMessage extends CrossPlayObject {
                     System.err.println("Received invalid cross-play object type!");
                     break;
                 case CALL:
-                    CrossPlayMessage nestedMessage = CrossPlayMessage.fromJson(paramJson, nextObjectIdLocal);
-                    nextObjectIdLocal++;
+                    CrossPlayMessage nestedMessage = CrossPlayMessage.fromJson(paramJson);
                     params[i] = nestedMessage;
                     break;
                 default:
-                    int objectId = paramJson.getInt("oid");
-                    params[i] = new CrossPlayObject(type, objectId);
+                    params[i] = new CrossPlayObject(type);
                     break;
             }
         }
 
-        CrossPlayMessage message = new CrossPlayMessage(method, params, nextObjectIdLocal);
+        CrossPlayMessage message = new CrossPlayMessage(method, params);
         return message;
     }
 

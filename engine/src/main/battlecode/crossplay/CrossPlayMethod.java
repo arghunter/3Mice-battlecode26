@@ -5,6 +5,7 @@ public enum CrossPlayMethod {
     RC_GET_ROUND_NUM,
     RC_GET_MAP_WIDTH,
     RC_GET_MAP_HEIGHT,
+    LOG,
     // TODO add more methods
     ;
 
