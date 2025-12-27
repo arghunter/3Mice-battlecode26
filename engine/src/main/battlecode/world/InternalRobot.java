@@ -1092,21 +1092,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
             }
         }
 
-        // indicator strings!
-        if (!indicatorString.equals("")) {
-            this.gameWorld.getMatchMaker().addIndicatorString(this.ID, this.indicatorString);
-        }
-
-        for (int i = 0; i < trapsToTrigger.size(); i++) {
-            this.gameWorld.triggerTrap(trapsToTrigger.get(i), this);
-        }
-
-        this.trapsToTrigger = new ArrayList<>();
-
-        this.gameWorld.getMatchMaker().endTurn(this.ID, this.health, this.cheeseAmount, this.movementCooldownTurns,
-                this.actionCooldownTurns, this.turningCooldownTurns, this.bytecodesUsed, this.location, this.dir);
-        this.roundsAlive++;
-
         // cat algo
         // TODO: cat does not care about rats that attack it over other rats
 
@@ -1323,6 +1308,21 @@ public class InternalRobot implements Comparable<InternalRobot> {
                     break;
             }
         }
+
+        // indicator strings!
+        if (!indicatorString.equals("")) {
+            this.gameWorld.getMatchMaker().addIndicatorString(this.ID, this.indicatorString);
+        }
+
+        for (int i = 0; i < trapsToTrigger.size(); i++) {
+            this.gameWorld.triggerTrap(trapsToTrigger.get(i), this);
+        }
+
+        this.trapsToTrigger = new ArrayList<>();
+
+        this.gameWorld.getMatchMaker().endTurn(this.ID, this.health, this.cheeseAmount, this.movementCooldownTurns,
+                this.actionCooldownTurns, this.turningCooldownTurns, this.bytecodesUsed, this.location, this.dir);
+        this.roundsAlive++;
     }
 
     // *********************************
