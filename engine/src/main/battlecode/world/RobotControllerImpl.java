@@ -1005,6 +1005,7 @@ public final class RobotControllerImpl implements RobotController {
                 // all robots in the 3x3 including enemies die
                 currentRobot.addHealth(-currentRobot.getHealth());
             }
+            this.gameWorld.addRobot(this.adjacentLocation(d), this.robot);
         }
 
         this.gameWorld.getTeamInfo().addCheese(this.getTeam(), -GameConstants.RAT_KING_UPGRADE_CHEESE_COST);
