@@ -719,6 +719,8 @@ public class InternalRobot implements Comparable<InternalRobot> {
     }
 
     private void getThrown(Direction dir) {
+        // System.out.println("Robot got thrown: " + this.ID + " " + dir);
+
         this.grabbedByRobot = null;
         this.remainingCarriedDuration = 0;
         this.thrownDir = dir;
@@ -788,6 +790,11 @@ public class InternalRobot implements Comparable<InternalRobot> {
     }
 
     public void travelFlying(boolean isSecondMove) {
+        if (this.thrownDir == null) {
+            return;
+        }
+
+        System.out.println("Robot flyingggg: " + this.ID + " " + this.thrownDir + " " + isSecondMove);
         MapLocation newLoc = this.getLocation().add(this.thrownDir);
 
         if (!this.gameWorld.getGameMap().onTheMap(newLoc)) {
