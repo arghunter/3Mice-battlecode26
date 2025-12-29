@@ -796,7 +796,9 @@ public class InternalRobot implements Comparable<InternalRobot> {
         }
 
         System.out.println("Robot flyingggg: " + this.ID + " " + this.thrownDir + " " + isSecondMove);
-        MapLocation newLoc = this.getLocation().add(this.thrownDir);
+        // use the internal location
+
+        MapLocation newLoc = this.location.add(this.thrownDir);
 
         if (!this.gameWorld.getGameMap().onTheMap(newLoc)) {
             this.hitGround();
@@ -1057,6 +1059,8 @@ public class InternalRobot implements Comparable<InternalRobot> {
                 }
 
             } else {
+                // set location to grabber location
+                this.setInternalLocationOnly(this.getGrabbedByRobot().getLocation());
                 remainingCarriedDuration -= 1;
             }
         }
@@ -1114,7 +1118,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
             // and cat with ID " + this.ID + " is at location " + this.getLocation());
             switch (this.catState) {
                 case EXPLORE:
-                    System.out.println("CAT " + this.ID + "Entering Explore");
 
                     MapLocation waypoint = catWaypoints[currentWaypoint];
 
@@ -1155,8 +1158,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
                     Direction toWaypoint = this.location.directionTo(this.catTargetLoc);
                     this.dir = this.location.directionTo(this.catTargetLoc);
-
-                    System.out.println(this.ID + " exploring " + this.catTargetLoc);
 
                     if (this.controller.canMove(toWaypoint)) {
                         try {
