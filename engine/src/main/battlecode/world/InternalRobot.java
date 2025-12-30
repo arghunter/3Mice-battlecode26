@@ -791,11 +791,12 @@ public class InternalRobot implements Comparable<InternalRobot> {
     }
 
     public void travelFlying(boolean isSecondMove) {
-        if (this.thrownDir == null) {
+        if (this.thrownDir == null || this.health == 0) {
             return;
         }
 
-        System.out.println("Robot flyingggg: " + this.ID + " " + this.thrownDir + " " + isSecondMove);
+        System.out
+                .println("Robot flyingggg: " + this.ID + " " + this.thrownDir + " " + this.health + " " + isSecondMove);
         // use the internal location
 
         MapLocation newLoc = this.location.add(this.thrownDir);
