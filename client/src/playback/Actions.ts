@@ -417,6 +417,12 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             ctx.globalAlpha = 1
         }
     },
+    [schema.Action.RemoveTrap]: class RemoveTrapAction extends Action<schema.RemoveTrap> {
+        apply(round: Round): void {
+            // remove a trap from map
+            round.map.trapData[this.actionData.loc()] = 0
+        }
+    },
     [schema.Action.TriggerTrap]: class TriggerTrapAction extends Action<schema.TriggerTrap> {
         apply(round: Round): void {
             // remove trap from map
