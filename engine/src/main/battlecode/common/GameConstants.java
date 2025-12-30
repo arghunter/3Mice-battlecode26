@@ -101,7 +101,7 @@ public class GameConstants {
     public static final int SQ_CHEESE_SPAWN_RADIUS = 4;
 
     /** How much cheese each mine spawns at once */
-    public static final int CHEESE_SPAWN_AMOUNT = 2;
+    public static final int CHEESE_SPAWN_AMOUNT = 5;
 
     /** The number of rat kings a player starts with. */
     public static final int NUMBER_INITIAL_RAT_KINGS = 1;
