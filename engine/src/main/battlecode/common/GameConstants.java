@@ -82,6 +82,12 @@ public class GameConstants {
      */
     public static final int MOVE_STRAFE_COOLDOWN = 18;
 
+    /**
+     * The fractional slowdown a rat's movement and actions (not turning!)
+     * incur per unit of cheese the rat is currently carrying.
+     */
+    public static final double CHEESE_COOLDOWN_PENALTY = 0.01;
+
     /** The amount of cheese the ratking consumes each round. */
     public static final int RATKING_CHEESE_CONSUMPTION = 10;
 

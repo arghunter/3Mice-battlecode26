@@ -436,6 +436,9 @@ public class InternalRobot implements Comparable<InternalRobot> {
         int cooldownUp = numActionCooldownToAdd
                 * (int) (this.carryingRobot != null ? GameConstants.CARRY_COOLDOWN_MULTIPLIER : 1); // TODO add support
                                                                                                     // for rat towers???
+        if (getType() == UnitType.RAT) {
+            cooldownUp = (int) (((double)cooldownUp)*(1.0 + this.cheeseAmount*GameConstants.CHEESE_COOLDOWN_PENALTY));
+        }
         setActionCooldownTurns(this.actionCooldownTurns + cooldownUp);
     }
 
@@ -452,6 +455,9 @@ public class InternalRobot implements Comparable<InternalRobot> {
                                                                                                               // support
                                                                                                               // for rat
                                                                                                               // towers???
+        if (getType() == UnitType.RAT) {
+            movementCooldown = (int) (((double)movementCooldown)*(1.0 + this.cheeseAmount*GameConstants.CHEESE_COOLDOWN_PENALTY));
+        }
         this.setMovementCooldownTurns(this.movementCooldownTurns + movementCooldown);
     }
 
