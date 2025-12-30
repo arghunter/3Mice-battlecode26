@@ -195,8 +195,8 @@ public final class RobotControllerImpl implements RobotController {
                 : (getLocation().distanceSquaredTo(loc));
 
         int addDistance = (this.getType().size > 1)
-                ? (int) Math.ceil((this.getType().size / Math.sqrt(2.0) + Math.sqrt((double) maxRadiusSquared))
-                        * (this.getType().size / Math.sqrt(2.0) + Math.sqrt((double) maxRadiusSquared)))
+                ? (int) Math.ceil((this.getType().size / (2.0) + Math.sqrt((double) maxRadiusSquared))
+                        * (this.getType().size / 2.0 + Math.sqrt((double) maxRadiusSquared)))
                 : maxRadiusSquared;
 
         if (distance > (addDistance))
