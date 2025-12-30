@@ -310,6 +310,7 @@ public class GameMaker {
             RobotTypeMetadata.startRobotTypeMetadata(builder);
             RobotTypeMetadata.addType(builder, FlatHelpers.getRobotTypeFromUnitType(type));
             RobotTypeMetadata.addActionCooldown(builder, type.actionCooldown);
+            RobotTypeMetadata.addTurningCooldown(builder, GameConstants.TURNING_COOLDOWN);
             RobotTypeMetadata.addBaseHealth(builder, type.health);
             RobotTypeMetadata.addBytecodeLimit(builder, type.bytecodeLimit);
             RobotTypeMetadata.addMovementCooldown(builder, type.movementCooldown);
