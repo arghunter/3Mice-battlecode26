@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import org.json.*;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.*;
 
 import battlecode.common.*;
+import battlecode.instrumenter.stream.RoboPrintStream;
 
 /**
  * Allows bots written in different languages to be run by the Java engine using a message-passing system.
@@ -21,15 +23,26 @@ public class CrossPlay {
         LOCK_FILE_JAVA = "lock_java.txt", // lock file created by the java engine
         LOCK_FILE_OTHER = "lock_other.txt"; // lock file created by the other language's runner script
 
+    private final boolean finalizer;
+    private boolean initialized;
     private ArrayList<Object> objects;
     private RobotController rc;
+    private CrossPlayReference rcRef;
     private int roundNum;
     private Team team;
     private int id;
-    private CrossPlayReference rcRef;
+    private OutputStream out;
 
     public CrossPlay() {
         this.objects = new ArrayList<>();
+        this.finalizer = false;
+        this.initialized = false;
+    }
+
+    public CrossPlay(boolean finalizer) {
+        this.objects = new ArrayList<>();
+        this.finalizer = finalizer;
+        this.initialized = false;
     }
 
     private void clearObjects() {
@@ -116,7 +129,7 @@ public class CrossPlay {
         return ref;
     }
 
-    public void runMessagePassing() {
+    public int runMessagePassing() throws GameActionException {
         Path crossPlayDir = Paths.get(CROSS_PLAY_DIR);
         Path javaMessagePath = crossPlayDir.resolve(MESSAGE_FILE_JAVA);
         Path otherMessagePath = crossPlayDir.resolve(MESSAGE_FILE_OTHER);
@@ -127,7 +140,7 @@ public class CrossPlay {
         while (true) {
             try {
                 if (!Files.exists(otherMessagePath) || Files.exists(javaMessagePath) || Files.exists(otherLockPath)) {
-                    Thread.sleep(100, 0); // TODO make shorter: sleep for 0.1 s
+                    Thread.sleep(0, 100000); // TODO currently 0.1 ms, maybe make shorter
                     // System.out.println("Still waiting for message Python -> Java...");
                     continue;
                 }
@@ -144,19 +157,21 @@ public class CrossPlay {
 
                 // System.out.println("Received message Python -> Java: " + messageJson.toString());
 
-                if (message.method == CrossPlayMethod.TERMINATE) {
-                    Files.delete(otherMessagePath);
-                    Files.delete(javaLockPath);
-                    // System.out.println("Received terminate message, ending cross-play message passing.");
-                    break;
-                }
-
                 CrossPlayObject result = processMessage(message);
                 String resultContent = result.toJson().toString();
                 Files.writeString(javaMessagePath, resultContent);
 
                 Files.delete(otherMessagePath);
                 Files.delete(javaLockPath);
+
+                if (message.method == CrossPlayMethod.END_TURN) {
+                    // System.out.println("Received terminate message, ending cross-play message passing.");
+                    int bytecodeUsed = getLiteralValue(message.params[0]);
+                    return bytecodeUsed;
+                } else if (this.finalizer && message.method == CrossPlayMethod.START_TURN) {
+                    // System.out.println("Finalizer received start turn message, ending cross-play message passing.");
+                    return 0;
+                }
 
                 // System.out.println("Sent response Java -> Python: " + resultContent);
                 // System.out.println("Waiting for message Python -> Java...");
@@ -168,38 +183,7 @@ public class CrossPlay {
         }
     }
 
-    // private JSONArray processJsonMessages(JSONArray json) {
-    //     System.out.println("Starting cross-play message processing...");
-    //     int length = json.length();
-    //     JSONObject[] resultsArr = new JSONObject[length];
-
-    //     for (int i = 0; i < length; i++) {
-    //         JSONObject messageJson = json.getJSONObject(i);
-    //         CrossPlayMessage message = CrossPlayMessage.fromJson(messageJson);
-    //         CrossPlayObject result = processMessage(message);
-    //         JSONObject resultJson = result.toJson();
-    //         resultsArr[i] = resultJson;
-    //     }
-
-    //     JSONArray resultsJson = new JSONArray(resultsArr);
-    //     System.out.println("Finished cross-play message processing.");
-    //     return resultsJson;
-    // }
-
     private CrossPlayObject processMessage(CrossPlayMessage message) {
-        CrossPlayObject[] computedParams = new CrossPlayObject[message.params.length];
-
-        for (int i = 0; i < message.params.length; i++) {
-            CrossPlayObject param = message.params[i];
-
-            if (param instanceof CrossPlayMessage mess) {
-                CrossPlayObject innerResult = processMessage(mess);
-                computedParams[i] = getObject(innerResult);
-            } else {
-                computedParams[i] = param;
-            }
-        }
-
         CrossPlayObject result;
         RobotController rc;
 
@@ -207,32 +191,53 @@ public class CrossPlay {
         switch (message.method) {
             case INVALID:
                 throw new CrossPlayException("Received invalid cross-play method!");
-            case TERMINATE:
-                throw new CrossPlayException("Terminate messages should be handled outside of processMessage.");
             case START_TURN:
-                result = new CrossPlayLiteral(CrossPlayObjectType.ARRAY, new CrossPlayObject[] {
-                    this.rcRef,
-                    new CrossPlayLiteral(CrossPlayObjectType.INTEGER, this.roundNum),
-                    new CrossPlayLiteral(CrossPlayObjectType.TEAM, this.team),
-                    new CrossPlayLiteral(CrossPlayObjectType.INTEGER, this.id),
-                    new CrossPlayLiteral(CrossPlayObjectType.BOOLEAN, false),
-                });
+                // System.out.println("Processing START_TURN");
+                if (this.finalizer) {
+                    result = new CrossPlayLiteral(CrossPlayObjectType.ARRAY, new CrossPlayObject[] {
+                        CrossPlayLiteral.NULL,
+                        CrossPlayLiteral.NULL,
+                        CrossPlayLiteral.NULL,
+                        CrossPlayLiteral.NULL,
+                        CrossPlayLiteral.TRUE
+                    });
+                } else {
+                    result = new CrossPlayLiteral(CrossPlayObjectType.ARRAY, new CrossPlayObject[] {
+                        this.rcRef,
+                        CrossPlayLiteral.ofInt(this.roundNum),
+                        CrossPlayLiteral.ofTeam(this.team),
+                        CrossPlayLiteral.ofInt(this.id),
+                        CrossPlayLiteral.FALSE
+                    });
+                }
+                break;
+            case END_TURN:
+                // System.out.println("Processing END_TURN");
+                result = new CrossPlayLiteral(CrossPlayObjectType.NULL, null);
                 break;
             case RC_GET_ROUND_NUM:
-                rc = this.<RobotController>getObject(computedParams[0]);
+                // System.out.println("Processing RC_GET_ROUND_NUM");
+                rc = this.<RobotController>getObject(message.params[0]);
                 result = new CrossPlayLiteral(CrossPlayObjectType.INTEGER, rc.getRoundNum());
                 break;
             case RC_GET_MAP_WIDTH:
-                rc = this.<RobotController>getObject(computedParams[0]);
+                // System.out.println("Processing RC_GET_MAP_WIDTH");
+                rc = this.<RobotController>getObject(message.params[0]);
                 result = new CrossPlayLiteral(CrossPlayObjectType.INTEGER, rc.getMapWidth());
                 break;
             case RC_GET_MAP_HEIGHT:
-                rc = this.<RobotController>getObject(computedParams[0]);
+                // System.out.println("Processing RC_GET_MAP_HEIGHT");
+                rc = this.<RobotController>getObject(message.params[0]);
                 result = new CrossPlayLiteral(CrossPlayObjectType.INTEGER, rc.getMapHeight());
                 break;
             case LOG:
-                String msg = getLiteralValue(computedParams[0]);
-                System.out.println(msg);
+                // System.out.println("Processing LOG");
+                String msg = getLiteralValue(message.params[0]);
+
+                if (this.out instanceof RoboPrintStream rps) {
+                    rps.println(msg);
+                }
+
                 result = new CrossPlayLiteral(CrossPlayObjectType.NULL, null);
                 break;
             default:
@@ -242,20 +247,32 @@ public class CrossPlay {
         return result;
     }
 
-    public void playTurn(RobotController rc) {
+    public int playTurn(RobotController rc, OutputStream systemOut) throws GameActionException {
+        // System.out.println("playTurn called for CrossPlay instance " + this.hashCode());
+
+        if (this.rc == rc && this.roundNum == rc.getRoundNum()) {
+            // System.out.println("playTurn returned early for CrossPlay instance " + this.hashCode());
+            return 0;
+        }
+
         this.rc = rc;
         this.roundNum = rc.getRoundNum();
         this.team = rc.getTeam();
         this.id = rc.getID();
+        this.out = systemOut;
 
-        if (this.roundNum == 1) {
+        if (this.initialized) {
+            this.rcRef = new CrossPlayReference(CrossPlayObjectType.ROBOT_CONTROLLER, 0);
+        } else {
             clearObjects();
             this.rcRef = setNextObject(CrossPlayObjectType.ROBOT_CONTROLLER, this.rc);
-            System.out.println("Cross-play bot initialized!");
-        } else {
-            this.rcRef = new CrossPlayReference(CrossPlayObjectType.ROBOT_CONTROLLER, 0);
+            this.initialized = true;
+            // System.out.println("Cross-play bot initialized!");
         }
-        
-        runMessagePassing();
+
+        // System.out.println("Running message passing for CrossPlay instance " + this.hashCode());
+        int bytecodeUsed = runMessagePassing();
+        // System.out.println("playTurn finished for CrossPlay instance " + this.hashCode());
+        return bytecodeUsed;
     }
 }

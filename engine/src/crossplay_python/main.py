@@ -6,7 +6,8 @@ from argparse import ArgumentParser
 from collections import OrderedDict
 
 from crossplay_python.runner import RobotRunner
-from crossplay_python.crossplay import BYTECODE_LIMIT, CrossPlayMessage, CrossPlayMethod, wait
+from crossplay_python.crossplay import BYTECODE_LIMIT, CrossPlayLiteral as lit, \
+    CrossPlayMessage as mess, CrossPlayMethod as m, CrossPlayObjectType as ot, wait
 from crossplay_python.wrappers import _GAME_METHODS, Team
 
 CROSSPLAY_PYTHON_DIR = "example-bots/src/crossplay_python"
@@ -18,6 +19,9 @@ TEAM_NAMES = {
 }
 
 def get_code(bot_name):
+    if bot_name is None:
+        return None
+
     path = f"{CROSSPLAY_PYTHON_DIR}/{bot_name}"
 
     # read all files in this directory into a dictionary
@@ -40,13 +44,6 @@ def get_error_printer(team=None, id=None, round=None):
 def play(team_a=None, team_b=None, debug=False):
     print(f"Starting cross-play Python runner with teams {team_a} and {team_b}")
 
-    # TODO comment out these lines when done testing
-    if team_a is None:
-        team_a = "pytest"
-    
-    if team_b is None:
-        team_b = "pytest"
-
     code = {
         Team.A: get_code(team_a),
         Team.B: get_code(team_b),
@@ -54,8 +51,14 @@ def play(team_a=None, team_b=None, debug=False):
     }
     
     while True:
-        rc, round, team, id, end = wait(CrossPlayMessage(CrossPlayMethod.START_TURN, []))
-        print(f"Starting turn for RobotController: {rc}, round: {round}, team: {TEAM_NAMES[team]}, ID: {id}, end: {end}")
+        rc, round, team, id, end = wait(mess(m.START_TURN, []))
+
+        if end:
+            print("Game ended")
+            break
+
+        if debug:
+            print(f"Starting turn. Round {round}, team {TEAM_NAMES[team]}, ID {id}, end {end}")
 
         runner = RobotRunner(
             code=code[team],
@@ -64,11 +67,11 @@ def play(team_a=None, team_b=None, debug=False):
             bytecode_limit=BYTECODE_LIMIT,
             debug=debug)
         
+        runner.init_robot()
         runner.run()
-
-        if end:
-            print("Game ended")
-            break
+        bytecode = runner.bytecode_limit - runner.bytecode
+        runner.kill()
+        wait(mess(m.END_TURN, [lit(ot.INTEGER, bytecode)]))
 
 if __name__ == "__main__":
     parser = ArgumentParser()

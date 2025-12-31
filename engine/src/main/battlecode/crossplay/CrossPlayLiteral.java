@@ -86,4 +86,53 @@ public class CrossPlayLiteral extends CrossPlayObject {
                 throw new CrossPlayException("Cannot decode CrossPlayObject of type " + type + " as a literal.");
         }
     }
+
+    public static CrossPlayLiteral of(Object value) {
+        if (value == null) {
+            return NULL;
+        } else if (value instanceof Boolean) {
+            return ofBoolean((Boolean)value);
+        } else if (value instanceof Integer) {
+            return ofInt((Integer)value);
+        } else if (value instanceof Double) {
+            return ofDouble((Double)value);
+        } else if (value instanceof String) {
+            return ofString((String)value);
+        } else if (value instanceof CrossPlayObject[]) {
+            return ofArray((CrossPlayObject[])value);
+        } else if (value instanceof Team) {
+            return ofTeam((Team)value);
+        } else {
+            throw new CrossPlayException("Cannot create CrossPlayLiteral from value of type " + value.getClass().getName());
+        }
+    }
+
+    public static final CrossPlayLiteral
+        NULL = new CrossPlayLiteral(CrossPlayObjectType.NULL, null),
+        TRUE = new CrossPlayLiteral(CrossPlayObjectType.BOOLEAN, true),
+        FALSE = new CrossPlayLiteral(CrossPlayObjectType.BOOLEAN, false);
+
+    public static CrossPlayLiteral ofBoolean(Boolean value) {
+        return value ? TRUE : FALSE;
+    }
+
+    public static CrossPlayLiteral ofInt(Integer value) {
+        return new CrossPlayLiteral(CrossPlayObjectType.INTEGER, value);
+    }
+
+    public static CrossPlayLiteral ofDouble(Double value) {
+        return new CrossPlayLiteral(CrossPlayObjectType.DOUBLE, value);
+    }
+
+    public static CrossPlayLiteral ofString(String value) {
+        return new CrossPlayLiteral(CrossPlayObjectType.STRING, value);
+    }
+
+    public static CrossPlayLiteral ofArray(CrossPlayObject[] value) {
+        return new CrossPlayLiteral(CrossPlayObjectType.ARRAY, value);
+    }
+
+    public static CrossPlayLiteral ofTeam(Team value) {
+        return new CrossPlayLiteral(CrossPlayObjectType.TEAM, value);
+    }
 }

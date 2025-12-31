@@ -23,6 +23,9 @@ frontend/build
 ### Matches should be ignored
 /matches/
 
+### Cross-play temp files
+/crossplay_temp/
+
 ### Java
 *.classpath
 *.project

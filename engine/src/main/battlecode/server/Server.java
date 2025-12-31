@@ -7,6 +7,7 @@ import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotInfo;
 import battlecode.common.Team;
+import battlecode.crossplay.CrossPlay;
 import battlecode.crossplay.CrossPlayLanguage;
 import battlecode.world.*;
 import battlecode.world.control.*;
@@ -313,6 +314,10 @@ public class Server implements Runnable {
 
         double timeDiff = (System.currentTimeMillis() - startTime) / 1000.0;
         debug(String.format("match completed in %.4g seconds", timeDiff));
+
+        CrossPlay finalizer = new CrossPlay(true);
+        finalizer.runMessagePassing();
+
         return currentWorld.getWinner();
     }
 

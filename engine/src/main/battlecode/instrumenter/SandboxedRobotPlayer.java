@@ -1,5 +1,6 @@
 package battlecode.instrumenter;
 
+import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.Team;
 import battlecode.instrumenter.profiler.Profiler;
@@ -78,6 +79,16 @@ public class SandboxedRobotPlayer {
     private final Method killMethod;
 
     /**
+     * Used to pause the player thread after loading.
+     */
+    private final Method pauseMethod;
+
+    /**
+     * Used to initialize the RobotMonitor for the player.
+     */
+    private final Method initMethod;
+
+    /**
      * The cached 'setBytecodeLimit' method of the monitor.
      */
     private final Method setBytecodeLimitMethod;
@@ -134,10 +145,7 @@ public class SandboxedRobotPlayer {
         individualLoader = loader;
 
         // Load monitor / monitor methods
-        // Used to initialize the RobotMonitor for the player
-        final Method initMethod;
-        // Used to pause the player thread after loading
-        final Method pauseMethod;
+
         try {
             // The loaded, uninstrumented-but-individual RobotMonitor for this player.
             Class<?> monitor = individualLoader
@@ -193,12 +201,12 @@ public class SandboxedRobotPlayer {
                 // Run the robot!
                 loadAndRunPlayer(teamName, teamLanguage, PLAYER_CLASS_NAME);
                 // If we get here, we've returned from the 'run' method. Tell the user.
-                if (robotController.getLocation() != null){
+                if (robotController.getLocation() != null) {
                 System.out.println(robotController.getTeam().toString() + "'s " +
                         robotController.getID() + " at location " + robotController.getLocation().toString()
-                        + " froze in round " +robotController.getRoundNum() +
+                        + " froze in round " + robotController.getRoundNum() +
                         " because it returned from its run() method!"); }
-                else{
+                else {
                     System.out.println(robotController.getTeam().toString() + "'s " +
                         robotController.getID() + " that has not spawned yet " 
                         + " froze in round " +robotController.getRoundNum() +
@@ -301,8 +309,22 @@ public class SandboxedRobotPlayer {
 
     private void loadAndRunPlayerCrossPlay(String teamName, String playerClassName)
             throws InvocationTargetException, IllegalAccessException, InstrumentationException {
-        // TODO figure out if the python program should be called at all here
-        crossPlay.playTurn(robotController);
+        while (true) {
+            try {
+                /*int bytecodeUsed =*/ crossPlay.playTurn(robotController, systemOut);
+                // TODO set bytecode limit somehow (maybe in python, maybe here)
+            } catch (GameActionException e) {
+                String message = "GameActionException thrown during cross-play turn: " + e.getMessage();
+
+                if (systemOut instanceof RoboPrintStream rps) {
+                    rps.println(message);
+                } else {
+                    System.out.println(message);
+                }
+            }
+
+            this.pauseMethod.invoke(null);
+        }
     }
 
     /**

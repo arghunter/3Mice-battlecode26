@@ -91,6 +91,10 @@ task headless(type: JavaExec, dependsOn: [':engine:build', ':example-bots:build'
   ]
 }
 
+task crossPlayPy(type: Exec, dependsOn: [':engine:build']) {
+  commandLine 'python', 'engine/src/crossplay_python/main.py', '--teamA', project.property('teamA'), '--teamB', project.property('teamB')
+}
+
 // keep the client happy because it references this step
 task unpackClient() {}
 

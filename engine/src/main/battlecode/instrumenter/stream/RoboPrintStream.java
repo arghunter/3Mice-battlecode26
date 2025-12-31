@@ -50,8 +50,9 @@ public class RoboPrintStream extends PrintStream {
 
     public void print(char[] s) {
         String header = getHeader();
-        real.print(header + s);
-        if (this.writeToSystemOut) java.lang.System.out.print(header + s);
+        String st = header + new String(s);
+        real.print(st);
+        if (this.writeToSystemOut) java.lang.System.out.print(st);
     }
 
     public void print(double d) {

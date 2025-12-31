@@ -38,8 +38,8 @@ class CrossPlayObjectType(Enum):
 
 class CrossPlayMethod(Enum):
     INVALID = 0
-    TERMINATE = 1
-    START_TURN = 2 # returns [rc, round, team, id, end]
+    START_TURN = 1 # returns [rc, round, team, id, end]
+    END_TURN = 2 # params: [bytecode_used]
     RC_GET_ROUND_NUM = 3
     RC_GET_MAP_WIDTH = 4
     RC_GET_MAP_HEIGHT = 5
@@ -198,7 +198,8 @@ class CrossPlayMessage(CrossPlayObject):
         params = [CrossPlayObject.from_json(param) for param in json_data["params"]]
         return CrossPlayMessage(method, params)
 
-def wait(message: CrossPlayMessage, timeout=1000, timestep=0.1, message_dir=MESSAGE_DIR):
+# 0.1 ms timestep, 10 min timeout
+def wait(message: CrossPlayMessage, timeout=600, timestep=0.0001, message_dir=MESSAGE_DIR):
     read_file = os.path.join(message_dir, MESSAGE_FILE_JAVA)
     write_file = os.path.join(message_dir, MESSAGE_FILE_OTHER)
     java_lock_file = os.path.join(message_dir, LOCK_FILE_JAVA)
