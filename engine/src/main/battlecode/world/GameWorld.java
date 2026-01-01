@@ -924,6 +924,10 @@ public class GameWorld {
                 InternalRobot carryingRobot = robot.getCarryingRobot();
                 carryingRobot.getDropped(loc);
             }
+            if(robot.getCheese() > 0) {
+                addCheese(loc, robot.getCheese());
+                matchMaker.addCheeseSpawnAction(loc, robot.getCheese());   
+            }
         }
         controlProvider.robotKilled(robot);
         objectInfo.destroyRobot(id);
