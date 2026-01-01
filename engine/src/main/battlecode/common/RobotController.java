@@ -159,6 +159,15 @@ public interface RobotController {
      */
     UnitType getType();
 
+    /**
+     * Returns robot that this robot is carrying or null if this robot is not carrying another robot.
+     * 
+     * @return RobotInfo for the carried robot or null.
+     * 
+     * @battlecode.doc.costlymethod
+     */
+    RobotInfo getCarrying();
+
     // ***********************************
     // ****** GENERAL VISION METHODS *****
     // ***********************************

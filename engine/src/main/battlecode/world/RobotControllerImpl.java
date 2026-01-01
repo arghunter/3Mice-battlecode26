@@ -169,6 +169,24 @@ public final class RobotControllerImpl implements RobotController {
         return this.robot.getType();
     }
 
+    @Override
+    public RobotInfo getCarrying() {
+        if (this.robot.isCarryingRobot())
+            return null;
+        else
+            return this.robot.getCarryingRobot().getRobotInfo();
+    }
+
+    @Override
+    public boolean isBeingThrown() {
+        return this.robot.isBeingThrown();
+    }
+
+    @Override
+    public boolean isBeingCarried() {
+        return this.robot.isGrabbedByRobot();
+    }
+
     // ***********************************
     // ****** GENERAL VISION METHODS *****
     // ***********************************
