@@ -22,8 +22,8 @@ public class CrossPlay {
         MESSAGE_FILE_OTHER = "messages_other.json", // messages from the other language's runner script
         LOCK_FILE_JAVA = "lock_java.txt", // lock file created by the java engine
         LOCK_FILE_OTHER = "lock_other.txt", // lock file created by the other language's runner script
-        STARTED_JAVA = "started_java.txt", // file created by the java engine when it starts
-        STARTED_OTHER = "started_other.txt"; // file created by the other language's runner
+        STARTED_FILE_JAVA = "started_java.txt", // file created by the java engine when it starts
+        STARTED_FILE_OTHER = "started_other.txt"; // file created by the other language's runner
 
     private final boolean finalizer;
     private boolean initialized;
@@ -57,11 +57,11 @@ public class CrossPlay {
 
             if (!Files.exists(crossPlayDir) || !Files.isDirectory(crossPlayDir)) {
                 Files.createDirectory(crossPlayDir);
-            } else if (Files.exists(crossPlayDir.resolve(STARTED_JAVA))) {
+            } else if (Files.exists(crossPlayDir.resolve(STARTED_FILE_JAVA))) {
                 System.out.println("DEBUGGING: Detected existing crossplay_temp/started_java.txt file. "
                     + "This indicates that a previous cross-play match did not terminate cleanly. "
                     + "Deleting the old crossplay_temp files.");
-            } else if (Files.exists(crossPlayDir.resolve(STARTED_OTHER))) {
+            } else if (Files.exists(crossPlayDir.resolve(STARTED_FILE_OTHER))) {
                 System.out.println("DEBUGGING: Python cross-play runner already started. Using existing cross-play temp directory.");
                 return;
             }
@@ -71,7 +71,7 @@ public class CrossPlay {
             Files.deleteIfExists(crossPlayDir.resolve(LOCK_FILE_JAVA));
             Files.deleteIfExists(crossPlayDir.resolve(LOCK_FILE_OTHER));
 
-            Files.createFile(crossPlayDir.resolve(STARTED_JAVA));
+            Files.createFile(crossPlayDir.resolve(STARTED_FILE_JAVA));
         } catch (Exception e) {
             throw new CrossPlayException("Failed to clear cross-play lock files.");
         }
@@ -86,8 +86,8 @@ public class CrossPlay {
                 Files.deleteIfExists(crossPlayDir.resolve(MESSAGE_FILE_OTHER));
                 Files.deleteIfExists(crossPlayDir.resolve(LOCK_FILE_JAVA));
                 Files.deleteIfExists(crossPlayDir.resolve(LOCK_FILE_OTHER));
-                Files.deleteIfExists(crossPlayDir.resolve(STARTED_JAVA));
-                Files.deleteIfExists(crossPlayDir.resolve(STARTED_OTHER));
+                Files.deleteIfExists(crossPlayDir.resolve(STARTED_FILE_JAVA));
+                Files.deleteIfExists(crossPlayDir.resolve(STARTED_FILE_OTHER));
                 Files.delete(crossPlayDir);
             }
         } catch (IOException e) {
