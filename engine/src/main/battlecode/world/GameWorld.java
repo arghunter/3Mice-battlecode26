@@ -358,36 +358,47 @@ public class GameWorld {
             int dx = rand.nextInt(-GameConstants.SQ_CHEESE_SPAWN_RADIUS, GameConstants.SQ_CHEESE_SPAWN_RADIUS);
             int dy = rand.nextInt(-GameConstants.SQ_CHEESE_SPAWN_RADIUS, GameConstants.SQ_CHEESE_SPAWN_RADIUS);
 
-            // if rotational, flip both symmetries, if vertical/horizontal, only flip the
-            // corresponding one
-            int pair_dx = gameMap.getSymmetry() == MapSymmetry.VERTICAL ? dx : -dx;
-            int pair_dy = gameMap.getSymmetry() == MapSymmetry.HORIZONTAL ? dy : -dy;
+            MapLocation ogSpawnLoc = mine.getLocation();
+            MapLocation pairedSpawnLoc = mine.getPair().getLocation();
             CheeseMine pairedMine = mine.getPair();
 
-            int cheeseX = mine.getLocation().x + dx;
-            int cheeseY = mine.getLocation().y + dy;
+            for (int invalidSpawns = 0; invalidSpawns < 5; invalidSpawns++) {
+                int pair_dx = gameMap.getSymmetry() == MapSymmetry.VERTICAL ? dx : -dx;
+                int pair_dy = gameMap.getSymmetry() == MapSymmetry.HORIZONTAL ? dy : -dy;
 
-            int pairedX = pairedMine.getLocation().x + pair_dx;
-            int pairedY = pairedMine.getLocation().y + pair_dy;
+                int cheeseX = mine.getLocation().x + dx;
+                int cheeseY = mine.getLocation().y + dy;
 
-            // check cheeseX and cheeseY is on map
-            if (cheeseX >= 0 && cheeseX < this.gameMap.getWidth() && cheeseY >= 0 && cheeseY < this.gameMap.getHeight()
-                    && pairedX >= 0 && pairedX < this.gameMap.getWidth() && pairedY >= 0
-                    && pairedY < this.gameMap.getHeight()) {
-                spawn = true;
-            } else {
-                spawn = false;
+                int pairedX = pairedMine.getLocation().x + pair_dx;
+                int pairedY = pairedMine.getLocation().y + pair_dy;
+
+                // check cheeseX and cheeseY is on map
+                if (cheeseX >= 0 && cheeseX < this.gameMap.getWidth() && cheeseY >= 0
+                        && cheeseY < this.gameMap.getHeight()
+                        && pairedX >= 0 && pairedX < this.gameMap.getWidth() && pairedY >= 0
+                        && pairedY < this.gameMap.getHeight()
+                        && !this.getWall(new MapLocation(cheeseX, cheeseY))
+                        && !this.getWall(new MapLocation(pairedX, pairedY))) {
+                    ogSpawnLoc = new MapLocation(cheeseX, cheeseY);
+                    pairedSpawnLoc = new MapLocation(pairedX, pairedY);
+                    System.out.println("Found a good cheese loc! " + ogSpawnLoc);
+                    break;
+                }
+
             }
 
+            // if rotational, flip both symmetries, if vertical/horizontal, only flip the
+            // corresponding one
+
             if (spawn) {
-                addCheese(new MapLocation(cheeseX, cheeseY), GameConstants.CHEESE_SPAWN_AMOUNT);
-                addCheese(new MapLocation(pairedX, pairedY), GameConstants.CHEESE_SPAWN_AMOUNT);
+                addCheese(ogSpawnLoc, GameConstants.CHEESE_SPAWN_AMOUNT);
+                addCheese(pairedSpawnLoc, GameConstants.CHEESE_SPAWN_AMOUNT);
 
                 mine.setLastRound(this.currentRound);
                 pairedMine.setLastRound(this.currentRound);
 
-                matchMaker.addCheeseSpawnAction(new MapLocation(cheeseX, cheeseY), GameConstants.CHEESE_SPAWN_AMOUNT);
-                matchMaker.addCheeseSpawnAction(new MapLocation(pairedX, pairedY), GameConstants.CHEESE_SPAWN_AMOUNT);
+                matchMaker.addCheeseSpawnAction(ogSpawnLoc, GameConstants.CHEESE_SPAWN_AMOUNT);
+                matchMaker.addCheeseSpawnAction(pairedSpawnLoc, GameConstants.CHEESE_SPAWN_AMOUNT);
             }
 
         }
@@ -482,7 +493,7 @@ public class GameWorld {
         }
 
         this.trapLocations[locationToIndex(loc)] = null;
-        matchMaker.addTriggeredTrap(trap.getId()); 
+        matchMaker.addTriggeredTrap(trap.getId());
         matchMaker.addTrapTriggerAction(trap.getId(), loc, triggeringTeam, type);
 
         removeTrap(loc);
@@ -905,7 +916,15 @@ public class GameWorld {
     }
 
     public void destroyRobot(int id, boolean fromException, boolean fromDamage) {
+        // System.out.println("A ROBOT DIED!!");
+        // System.out.println(id);
         InternalRobot robot = objectInfo.getRobotByID(id);
+        if (robot == null) {
+            // robot was already killed
+            return;
+        }
+
+        // System.out.println(robot);
         Team robotTeam = robot.getTeam();
         MapLocation loc = robot.getLocation();
 
@@ -924,9 +943,9 @@ public class GameWorld {
                 InternalRobot carryingRobot = robot.getCarryingRobot();
                 carryingRobot.getDropped(loc);
             }
-            if(robot.getCheese() > 0) {
+            if (robot.getCheese() > 0) {
                 addCheese(loc, robot.getCheese());
-                matchMaker.addCheeseSpawnAction(loc, robot.getCheese());   
+                matchMaker.addCheeseSpawnAction(loc, robot.getCheese());
             }
         }
         controlProvider.robotKilled(robot);
@@ -944,7 +963,7 @@ public class GameWorld {
             System.out
                     .println("DEBUGGING: number of rat kings = " + this.getTeamInfo().getNumRatKings(robot.getTeam()));
             checkWin(robotTeam);
-        } else if (robot.getType() == UnitType.CAT && this.getNumCats() == 0) {
+        } else if (this.isCooperation && robot.getType() == UnitType.CAT && this.getNumCats() == 0) {
             System.out.println("DEBUGGING: number of cats = " + this.getNumCats());
             checkWin(robotTeam);
         }
