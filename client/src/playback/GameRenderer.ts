@@ -58,9 +58,9 @@ class GameRendererClass {
         loadImage('robots/squeak.png')
         loadImage('dirty.png')
         for (const color of TEAM_COLOR_NAMES) {
+            loadImage(`robots/${color.toLowerCase()}/rat_king_64x64.png`)
             for (let i = 0; i < 9; i++) {
                 loadImage(`robots/cat/cat_${i}.png`)
-                loadImage(`robots/${color.toLowerCase()}/rat_king_${i}_64x64.png`)
                 loadImage(`robots/${color.toLowerCase()}/rat_${i}_64x64.png`)
             }
         }

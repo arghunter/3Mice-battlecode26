@@ -715,7 +715,7 @@ export class Body {
         this.robotName = `${this.team.colorName} Rat King`
         this.size = 3
         const dir = this.direction
-        this.imgPath = `robots/${this.team.colorName.toLowerCase()}/rat_king_${dir}_64x64.png`
+        this.imgPath = `robots/${this.team.colorName.toLowerCase()}/rat_king_64x64.png`
         this.populateDefaultValues()
     }
 }
@@ -781,7 +781,7 @@ export const BODY_DEFINITIONS: Record<schema.RobotType, typeof Body> = {
 
         public draw(match: Match, ctx: CanvasRenderingContext2D): void {
             const dir = this.direction
-            this.imgPath = `robots/${this.team.colorName.toLowerCase()}/rat_king_${dir}_64x64.png`
+            this.imgPath = `robots/${this.team.colorName.toLowerCase()}/rat_king_64x64.png`
             super.draw(match, ctx)
         }
     },
