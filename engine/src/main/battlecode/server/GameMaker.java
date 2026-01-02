@@ -352,11 +352,11 @@ public class GameMaker {
 
         private TIntArrayList diedIds; // ints
 
-        private TIntArrayList trapAddedIds;
-        private TIntArrayList trapAddedX;
-        private TIntArrayList trapAddedY;
-        private TByteArrayList trapAddedTypes;
-        private TByteArrayList trapAddedTeams;
+        // private TIntArrayList trapAddedIds;
+        // private TIntArrayList trapAddedX;
+        // private TIntArrayList trapAddedY;
+        // private TByteArrayList trapAddedTypes;
+        // private TByteArrayList trapAddedTeams;
 
         private TIntArrayList trapTriggeredIds;
 
@@ -390,12 +390,12 @@ public class GameMaker {
             this.timelineMarkerLabels = new ArrayList<>();
             this.timelineMarkerColors = new ArrayList<>();
             
-            this.trapAddedIds = new TIntArrayList();
-            this.trapAddedX = new TIntArrayList();
-            this.trapAddedY = new TIntArrayList();
-            this.trapAddedTypes = new TByteArrayList();
-            this.trapAddedTeams = new TByteArrayList();
-            this.trapTriggeredIds = new TIntArrayList();
+            // this.trapAddedIds = new TIntArrayList();
+            // this.trapAddedX = new TIntArrayList();
+            // this.trapAddedY = new TIntArrayList();
+            // this.trapAddedTypes = new TByteArrayList();
+            // this.trapAddedTeams = new TByteArrayList();
+            // this.trapTriggeredIds = new TIntArrayList();
 
         }
 
@@ -617,8 +617,6 @@ public class GameMaker {
             });
         }
 
-        // TODO: add the rest
-
         public void addPlaceTrapAction(int trapID, MapLocation loc, Team team, TrapType type) {
             applyToBuilders((builder) -> {
                 byte teamID = TeamMapping.id(team);
@@ -770,14 +768,14 @@ public class GameMaker {
             diedIds.add(id);
         }
 
-        public void addTrap(Trap trap) {
-            trapAddedIds.add(trap.getId());
-            MapLocation loc = trap.getLocation();
-            trapAddedX.add(loc.x);
-            trapAddedY.add(loc.y);
-            trapAddedTypes.add(FlatHelpers.getSchemaTrapTypeFromTrapType(trap.getType()));
-            trapAddedTeams.add(TeamMapping.id(trap.getTeam()));
-        }
+        // public void addTrap(Trap trap) {
+        //     trapAddedIds.add(trap.getId());
+        //     MapLocation loc = trap.getLocation();
+        //     trapAddedX.add(loc.x);
+        //     trapAddedY.add(loc.y);
+        //     trapAddedTypes.add(FlatHelpers.getSchemaTrapTypeFromTrapType(trap.getType()));
+        //     trapAddedTeams.add(TeamMapping.id(trap.getTeam()));
+        // }
 
         public void addTriggeredTrap(int id) {
             trapTriggeredIds.add(id);
@@ -797,6 +795,14 @@ public class GameMaker {
             this.teamDirtCount.clear();
             this.teamRatTrapCount.clear();
             this.teamCatTrapCount.clear();
+
+            // this.trapAddedIds.clear();
+            // this.trapAddedX.clear();
+            // this.trapAddedY.clear();
+            // this.trapAddedTypes.clear();
+            // this.trapAddedTeams.clear();
+            // this.trapTriggeredIds.clear();
+
             this.diedIds.clear();
         }
 

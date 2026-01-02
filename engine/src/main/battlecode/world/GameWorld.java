@@ -438,7 +438,6 @@ public class GameWorld {
 
         TrapType type = trap.getType();
         Team team = trap.getTeam();
-        int trapId = trap.getId();
 
         int idx = locationToIndex(loc);
         this.trapLocations[idx] = trap;
@@ -447,11 +446,9 @@ public class GameWorld {
             this.trapTriggers[locationToIndex(adjLoc)].add(trap);
         }
 
-        matchMaker.addTrap(trap);
         int[] trapTypeCounts = this.trapCounts.get(type);
         trapTypeCounts[team.ordinal()] += 1;
         this.trapCounts.put(type, trapTypeCounts);
-        trapId++;
     }
 
     public void removeTrap(MapLocation loc) {
