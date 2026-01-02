@@ -155,7 +155,7 @@ public class GameConstants {
     public static final int THROW_DAMAGE_PER_TILE = 5;
 
     /** The damage a robot takes after being bitten by a rat */
-    public static final int RAT_BITE_DAMAGE = 2;
+    public static final int RAT_BITE_DAMAGE = 5;
 
     /** The damage a robot takes after being scratched by a cat */
     public static final int CAT_SCRATCH_DAMAGE = 50;

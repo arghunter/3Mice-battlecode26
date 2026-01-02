@@ -310,6 +310,7 @@ public class GameMaker {
             RobotTypeMetadata.startRobotTypeMetadata(builder);
             RobotTypeMetadata.addType(builder, FlatHelpers.getRobotTypeFromUnitType(type));
             RobotTypeMetadata.addActionCooldown(builder, type.actionCooldown);
+            RobotTypeMetadata.addTurningCooldown(builder, GameConstants.TURNING_COOLDOWN);
             RobotTypeMetadata.addBaseHealth(builder, type.health);
             RobotTypeMetadata.addBytecodeLimit(builder, type.bytecodeLimit);
             RobotTypeMetadata.addMovementCooldown(builder, type.movementCooldown);
@@ -592,6 +593,14 @@ public class GameMaker {
                 byte teamID = TeamMapping.id(team);
                 int action = PlaceTrap.createPlaceTrap(builder, locationToInt(loc), teamID);
                 builder.addAction(action, Action.PlaceTrap);
+            });
+        }
+
+        public void addTrapTriggerAction(int trapID, MapLocation loc, Team team, TrapType type) {
+            applyToBuilders((builder) -> {
+                byte teamID = TeamMapping.id(team);
+                int action = TriggerTrap.createTriggerTrap(builder, locationToInt(loc), teamID);
+                builder.addAction(action, Action.TriggerTrap);
             });
         }
 
