@@ -19,8 +19,9 @@ export class TeamRoundStat {
     ratKingCount: number = 0
     ratKingPercent: number = 0
     dirtAmount: number = 0
-    ratCount: number = 0
-    trapAmount: number = 0
+    babyRatCount: number = 0
+    ratTrapAmount: number = 0
+    catTrapAmount: number = 0
 
     copy(): TeamRoundStat {
         const newStat: TeamRoundStat = Object.assign(Object.create(Object.getPrototypeOf(this)), this)
@@ -72,8 +73,12 @@ export default class RoundStat {
         const time = Date.now()
         if (delta) {
             let totalCheese = 0
+            let totalCatDamage = 0
+            let totalRatKings = 0
             for (let i = 0; i < delta.teamIdsLength(); i++) {
                 totalCheese += delta.teamCheeseAmounts(i)!
+                totalCatDamage += delta.teamCatDamage(i)!
+                totalRatKings += delta.teamAliveRatKings(i)!
             }
 
             for (let i = 0; i < delta.teamIdsLength(); i++) {
@@ -81,8 +86,16 @@ export default class RoundStat {
                 assert(team != undefined, `team ${i} not found in game.teams in round`)
                 const teamStat = this.teams.get(team) ?? assert.fail(`team ${i} not found in team stats in round`)
 
-                teamStat.cheeseAmount = delta.teamCheeseAmounts(i) ?? assert.fail('missing cheese amount')
+                teamStat.cheeseAmount = delta.teamCollectedCheeseAmounts(i) ?? assert.fail('missing cheese amount')
                 teamStat.cheesePercent = teamStat.cheeseAmount / totalCheese
+                teamStat.catDamageAmount = delta.teamCatDamage(i) ?? assert.fail('missing cat damage amount')
+                teamStat.catDamagePercent = teamStat.catDamageAmount / totalCatDamage
+                teamStat.ratKingCount = delta.teamAliveRatKings(i) ?? assert.fail('missing rat king count')
+                teamStat.ratKingPercent = teamStat.ratKingCount / totalRatKings
+                teamStat.dirtAmount = delta.teamDirtAmounts(i) ?? assert.fail('missing dirt amount')
+                teamStat.ratTrapAmount = delta.teamRatTrapCount(i) ?? assert.fail('missing rat trap amount')
+                teamStat.catTrapAmount = delta.teamCatTrapCount(i) ?? assert.fail('missing cat trap amount')
+                teamStat.babyRatCount = delta.teamAliveBabyRats(i) ?? assert.fail('missing baby rat count')
 
                 // Use the engine-emitted cooperation flag (per-turn) when available.
                 // If any turn in this delta indicates cooperation, consider gameMode active.
@@ -100,7 +113,7 @@ export default class RoundStat {
 
         // Clear values for recomputing
         for (const stat of this.teams.values()) {
-            stat.ratCount = 0
+            stat.babyRatCount = 0
         }
 
         // Compute total robot counts
@@ -111,7 +124,7 @@ export default class RoundStat {
             // Count number of alive robots
             if (body.dead) continue
 
-            if (body.robotType == schema.RobotType.RAT) teamStat.ratCount++
+            if (body.robotType == schema.RobotType.RAT) teamStat.babyRatCount++
         }
 
         const timems = Date.now() - time

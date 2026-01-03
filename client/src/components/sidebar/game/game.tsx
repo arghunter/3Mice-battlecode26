@@ -143,13 +143,36 @@ export const GamePage: React.FC<Props> = React.memo((props) => {
                     <div /*className="flex items-center gap-2"*/>
                         {/* Note: to keep animation smooth, we should still keep the elements rendered, but we pass showStats into
                             them so that they don't render any data (since we're likely hiding stats to prevent lag) */}
-                        <ResourceGraph active={showStats} property="cheeseAmount" propertyDisplayName="Cheese " />
+                        <ResourceGraph
+                            active={showStats}
+                            property="cheeseAmount"
+                            propertyDisplayName="Cheese Amount "
+                        />
                         <br />
-                        <ResourceGraph active={showStats} property="cheesePercent" propertyDisplayName="Cheese " />
+                        <ResourceGraph
+                            active={showStats}
+                            property="cheesePercent"
+                            propertyDisplayName="Cheese Percent "
+                        />
                         <br />
-                        {/* <ResourceGraph active={showStats} property="moneyAmount" propertyDisplayName="Chips" />
+                        <ResourceGraph active={showStats} property="catDamageAmount" propertyDisplayName="Cat Damage" />
                         <br />
-                        <ResourceGraph active={showStats} property="totalPaint" propertyDisplayName="Paint" /> */}
+                        <ResourceGraph
+                            active={showStats}
+                            property="catDamagePercent"
+                            propertyDisplayName="Cat Damage Percent"
+                        />
+                        <ResourceGraph
+                            active={showStats}
+                            property="ratKingCount"
+                            propertyDisplayName="Rat King Count"
+                        />
+                        <br />
+                        <ResourceGraph
+                            active={showStats}
+                            property="ratKingPercent"
+                            propertyDisplayName="Rat King Percent"
+                        />
                     </div>
                 ) : (
                     <div>Select a game to see stats</div>
