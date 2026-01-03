@@ -1101,7 +1101,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
         boolean isSleepingCat = this.getType().isCatType() && this.sleepTimeRemaining > 0;
         if (!this.isGrabbedByRobot() && !this.isBeingThrown() && !isSleepingCat) {
             this.actionCooldownTurns = Math.max(0, this.actionCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
-            this.turningCooldownTurns = Math.max(0, this.actionCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
+            this.turningCooldownTurns = Math.max(0, this.turningCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
             this.movementCooldownTurns = Math.max(0, this.movementCooldownTurns - GameConstants.COOLDOWNS_PER_TURN);
         }
 
