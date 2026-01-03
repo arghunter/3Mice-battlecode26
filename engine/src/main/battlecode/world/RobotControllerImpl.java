@@ -213,12 +213,12 @@ public final class RobotControllerImpl implements RobotController {
         // assumes maxRadiusSquared <= visionRadiusSquared.
         // This handles the angle checking, so we only check distance.
         assertCanSenseLocation(loc);
-        int distance = (this.getType().usesBottomLeftLocationForDistance())
+        float distance = (this.getType().usesBottomLeftLocationForDistance())
                 ? (getLocation().bottomLeftDistanceSquaredTo(loc))
                 : (getLocation().distanceSquaredTo(loc));
 
-        int addDistance = (this.getType().size > 1)
-                ? (int) Math.ceil((this.getType().size / (2.0) + Math.sqrt((double) maxRadiusSquared))
+        float addDistance = (this.getType().size > 1)
+                ? (float) Math.ceil((this.getType().size / (2.0) + Math.sqrt((double) maxRadiusSquared))
                         * (this.getType().size / 2.0 + Math.sqrt((double) maxRadiusSquared)))
                 : maxRadiusSquared;
 

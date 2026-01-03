@@ -1114,20 +1114,9 @@ public class InternalRobot implements Comparable<InternalRobot> {
             switch (this.catState) {
                 case EXPLORE:
 
-                    MapLocation waypoint = catWaypoints[currentWaypoint];
-
-                    if (this.location.equals(waypoint)) {
-                        currentWaypoint = (currentWaypoint + 1) % catWaypoints.length;
-                    }
-
-                    this.dir = this.location.directionTo(catWaypoints[currentWaypoint]);
-
                     // try seeing nearby rats
                     Message squeak = getFrontMessage();
                     RobotInfo[] nearbyRobots = this.controller.senseNearbyRobots();
-
-                    // this.gameWorld.getAllRobotsWithinConeRadiusSquared(this.location,
-                    // this.dir, getVisionConeAngle(), getVisionRadiusSquared(), team);
 
                     boolean ratVisible = false;
                     RobotInfo rat = null;
@@ -1148,21 +1137,26 @@ public class InternalRobot implements Comparable<InternalRobot> {
                         this.catTargetLoc = squeak.getSource();
                         this.catState = CatStateType.CHASE;
                     } else {
-                        this.catTargetLoc = waypoint;
+                        MapLocation waypoint = catWaypoints[currentWaypoint];
+
+                        if (this.location.equals(waypoint)) {
+                            currentWaypoint = (currentWaypoint + 1) % catWaypoints.length;
+                        }
+                        this.catTargetLoc = catWaypoints[currentWaypoint];
                     }
 
-                    Direction toWaypoint = this.location.directionTo(this.catTargetLoc);
-                    this.dir = this.location.directionTo(this.catTargetLoc);
+                    this.dir = this.gameWorld.getBfsDir(this.location, this.catTargetLoc);
 
-                    if (this.controller.canMove(toWaypoint)) {
+                    if (this.controller.canMove(this.dir)) {
+                        System.out.println("TRYING TO MOVE");
                         try {
-                            this.controller.move(toWaypoint);
+                            this.controller.move(this.dir);
                         } catch (GameActionException e) {
                         }
 
                     } else {
                         for (MapLocation partLoc : this.getAllPartLocations()) {
-                            MapLocation nextLoc = partLoc.add(toWaypoint);
+                            MapLocation nextLoc = partLoc.add(this.dir);
 
                             if (this.controller.canRemoveDirt(nextLoc)) {
                                 System.out.println("stuck more here cuz of dirt " + this.gameWorld.currentRound);
@@ -1192,8 +1186,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
                 case CHASE:
                     System.out.println("CAT " + this.ID + "Entering Chase");
 
-                    Direction toTarget = this.location.directionTo(this.catTargetLoc);
-                    this.dir = toTarget;
+                    this.dir = this.gameWorld.getBfsDir(this.location, this.catTargetLoc);
 
                     if (this.location.equals(this.catTargetLoc)) {
                         this.catState = CatStateType.SEARCH;
@@ -1290,7 +1283,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
                     }
 
-                    this.dir = this.location.directionTo(this.catTargetLoc);
+                    this.dir = this.gameWorld.getBfsDir(this.location, this.catTargetLoc);
 
                     // pounce towards target if possible
                     pounceTraj = canPounce(this.catTargetLoc);
