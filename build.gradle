@@ -78,6 +78,8 @@ task headless(type: JavaExec, dependsOn: [':engine:build', ':example-bots:build'
     '-Dbc.engine.show-indicators=' + (project.findProperty('showIndicators') ?: 'true'),
     '-Dbc.game.team-a=' + project.property('teamA'),
     '-Dbc.game.team-b=' + project.property('teamB'),
+    '-Dbc.game.team-a.language=' + (project.findProperty('languageA') ?: 'java'),
+    '-Dbc.game.team-b.language=' + (project.findProperty('languageB') ?: 'java'),
     '-Dbc.game.team-a.url=' + (project.findProperty('classLocationA') ?: defaultClassLocation),
     '-Dbc.game.team-b.url=' + (project.findProperty('classLocationB') ?: defaultClassLocation),
     '-Dbc.game.team-a.package=' + (project.findProperty('packageNameA') ?: project.property('teamA')),
@@ -87,6 +89,10 @@ task headless(type: JavaExec, dependsOn: [':engine:build', ':example-bots:build'
     '-Dbc.server.alternate-order=' + project.property('alternateOrder'),
     '-Dbc.server.save-file=' + (saveFileName)
   ]
+}
+
+task crossPlayPy(type: Exec, dependsOn: [':engine:build']) {
+  commandLine 'python', 'engine/src/crossplay_python/main.py', '--teamA', project.property('teamA'), '--teamB', project.property('teamB')
 }
 
 // keep the client happy because it references this step
