@@ -104,7 +104,7 @@ export default class Round {
     /**
      * Step the current turn within the current delta.
      */
-    private stepTurn(): void {
+    public stepTurn(): void {
         assert(this.turnNumber < this.turnsLength, 'Cannot step a round that is at the end')
 
         const turn = this.currentDelta!.turns(this.turnNumber)
@@ -120,7 +120,7 @@ export default class Round {
         // round n shows the state of actions at the end of round n-1, until we
         // start progressing
         if (this.turnNumber === 0) {
-            this.actions.tickLifetimes()
+            this.actions.tickLifetimes(this)
             this.bodies.clearDiedBodies()
         }
 

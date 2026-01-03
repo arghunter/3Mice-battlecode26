@@ -47,35 +47,35 @@ class RobotTypeMetadata(object):
         return 0
 
     # RobotTypeMetadata
-    def BaseHealth(self):
+    def TurningCooldown(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
     # RobotTypeMetadata
-    def BasePaint(self):
+    def BaseHealth(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
     # RobotTypeMetadata
-    def MaxPaint(self):
+    def MaxCheese(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
     # RobotTypeMetadata
-    def ActionRadiusSquared(self):
+    def VisionConeRadiusSquared(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
     # RobotTypeMetadata
-    def VisionRadiusSquared(self):
+    def VisionConeAngle(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(18))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
@@ -119,35 +119,35 @@ def RobotTypeMetadataAddMovementCooldown(builder: flatbuffers.Builder, movementC
 def AddMovementCooldown(builder: flatbuffers.Builder, movementCooldown: int):
     RobotTypeMetadataAddMovementCooldown(builder, movementCooldown)
 
+def RobotTypeMetadataAddTurningCooldown(builder: flatbuffers.Builder, turningCooldown: int):
+    builder.PrependInt32Slot(3, turningCooldown, 0)
+
+def AddTurningCooldown(builder: flatbuffers.Builder, turningCooldown: int):
+    RobotTypeMetadataAddTurningCooldown(builder, turningCooldown)
+
 def RobotTypeMetadataAddBaseHealth(builder: flatbuffers.Builder, baseHealth: int):
-    builder.PrependInt32Slot(3, baseHealth, 0)
+    builder.PrependInt32Slot(4, baseHealth, 0)
 
 def AddBaseHealth(builder: flatbuffers.Builder, baseHealth: int):
     RobotTypeMetadataAddBaseHealth(builder, baseHealth)
 
-def RobotTypeMetadataAddBasePaint(builder: flatbuffers.Builder, basePaint: int):
-    builder.PrependInt32Slot(4, basePaint, 0)
+def RobotTypeMetadataAddMaxCheese(builder: flatbuffers.Builder, maxCheese: int):
+    builder.PrependInt32Slot(5, maxCheese, 0)
 
-def AddBasePaint(builder: flatbuffers.Builder, basePaint: int):
-    RobotTypeMetadataAddBasePaint(builder, basePaint)
+def AddMaxCheese(builder: flatbuffers.Builder, maxCheese: int):
+    RobotTypeMetadataAddMaxCheese(builder, maxCheese)
 
-def RobotTypeMetadataAddMaxPaint(builder: flatbuffers.Builder, maxPaint: int):
-    builder.PrependInt32Slot(5, maxPaint, 0)
+def RobotTypeMetadataAddVisionConeRadiusSquared(builder: flatbuffers.Builder, visionConeRadiusSquared: int):
+    builder.PrependInt32Slot(6, visionConeRadiusSquared, 0)
 
-def AddMaxPaint(builder: flatbuffers.Builder, maxPaint: int):
-    RobotTypeMetadataAddMaxPaint(builder, maxPaint)
+def AddVisionConeRadiusSquared(builder: flatbuffers.Builder, visionConeRadiusSquared: int):
+    RobotTypeMetadataAddVisionConeRadiusSquared(builder, visionConeRadiusSquared)
 
-def RobotTypeMetadataAddActionRadiusSquared(builder: flatbuffers.Builder, actionRadiusSquared: int):
-    builder.PrependInt32Slot(6, actionRadiusSquared, 0)
+def RobotTypeMetadataAddVisionConeAngle(builder: flatbuffers.Builder, visionConeAngle: int):
+    builder.PrependInt32Slot(7, visionConeAngle, 0)
 
-def AddActionRadiusSquared(builder: flatbuffers.Builder, actionRadiusSquared: int):
-    RobotTypeMetadataAddActionRadiusSquared(builder, actionRadiusSquared)
-
-def RobotTypeMetadataAddVisionRadiusSquared(builder: flatbuffers.Builder, visionRadiusSquared: int):
-    builder.PrependInt32Slot(7, visionRadiusSquared, 0)
-
-def AddVisionRadiusSquared(builder: flatbuffers.Builder, visionRadiusSquared: int):
-    RobotTypeMetadataAddVisionRadiusSquared(builder, visionRadiusSquared)
+def AddVisionConeAngle(builder: flatbuffers.Builder, visionConeAngle: int):
+    RobotTypeMetadataAddVisionConeAngle(builder, visionConeAngle)
 
 def RobotTypeMetadataAddMessageRadiusSquared(builder: flatbuffers.Builder, messageRadiusSquared: int):
     builder.PrependInt32Slot(8, messageRadiusSquared, 0)

@@ -95,7 +95,7 @@ export default class Match {
      * Add the match footer to the match.
      */
     public addMatchFooter(footer: schema.MatchFooter): void {
-        this.winner = this.game.teams[footer.winner() - 1]
+        this.winner = this.game.getTeamByID(footer.winner())
         this.winType = footer.winType()
         this.addTimelineMarkers(footer)
         this.addProfilerFiles(footer)
@@ -202,6 +202,17 @@ export default class Match {
         const roundStepped = currentRoundNumber != this.currentRound.roundNumber
         const turnStepped = currentTurnNumber != this.currentRound.turnNumber || roundStepped
         return [roundStepped, turnStepped]
+    }
+
+    /**
+     * Editor-only: Set the internal simulation step via a normalized 0-1 interpolation factor.
+     * This allows the map editor (where `game.playable` is false) to animate action draw() calls
+     * without making the game "playable" or mutating state.
+     */
+    public setEditorInterpolationFactor(fraction: number): void {
+        // clamp to [0,1]
+        const clamped = Math.max(0, Math.min(1, fraction))
+        this._currentSimulationStep = Math.floor(clamped * MAX_SIMULATION_STEPS)
     }
 
     /**

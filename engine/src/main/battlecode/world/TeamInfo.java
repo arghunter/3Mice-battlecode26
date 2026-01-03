@@ -13,10 +13,14 @@ import static battlecode.common.GameActionExceptionType.*;
 public class TeamInfo {
 
     private GameWorld gameWorld;
-    private int[] moneyCounts;
-    private int[] totalPaintedSquares;
-    private int[] totalNumberOfTowers;
-    private int[] oldMoneyCounts;
+    private int[] globalCheese;
+    private int[] dirtCounts;
+    private int[] oldCheeseCounts;
+    private int[] cheeseCollected;
+    private int[] numBabyRats;
+    private int[] numRatKings;
+    private int[] damageToCats;
+    private int[] points;
 
     /**
      * Create a new representation of TeamInfo
@@ -25,10 +29,14 @@ public class TeamInfo {
      */
     public TeamInfo(GameWorld gameWorld) {
         this.gameWorld = gameWorld;
-        this.moneyCounts = new int[2];
-        this.oldMoneyCounts = new int[2];
-        this.totalPaintedSquares = new int[2];
-        this.totalNumberOfTowers = new int[2];
+        this.globalCheese = new int[2];
+        this.dirtCounts = new int[2];
+        this.oldCheeseCounts = new int[2];
+        this.cheeseCollected = new int[2];
+        this.numBabyRats = new int[2];
+        this.damageToCats = new int[2];
+        this.numRatKings = new int[2];
+        this.points = new int[2];
     }
 
     // *********************************
@@ -36,94 +44,171 @@ public class TeamInfo {
     // *********************************
 
     /**
-     * Get the amount of money.
+     * Get the amount of cheese.
      * 
      * @param team the team to query
-     * @return the team's money count
+     * @return the team's cheese count
      */
 
-    public int getMoney(Team team) {
-        return this.moneyCounts[team.ordinal()];
+    public int getCheese(Team team) {
+        return this.globalCheese[team.ordinal()];
     }
 
     /**
-     * Get the total number of squares painted by the team over the game
+     * Get the amount of cheese collected.
+     * 
      * @param team the team to query
-     * @return the number of squares painted
+     * @return the team's cheese count
      */
 
-     public int getNumberOfPaintedSquares(Team team) {
-        return this.totalPaintedSquares[team.ordinal()];
+    public int getCheeseCollected(Team team) {
+        return this.cheeseCollected[team.ordinal()];
     }
 
     /**
-     * Get the total number of towers belonging to a team
+     * Get the amount of dirt.
+     * 
      * @param team the team to query
-     * @return the number of towers the team has
+     * @return the team's dirt count
      */
-
-     public int getTotalNumberOfTowers(Team team) {
-        return this.totalNumberOfTowers[team.ordinal()];
+    public int getDirt(Team team) {
+        return this.dirtCounts[team.ordinal()];
     }
 
     /**
-     * Change the total number of squares painted by the team over the game
+     * Get the total number of rats belonging to a team
+     * 
      * @param team the team to query
+     * @return the number of rats the team has
      */
-
-     public void addPaintedSquares(int num, Team team) {
-        this.totalPaintedSquares[team.ordinal()] += num;
-        int areaWithoutWalls = this.gameWorld.getAreaWithoutWalls();
-        if (this.totalPaintedSquares[team.ordinal()] / (double) areaWithoutWalls * 100 >= GameConstants.PAINT_PERCENT_TO_WIN) {
-            checkWin(team);
-        }
-    }    
+    public int getNumBabyRats(Team team) {
+        return this.numBabyRats[team.ordinal()];
+    }
 
     /**
-     * Change the total number of towers belonging to a team
+     * Get the total number of rat kings belonging to a team
+     * 
      * @param team the team to query
+     * @return the number of rats the team has
      */
+    public int getNumRatKings(Team team) {
+        return this.numRatKings[team.ordinal()];
+    }
 
-     public void addTowers(int num, Team team) {
-        this.totalNumberOfTowers[team.ordinal()] += num;
-    }    
+    /**
+     * Get how much damage to cats a team has done
+     * 
+     * @param team the team to query
+     * @return the team's damage done to cats
+     */
+    public int getDamageToCats(Team team) {
+        return this.damageToCats[team.ordinal()];
+    }
+
+    /**
+     * Get the amount of points belonging to a team
+     * 
+     * @param team the team to query
+     * @return the number of points the team has
+     */
+    public int getPoints(Team team) {
+        return this.points[team.ordinal()];
+    }
 
     // *********************************
     // ***** UPDATE METHODS ************
     // *********************************
 
+
     /**
-     * Add to the amount of money. If amount is negative, subtract from money
+     * Change the total number of baby rats belonging to a team
+     * 
+     * @param team the team to change
+     */
+    public void addBabyRats(int num, Team team) {
+        this.numBabyRats[team.ordinal()] += num;
+    }
+
+    /**
+     * Change the total number of rat kings belonging to a team
+     * 
+     * @param team the team to change
+     */
+    public void addRatKings(int num, Team team) {
+        this.numRatKings[team.ordinal()] += num;
+    }
+
+    /**
+     * Add to the amount of cheese. If amount is negative, subtract from cheese
      * instead.
      * 
      * @param team   the team to query
-     * @param amount the change in the money count
-     * @throws IllegalArgumentException if the resulting amount of money is negative
+     * @param amount the change in the cheese count
+     * @throws IllegalArgumentException if the resulting amount of cheese is
+     *                                  negative
      */
-    public void addMoney(Team team, int amount) throws IllegalArgumentException {
-        if (this.moneyCounts[team.ordinal()] + amount < 0) {
-            throw new IllegalArgumentException("Invalid bread change");
+    public void addCheese(Team team, int amount) throws IllegalArgumentException {
+        if (this.globalCheese[team.ordinal()] + amount < 0) {
+            throw new IllegalArgumentException("Invalid cheese change");
         }
-        this.moneyCounts[team.ordinal()] += amount;
+        this.globalCheese[team.ordinal()] += amount;
     }
 
-    private void checkWin(Team team) {
-        int areaWithoutWalls = this.gameWorld.getAreaWithoutWalls();
-        if (this.totalPaintedSquares[team.ordinal()] / (double) areaWithoutWalls * 100 < GameConstants.PAINT_PERCENT_TO_WIN) {
-            throw new InternalError("Reporting incorrect win");
-        }
-        this.gameWorld.gameStats.setWinner(team);
-        this.gameWorld.gameStats.setDominationFactor(DominationFactor.PAINT_ENOUGH_AREA);
+    /**
+     * Add to the amount of cheese collected.
+     * 
+     * @param team   the team to query
+     * @param amount    cheese collected
+     */
+    public void addCheeseCollected(Team team, int amount) {
+        this.cheeseCollected[team.ordinal()] += amount;
     }
 
-    public int getRoundMoneyChange(Team team) {
-        return this.moneyCounts[team.ordinal()] - this.oldMoneyCounts[team.ordinal()];
+    /**
+     * Add to the damage done to cats for a team.
+     * 
+     * @param team   team to attribute damage to
+     * @param amount the change in the amount of damage done to cats
+     */
+    public void addDamageToCats(Team team, int amount) {
+        this.damageToCats[team.ordinal()] += amount;
+    }
+
+    /**
+     * Add points to teams.
+     * 
+     * @param team   team to add points to
+     * @param amount the change in the amount of points
+     */
+    public void addPoints(Team team, int amount) {
+        this.points[team.ordinal()] += amount;
+    }
+
+    /**
+     * Update the amount of dirt.
+     * 
+     * @param team    the team to query
+     * @param isPlace whether dirt is being placed (true) or removed (false)
+     */
+    public void updateDirt(Team team, boolean isPlace) {
+        if (team.ordinal() == 2) {
+            return; // cat dig
+        }
+
+        if (isPlace) {
+            this.dirtCounts[team.ordinal()] -= 1;
+        } else {
+            this.dirtCounts[team.ordinal()] += 1;
+        }
+    }
+
+    public int getRoundCheeseChange(Team team) {
+        return this.globalCheese[team.ordinal()] - this.oldCheeseCounts[team.ordinal()];
     }
 
     public void processEndOfRound() {
-        this.oldMoneyCounts[0] = this.moneyCounts[0];
-        this.oldMoneyCounts[1] = this.moneyCounts[1];
+        this.oldCheeseCounts[0] = this.globalCheese[0];
+        this.oldCheeseCounts[1] = this.globalCheese[1];
     }
-
 
 }

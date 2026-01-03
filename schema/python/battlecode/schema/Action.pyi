@@ -10,20 +10,27 @@ uoffset: typing.TypeAlias = flatbuffers.number_types.UOffsetTFlags.py_type
 
 class Action(object):
   NONE: int
+  CatFeed: int
+  RatAttack: int
+  RatNap: int
+  RatCollision: int
+  PlaceDirt: int
+  BreakDirt: int
+  CheesePickup: int
+  CheeseSpawn: int
+  CheeseTransfer: int
+  CatScratch: int
+  CatPounce: int
+  PlaceTrap: int
+  RemoveTrap: int
+  TriggerTrap: int
+  ThrowRat: int
+  UpgradeToRatKing: int
+  RatSqueak: int
   DamageAction: int
-  PaintAction: int
-  UnpaintAction: int
-  MarkAction: int
-  UnmarkAction: int
-  AttackAction: int
-  SplashAction: int
-  MopAction: int
-  BuildAction: int
-  TransferAction: int
-  MessageAction: int
+  StunAction: int
   SpawnAction: int
   DieAction: int
-  UpgradeAction: int
   IndicatorStringAction: int
   IndicatorDotAction: int
   IndicatorLineAction: int

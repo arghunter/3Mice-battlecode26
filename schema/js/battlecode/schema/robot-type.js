@@ -6,10 +6,7 @@ exports.RobotType = void 0;
 var RobotType;
 (function (RobotType) {
     RobotType[RobotType["NONE"] = 0] = "NONE";
-    RobotType[RobotType["PAINT_TOWER"] = 1] = "PAINT_TOWER";
-    RobotType[RobotType["MONEY_TOWER"] = 2] = "MONEY_TOWER";
-    RobotType[RobotType["DEFENSE_TOWER"] = 3] = "DEFENSE_TOWER";
-    RobotType[RobotType["SOLDIER"] = 4] = "SOLDIER";
-    RobotType[RobotType["SPLASHER"] = 5] = "SPLASHER";
-    RobotType[RobotType["MOPPER"] = 6] = "MOPPER";
+    RobotType[RobotType["RAT"] = 1] = "RAT";
+    RobotType[RobotType["RAT_KING"] = 2] = "RAT_KING";
+    RobotType[RobotType["CAT"] = 3] = "CAT";
 })(RobotType || (exports.RobotType = RobotType = {}));

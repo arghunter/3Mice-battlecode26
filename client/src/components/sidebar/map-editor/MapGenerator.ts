@@ -1,5 +1,5 @@
 import { schema, flatbuffers } from 'battlecode-schema'
-import Game from '../../../playback/Game'
+import Game, { Team } from '../../../playback/Game'
 import Match from '../../../playback/Match'
 import { CurrentMap, StaticMap } from '../../../playback/Map'
 import Round from '../../../playback/Round'
@@ -24,6 +24,16 @@ export function loadFileAsMap(file: File): Promise<Game> {
 }
 
 export function exportMap(round: Round, name: string) {
+    /*
+    Array.from(round.bodies.bodies.values())
+        .filter(
+            (body) =>
+                body.robotType === RobotType.RAT ||
+                body.robotType === RobotType.RAT_KING ||
+                body.robotType === RobotType.CAT
+        )
+        .forEach((body) => round.bodies.removeBody(body.id))
+    */
     const mapError = verifyMap(round.map, round.bodies)
     if (mapError) return mapError
 
@@ -53,36 +63,49 @@ function verifyMap(map: CurrentMap, bodies: Bodies): string {
         return 'Map is empty'
     }
 
+    // verify there are at least 2 cats
+    const numCats = Array.from(bodies.bodies.values()).filter((body) => body.robotType === RobotType.CAT).length
+    if (numCats < 2) {
+        return 'Map must have at least 2 cats placed'
+    }
+
+    // verify there is exactly one rat-king per team initially
+    const ratKings = Array.from(bodies.bodies.values()).filter((body) => body.robotType === RobotType.RAT_KING)
+    const ratKingTeams = new Set<Team>()
+    for (const ratK of ratKings) {
+        ratKingTeams.add(ratK.team)
+    }
+    if (ratKings.length !== 2 || ratKingTeams.size !== 2) {
+        return `Each team must have exactly 1 Rat King placed`
+    }
+
     // Validate map elements
     let numWalls = 0
+    let numDirt = 0
     const mapSize = map.width * map.height
     for (let i = 0; i < mapSize; i++) {
         const pos = map.indexToLocation(i)
         const wall = map.staticMap.walls[i]
-        const ruin = map.staticMap.ruins.find((l) => l.x === pos.x && l.y === pos.y)
+        const cheeseMine = map.staticMap.cheeseMines.find((l) => l.x === pos.x && l.y === pos.y)
         const body = bodies.getBodyAtLocation(pos.x, pos.y)
 
-        if (ruin && wall) {
-            return `Ruin and wall overlap at (${pos.x}, ${pos.y})`
-        }
-
-        if (ruin && body) {
-            return `Robot at (${pos.x}, ${pos.y}) is on top of a ruin`
+        if (cheeseMine && wall) {
+            return `Cheese mine and wall overlap at (${pos.x}, ${pos.y})`
         }
 
         if (wall && body) {
             return `Robot at (${pos.x}, ${pos.y}) is on top of a wall`
         }
 
-        if (ruin) {
-            // Check distance to nearby ruins
-            for (const checkRuin of map.staticMap.ruins) {
-                if (checkRuin === ruin) continue
+        if (cheeseMine) {
+            // Check distance to nearby cheese mines
+            for (const checkCheeseMine of map.staticMap.cheeseMines) {
+                if (checkCheeseMine === cheeseMine) continue
 
-                if (squareIntersects(checkRuin, pos, 4)) {
+                if (squareIntersects(checkCheeseMine, pos, 4)) {
                     return (
-                        `Ruin at (${pos.x}, ${pos.y}) is too close to ruin ` +
-                        `at (${checkRuin.x}, ${checkRuin.y}), must be ` +
+                        `Cheese mine at (${pos.x}, ${pos.y}) is too close to cheese mine ` +
+                        `at (${checkCheeseMine.x}, ${checkCheeseMine.y}), must be ` +
                         `>= 5 away`
                     )
                 }
@@ -90,13 +113,13 @@ function verifyMap(map: CurrentMap, bodies: Bodies): string {
         }
 
         if (wall) {
-            // Check distance to nearby ruins
+            // Check distance to nearby cheese mines
 
-            for (const checkRuin of map.staticMap.ruins) {
-                if (squareIntersects(checkRuin, pos, 2)) {
+            for (const checkCheeseMine of map.staticMap.cheeseMines) {
+                if (squareIntersects(checkCheeseMine, pos, 2)) {
                     return (
-                        `Wall at (${pos.x}, ${pos.y}) is too close to ruin ` +
-                        `at (${checkRuin.x}, ${checkRuin.y}), must be ` +
+                        `Wall at (${pos.x}, ${pos.y}) is too close to cheese mine ` +
+                        `at (${checkCheeseMine.x}, ${checkCheeseMine.y}), must be ` +
                         `>= 3 away`
                     )
                 }
@@ -104,34 +127,32 @@ function verifyMap(map: CurrentMap, bodies: Bodies): string {
         }
 
         numWalls += wall
+        numDirt += map.dirt[i] > 0 ? 1 : 0
     }
 
     // Validate wall percentage
-    const maxPercent = 20
-    if (numWalls * 100 >= mapSize * maxPercent) {
+    const maxWallPercent = 20
+    if (numWalls * 100 >= mapSize * maxWallPercent) {
         const displayPercent = (numWalls / mapSize) * 100
-        return `Walls must take up at most ${maxPercent}% of the map, currently is ${displayPercent.toFixed(1)}%`
+        return `Walls must take up at most ${maxWallPercent}% of the map, currently is ${displayPercent.toFixed(1)}%`
+    }
+
+    // Validate dirt percentage
+    const maxDirtPercent = 50
+    if (numDirt * 100 >= mapSize * maxDirtPercent) {
+        const displayPercent = (numDirt / mapSize) * 100
+        return `Dirt must take up at most ${maxDirtPercent}% of the map, currently is ${displayPercent.toFixed(1)}%`
     }
 
     // Validate initial bodies
-    const numPaintTowers = [0, 0]
-    const numMoneyTowers = [0, 0]
     for (const body of bodies.bodies.values()) {
-        // Check distance to nearby ruins, towers, and walls
+        // Check distance from cat to other cats and cheese mines
 
-        if (body.robotType === RobotType.PAINT_TOWER) {
-            numPaintTowers[body.team.id - 1]++
-        } else if (body.robotType === RobotType.MONEY_TOWER) {
-            numMoneyTowers[body.team.id - 1]++
-        } else {
-            return `Tower at (${body.pos.x}, ${body.pos.y}) has invalid type!`
-        }
-
-        for (const checkRuin of map.staticMap.ruins) {
-            if (squareIntersects(checkRuin, body.pos, 4)) {
+        for (const checkCheeseMine of map.staticMap.cheeseMines) {
+            if (squareIntersects(checkCheeseMine, body.pos, 4)) {
                 return (
-                    `Tower at (${body.pos.x}, ${body.pos.y}) is too close to ruin ` +
-                    `at (${checkRuin.x}, ${checkRuin.y}), must be ` +
+                    `Cheese mine at (${checkCheeseMine.x}, ${checkCheeseMine.y}) is too close to cheese mine ` +
+                    `at (${body.pos.x}, ${body.pos.y}), must be ` +
                     `>= 5 away`
                 )
             }
@@ -139,11 +160,11 @@ function verifyMap(map: CurrentMap, bodies: Bodies): string {
 
         for (const checkBody of bodies.bodies.values()) {
             if (checkBody === body) continue
-            if (squareIntersects(checkBody.pos, body.pos, 4)) {
+            if (squareIntersects(checkBody.pos, body.pos, 0)) {
                 return (
-                    `Tower at (${body.pos.x}, ${body.pos.y}) is too close to ruin ` +
+                    `Cat at (${body.pos.x}, ${body.pos.y}) is too close to cat ` +
                     `at (${checkBody.pos.x}, ${checkBody.pos.y}), must be ` +
-                    `>= 5 away`
+                    `>= 1 away`
                 )
             }
         }
@@ -154,20 +175,10 @@ function verifyMap(map: CurrentMap, bodies: Bodies): string {
         if (wall !== -1) {
             const pos = map.indexToLocation(wall)
             return (
-                `Tower at (${body.pos.x}, ${body.pos.y}) is too close to wall ` +
+                `Cat at (${body.pos.x}, ${body.pos.y}) is too close to wall ` +
                 `at (${pos.x}, ${pos.y}), must be ` +
                 `>= 3 away`
             )
-        }
-    }
-
-    for (const teamIdx of [0, 1]) {
-        if (numPaintTowers[teamIdx] !== 1) {
-            return `Expected exactly 1 ${TEAM_COLOR_NAMES[teamIdx]} paint tower, found ${numPaintTowers[teamIdx]}`
-        }
-
-        if (numMoneyTowers[teamIdx] !== 1) {
-            return `Expected exactly 1 ${TEAM_COLOR_NAMES[teamIdx]} money tower, found ${numMoneyTowers[teamIdx]}`
         }
     }
 

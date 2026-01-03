@@ -19,6 +19,9 @@ import com.google.flatbuffers.UnionVector;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+/**
+ * A list of initial bodies to be placed on the map.
+ */
 @SuppressWarnings("unused")
 public final class InitialBodyTable extends Table {
   public static void ValidateVersion() { Constants.FLATBUFFERS_24_3_25(); }
