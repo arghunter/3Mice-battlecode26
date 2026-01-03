@@ -600,4 +600,16 @@ export class StaticMap {
     public wallAt(x: number, y: number) {
         return this.inBounds(x, y) && this.walls[this.locationToIndex(x, y)]
     }
+    public getNeighbors(x: number, y: number): Vector[] {
+        const neighbors: Vector[] = []
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                if (Math.abs(dx) + Math.abs(dy) === 0) continue
+                const nx = x + dx
+                const ny = y + dy
+                neighbors.push({ x: nx, y: ny })
+            }
+        }
+        return neighbors
+    }
 }

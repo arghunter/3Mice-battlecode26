@@ -507,14 +507,13 @@ export class CatBrush extends SymmetricMapEditorBrush<StaticMap> {
             }
 
             // if adding a waypoint
-            if (!this.map.inBounds(x + 1, y + 1)) return null
+            for (let nei of this.map.getNeighbors(x, y)) {
+                if (this.map.wallAt(nei.x, nei.y) || !this.map.inBounds(nei.x, nei.y)) {
+                    return null
+                }
+            }
 
-            if (
-                this.bodies.getBodyAtLocation(x, y) ||
-                this.map.wallAt(x, y) ||
-                this.map.wallAt(x + 1, y + 1) ||
-                this.map.wallAt(x, y + 1)
-            ) {
+            if (this.bodies.getBodyAtLocation(x, y) || this.map.wallAt(x, y)) {
                 return null
             }
             if (!this.map.catWaypoints.has(currentCat)) {
