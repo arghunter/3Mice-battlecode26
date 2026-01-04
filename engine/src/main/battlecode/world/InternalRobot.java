@@ -549,7 +549,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
     public void addHealth(int healthAmount) {
         this.health += healthAmount;
 
-        if (healthAmount < 0)
+        if (healthAmount < 0 && this.getType() != UnitType.CAT)
             this.gameWorld.getTeamInfo().addDamageSuffered(this.team, -healthAmount);
 
         this.health = Math.min(this.health, this.type.health);
