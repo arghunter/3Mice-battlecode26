@@ -962,7 +962,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
             InternalRobot crushedRobot = this.gameWorld.getRobot(translatedLoc);
             if (crushedRobot != null && (crushedRobot.getID() != this.ID)) {
                 // destroy robot
-                crushedRobot.addHealth(crushedRobot.getHealth());
+                crushedRobot.addHealth(-crushedRobot.getHealth());
             }
         }
 
