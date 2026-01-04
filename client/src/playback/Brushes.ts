@@ -546,23 +546,27 @@ export class CatBrush extends SymmetricMapEditorBrush<StaticMap> {
             if (!body) return null
 
             const team = body.team
+            const pos = body.pos
             this.bodies.removeBody(body.id)
             const waypoints = this.map.catWaypoints.get(body.id)
             this.map.catWaypoints.delete(body.id)
 
-            return { team, waypoints }
+            return { team, waypoints, pos }
         }
-
         if (isCat) {
             // shouldnt matter which team we add to since cats are neutral
             const id = add(x, y, this.bodies.game.teams[0])
             if (id) return () => this.bodies.removeBody(id)
             return null
         } else {
-            const { team, waypoints } = remove(x, y)!
+            const removed = remove(x, y)
+            if (!removed) return null
+
+            const { team, waypoints, pos } = removed
             if (!team) return null
+
             return () => {
-                add(x, y, team)
+                add(pos.x, pos.y, team)
                 if (waypoints) {
                     this.map.catWaypoints.set(this.bodies.getBodyAtLocation(x, y)!.id, waypoints)
                 }
@@ -573,6 +577,10 @@ export class CatBrush extends SymmetricMapEditorBrush<StaticMap> {
     // Override default symmetric apply behavior because cats occupy a 2x2 footprint
     public apply(x: number, y: number, fields: Record<string, MapEditorBrushField>, robotOne: boolean): UndoFunction {
         const undoFunctions: UndoFunction[] = []
+
+        const body = this.bodies.getBodyAtLocation(x, y)
+        const anchor = body?.pos
+
         const undo0 = this.symmetricApply(x, y, fields, robotOne)
 
         // Return early if brush could not be applied
@@ -580,7 +588,10 @@ export class CatBrush extends SymmetricMapEditorBrush<StaticMap> {
 
         undoFunctions.push(undo0)
 
-        const symmetryPoint = this.map.applySymmetryCat({ x: x, y: y })
+        const symmetryPoint = !anchor 
+                ? this.map.applySymmetryCat({ x: x, y: y }) 
+                : this.map.applySymmetryCat(anchor)
+
         if (symmetryPoint.x != x || symmetryPoint.y != y) {
             const undo1 = this.symmetricApply(symmetryPoint.x, symmetryPoint.y, fields, !robotOne)
 
