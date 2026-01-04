@@ -572,17 +572,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
      * @param loc the MapLocation to attempt to bite
      */
     public void bite(MapLocation loc, int cheeseConsumed) {
-        if (this.gameWorld.getTeamInfo().getCheese(this.team) + this.getCheese() < cheeseConsumed) {
-            throw new RuntimeException("Not enough cheese to bite!");
-        }
-
-        if (this.type == UnitType.CAT) {
-            throw new RuntimeException("Unit must be a baby rat or rat king to bite!");
-        }
-
-        if (!this.canSenseLocation(loc)) {
-            return;
-        }
 
         // Must be an immediate neighbor
         int distSq = this.location.distanceSquaredTo(loc);
