@@ -1273,7 +1273,7 @@ public final class RobotControllerImpl implements RobotController {
     public void assertCanCarryRat(MapLocation loc) throws GameActionException {
         assertNotNull(loc);
         // must be senseable and within one square (adjacent)
-        assertCanActLocation(loc, 1);
+        assertCanActLocation(loc, 2);
         assertIsActionReady();
 
         if (!this.robot.getType().isThrowingType()) {
