@@ -261,8 +261,8 @@ export class CurrentMap {
                 ctx.fill()
             })
             waypoints?.forEach((waypoint, idx) => {
-                let prevWaypoint = bodies.getById(selectedBodyID).pos
-                if (idx > 0) {
+                let prevWaypoint = waypoints[0]
+                if (idx > 1) {
                     prevWaypoint = waypoints[idx - 1]
                 }
                 const startCoords = renderUtils.getRenderCoords(prevWaypoint.x, prevWaypoint.y, this.dimension)

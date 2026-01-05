@@ -89,9 +89,9 @@ export default class RoundStat {
                 teamStat.cheeseAmount = delta.teamCheeseTransferred(i) ?? assert.fail('missing cheese amount')
                 teamStat.cheesePercent = teamStat.cheeseAmount / totalCheese
                 teamStat.catDamageAmount = delta.teamCatDamage(i) ?? assert.fail('missing cat damage amount')
-                teamStat.catDamagePercent = teamStat.catDamageAmount / totalCatDamage
+                teamStat.catDamagePercent = totalCatDamage ? teamStat.catDamageAmount / totalCatDamage : 0
                 teamStat.ratKingCount = delta.teamAliveRatKings(i) ?? assert.fail('missing rat king count')
-                teamStat.ratKingPercent = teamStat.ratKingCount / totalRatKings
+                teamStat.ratKingPercent = totalRatKings ? teamStat.ratKingCount / totalRatKings : 0
                 teamStat.dirtAmount = delta.teamDirtAmounts(i) ?? assert.fail('missing dirt amount')
                 teamStat.ratTrapAmount = delta.teamRatTrapCount(i) ?? assert.fail('missing rat trap amount')
                 teamStat.catTrapAmount = delta.teamCatTrapCount(i) ?? assert.fail('missing cat trap amount')
