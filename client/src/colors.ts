@@ -76,14 +76,14 @@ export const Sections = {
 export const Colors = {
     GAMEAREA_BACKGROUND: new Color(
         'GAMEAREA_BACKGROUND',
-        '#2e2323',
+        '#4f345a',
         '--color-gamearea-background',
         'Background',
         Sections.INTERFACE
     ),
     SIDEBAR_BACKGROUND: new Color(
         'SIDEBAR_BACKGROUND',
-        '#3f3131',
+        '#40284b',
         '--color-sidebar-background',
         'Sidebar',
         Sections.INTERFACE
@@ -131,8 +131,8 @@ export const Presets: ColorPreset[] = [
         data: {
             version: 0,
             colors: {
-                GAMEAREA_BACKGROUND: '#2e2323',
-                SIDEBAR_BACKGROUND: '#3f3131',
+                GAMEAREA_BACKGROUND: '#4f345a',
+                SIDEBAR_BACKGROUND: '#40284b',
                 RED: '#ff9194',
                 PINK: '#ffb4c1',
                 GREEN: '#00a28e',
