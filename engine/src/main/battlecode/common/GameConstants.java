@@ -31,10 +31,10 @@ public class GameConstants {
     public static final int MIN_CHEESE_MINE_SPACING_SQUARED = 25;
 
     /** The maximum percentage of the map that can be dirt */
-    public static final int MAX_DIRT_PERCENTAGE = 25;
+    public static final int MAX_DIRT_PERCENTAGE = 50;
 
     /** The maximum percentage of the map that can be walls */
-    public static final int MAX_WALL_PERCENTAGE = 10; // TODO remove if not using walls
+    public static final int MAX_WALL_PERCENTAGE = 20; // TODO remove if not using walls
 
     // *********************************
     // ****** GAME PARAMETERS **********
@@ -193,7 +193,7 @@ public class GameConstants {
     public static final int DIG_DIRT_CHEESE_COST = 10;
 
     /** The cheese cost to place a tile of dirt */
-    public static final int PLACE_DIRT_CHEESE_COST = 20;
+    public static final int PLACE_DIRT_CHEESE_COST = 10;
 
     /** After this many turns, cats will begin moving if they haven't already. */
     public static final int CAT_GRACE_PERIOD = 100;
@@ -246,12 +246,7 @@ public class GameConstants {
      * The amount added to the action cooldown counter after digging out a tile of
      * dirt
      */
-    public static final int DIG_COOLDOWN = 25; // TODO need to specify!
-
-    /**
-     * The amount added to the action cooldown counter after building a tile of dirt
-     */
-    public static final int BUILD_COOLDOWN = 35; // TODO need to specify!
+    public static final int DIG_COOLDOWN = 25;
 
     /**
      * The multiplier to the cooldowns when carrying another robot; TODO increases

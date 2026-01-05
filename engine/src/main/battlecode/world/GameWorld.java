@@ -818,7 +818,6 @@ public class GameWorld {
         totalCheeseValues[Team.B.ordinal()] += this.teamInfo.getCheese(Team.B);
 
         if (totalCheeseValues[Team.A.ordinal()] > totalCheeseValues[Team.B.ordinal()]) {
-            // TODO: add new tiebreakers to domination factor
             setWinner(Team.A, DominationFactor.MORE_CHEESE);
             return true;
         } else if (totalCheeseValues[Team.B.ordinal()] > totalCheeseValues[Team.A.ordinal()]) {
@@ -834,12 +833,8 @@ public class GameWorld {
     public boolean setWinnerIfMoreRatsAlive() {
         int[] totalRobotsAlive = new int[2];
 
-        for (UnitType type : UnitType.values()) {
-            if (type.isBabyRatType() || type.isRatKingType()) {
-                totalRobotsAlive[Team.A.ordinal()] += this.getObjectInfo().getRobotTypeCount(Team.A, type);
-                totalRobotsAlive[Team.B.ordinal()] += this.getObjectInfo().getRobotTypeCount(Team.B, type);
-            }
-        }
+        totalRobotsAlive[0] = this.getTeamInfo().getNumBabyRats(Team.A) + this.getTeamInfo().getNumRatKings(Team.A);
+        totalRobotsAlive[1] = this.getTeamInfo().getNumBabyRats(Team.B) + this.getTeamInfo().getNumRatKings(Team.B);
 
         if (totalRobotsAlive[Team.A.ordinal()] > totalRobotsAlive[Team.B.ordinal()]) {
             setWinner(Team.A, DominationFactor.MORE_ROBOTS_ALIVE);
@@ -877,9 +872,9 @@ public class GameWorld {
 
         for (Team team : List.of(Team.A, Team.B)) {
 
-            float proportion_rat_kings = teamInfo.getNumRatKings(team) / total_num_rat_kings;
-            float proportion_cheese_transferred = teamInfo.getCheeseTransferred(team) / total_amount_cheese_transferred;
-            float proportion_cat_damage = teamInfo.getDamageToCats(team) / total_amount_cat_damage;
+            float proportion_rat_kings = total_num_rat_kings != 0 ? teamInfo.getNumRatKings(team) / total_num_rat_kings : 0; 
+            float proportion_cheese_transferred = total_amount_cheese_transferred != 0 ? teamInfo.getCheeseTransferred(team) / total_amount_cheese_transferred : 0;
+            float proportion_cat_damage = total_amount_cat_damage != 0 ? teamInfo.getDamageToCats(team) / total_amount_cat_damage : 0;
 
             int points = (int) (cat_weight * 100 * (proportion_cat_damage) + king_weight * 100 * proportion_rat_kings
                     + cheese_transfer_weight * 100 * proportion_cheese_transferred);
@@ -924,12 +919,23 @@ public class GameWorld {
     }
 
     private void checkWin(Team team) {
+        
+        // killed all of both team's rat kings in the same round
+        if (gameStats.getWinner() != null && gameStats.getDominationFactor() == DominationFactor.KILL_ALL_RAT_KINGS && setWinnerIfKilledAllRatKings()){
+            if (setWinnerIfMorePoints())
+                return;
+            if (setWinnerIfMoreCheese())
+                return;
+            if (setWinnerIfMoreRatsAlive())
+                return;
+            setWinnerArbitrary();
+        }
         if (gameStats.getWinner() != null) { // to avoid overriding previously set win
             return;
         }
-        // killed all rat kings?
-        if (setWinnerIfKilledAllRatKings())
+        if (setWinnerIfKilledAllRatKings()){
             return;
+        }
         // all cats dead
         if (setWinnerifAllCatsDead()) {
             return;
@@ -1101,11 +1107,8 @@ public class GameWorld {
 
         // check win
         if (robot.getType() == UnitType.RAT_KING && this.getTeamInfo().getNumRatKings(robot.getTeam()) == 0) {
-            System.out
-                    .println("DEBUGGING: number of rat kings = " + this.getTeamInfo().getNumRatKings(robot.getTeam()));
             checkWin(robotTeam);
         } else if (this.isCooperation && robot.getType() == UnitType.CAT && this.getNumCats() == 0) {
-            System.out.println("DEBUGGING: number of cats = " + this.getNumCats());
             checkWin(robotTeam);
         }
     }

@@ -217,11 +217,8 @@ public final class RobotControllerImpl implements RobotController {
                 ? (getLocation().bottomLeftDistanceSquaredTo(loc))
                 : (getLocation().distanceSquaredTo(loc));
 
-        float addDistance = (this.getType().size > 1)
-                ? (float) Math.ceil((this.getType().size / (2.0) + Math.sqrt((double) maxRadiusSquared))
-                        * (this.getType().size / 2.0 + Math.sqrt((double) maxRadiusSquared)))
-                : maxRadiusSquared;
-
+        float addDistance = (float) Math.ceil((this.getType().size / (2.0) + Math.sqrt((double) maxRadiusSquared))
+                        * (this.getType().size / 2.0 + Math.sqrt((double) maxRadiusSquared)));
         if (distance > (addDistance))
             throw new GameActionException(OUT_OF_RANGE,
                     "Target location not within action range");
