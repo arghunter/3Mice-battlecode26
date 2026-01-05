@@ -761,7 +761,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
             this.gameWorld.getMatchMaker().addCatFeedAction(this.getID());
         } else {
             this.setInternalLocationOnly(this.getLocation().add(dir));
-            this.gameWorld.addRobot(this.getLocation(), this);
+            this.gameWorld.removeRobot(this.getLocation());
         }
     }
 
