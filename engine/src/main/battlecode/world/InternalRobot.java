@@ -1098,6 +1098,9 @@ public class InternalRobot implements Comparable<InternalRobot> {
     public void processBeginningOfTurn() {
         this.sentMessagesCount = 0;
 
+        // first robot of the round should cause the cheese mines to run
+        this.gameWorld.runCheeseMines();
+
         // if rat is being carried
         if (this.getType() == UnitType.BABY_RAT && this.isGrabbedByRobot()
                 && this.getGrabbedByRobot().getTeam() != this.getTeam()) {

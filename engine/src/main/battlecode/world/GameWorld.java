@@ -43,6 +43,7 @@ public class GameWorld {
     private final LiveMap gameMap;
     private final TeamInfo teamInfo;
     private final ObjectInfo objectInfo;
+    private boolean hasRunCheeseMinesThisRound; // whether we've run the cheese mines yet
 
     private int[] currentNumberUnits = { 0, 0 };
 
@@ -118,6 +119,15 @@ public class GameWorld {
         return Direction.fromDelta(dx, dy);
     }
 
+    public void runCheeseMines(){
+        if (hasRunCheeseMinesThisRound)
+            return;
+
+        for (CheeseMine mine : this.cheeseMines) {
+            spawnCheese(mine);
+        }
+        hasRunCheeseMinesThisRound = true;
+    }
 
     public MapLocation symmetryLocation(MapLocation p) {
         return new MapLocation(symmetricX(p.x), symmetricY(p.y));
@@ -134,6 +144,7 @@ public class GameWorld {
         this.trapLocations = new Trap[numSquares]; // We guarantee that no maps will contain traps at t = 0
         this.robots = new InternalRobot[width][height]; // if represented in cartesian, should be height-width, but this
                                                         // should allow us to index x-y
+        this.hasRunCheeseMinesThisRound = false;
         this.currentRound = 0;
         this.idGenerator = new IDGenerator(gm.getSeed());
         this.gameStats = new GameStats();
@@ -945,9 +956,8 @@ public class GameWorld {
     }
 
     public void processEndOfRound() {
-        for (CheeseMine mine : this.cheeseMines) {
-            spawnCheese(mine);
-        }
+        // clear hasRunCheeseMinesThisRound for next round
+        this.hasRunCheeseMinesThisRound =  false;
 
         Team[] teams = {Team.A, Team.B};
         for (Team t : teams){
