@@ -954,6 +954,7 @@ public interface RobotController {
     /**
      * Safely drops robot in the specified direction
      * 
+     * @param dir direction to drop rat
      * @battlecode.doc.costlymethod
      */
     void dropRat(Direction dir) throws GameActionException;
