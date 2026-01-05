@@ -1134,7 +1134,6 @@ public final class RobotControllerImpl implements RobotController {
         return this.gameWorld.readSharedArray(index, this.getTeam());
     }
 
-    @Override
     public void writePersistentArray(int index, int value) throws GameActionException {
         if (!this.getType().isRatKingType()) {
             throw new GameActionException(CANT_DO_THAT, "Only rat kings can write to the persistent array!");
@@ -1149,7 +1148,6 @@ public final class RobotControllerImpl implements RobotController {
         this.gameWorld.writePersistentArray(index, value, this.getTeam());
     }
 
-    @Override
     public int readPersistentArray(int index) throws GameActionException {
         return this.gameWorld.readPersistentArray(index, this.getTeam());
     }
