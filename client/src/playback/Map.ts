@@ -284,6 +284,8 @@ export class CurrentMap {
 
         const dirt = this.dirt[schemaIdx]
         const wall = this.staticMap.walls[schemaIdx]
+        const ratTrap = this.ratTrapData[schemaIdx]
+        const catTrap = this.catTrapData[schemaIdx]
         const cheeseMine = this.staticMap.cheeseMines.find((r) => r.x === square.x && r.y === square.y)
         const cheese = this.cheeseData[schemaIdx]
         const srp = this.resourcePatterns.find((r) => r.center.x === square.x && r.center.y === square.y)
@@ -312,6 +314,12 @@ export class CurrentMap {
         }
         if (dirt) {
             info.push('Dirt')
+        }
+        if (ratTrap) {
+            info.push('Rat Trap')
+        }
+        if (ratTrap) {
+            info.push('Cat Trap')
         }
         if (cheese) {
             info.push(`Cheese: ${cheese}`)
