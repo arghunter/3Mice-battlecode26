@@ -980,7 +980,7 @@ public final class RobotControllerImpl implements RobotController {
     @Override
     public boolean canAttack(MapLocation loc, int cheeseConsumed) {
         try {
-            assertCanAttack(loc, 0);
+            assertCanAttack(loc, cheeseConsumed);
             return true;
         } catch (GameActionException e) {
             return false;
