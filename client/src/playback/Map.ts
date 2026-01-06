@@ -41,7 +41,7 @@ export class CurrentMap {
     public readonly markers: [Int8Array, Int8Array] // Each team has markers
     public readonly ratTrapData: Int8Array
     public readonly catTrapData: Int8Array
-    public readonly cheeseData: Int8Array
+    public readonly cheeseData: Int32Array
     public readonly resourcePatterns: ResourcePatternData[]
 
     get width(): number {
@@ -60,7 +60,7 @@ export class CurrentMap {
 
             this.staticMap = from
             this.dirt = new Int8Array(from.initialDirt)
-            this.cheeseData = new Int8Array(from.cheese)
+            this.cheeseData = new Int32Array(from.cheese)
             this.markers = [new Int8Array(this.width * this.height), new Int8Array(this.width * this.height)]
             this.resourcePatterns = []
             this.ratTrapData = new Int8Array(this.width * this.height)
@@ -70,7 +70,7 @@ export class CurrentMap {
 
             this.staticMap = from.staticMap
             this.dirt = new Int8Array(from.dirt)
-            this.cheeseData = new Int8Array(from.cheeseData)
+            this.cheeseData = new Int32Array(from.cheeseData)
             this.markers = [new Int8Array(from.markers[0]), new Int8Array(from.markers[1])]
 
             // Assumes ResourcePatternData is immutable
