@@ -414,7 +414,6 @@ public final class RobotControllerImpl implements RobotController {
             this.robot.addCheese(-1 * GameConstants.DIG_DIRT_CHEESE_COST);
 
         this.robot.addActionCooldownTurns(GameConstants.DIG_COOLDOWN);
-        System.out.println("DEBUGGING: " + "remove dirt at location" + loc);
         this.gameWorld.getMatchMaker().addRemoveDirtAction(loc);
     }
 
@@ -732,13 +731,10 @@ public final class RobotControllerImpl implements RobotController {
         for (int i = 0; i < newLocs.length; i++) {
 
             newLocs[i] = curLocs[i].add(d);
-
-            // System.out.println("Moving " + d + " from " + curLocs[i] + " " + newLocs[i]);
         }
 
         for (MapLocation loc : newLocs) {
             if (!onTheMap(loc)) {
-                // System.out.println("DEBUGGING: " + loc + " not on map");
                 throw new GameActionException(OUT_OF_RANGE,
                         "Can only move to locations on the map; " + loc + " is not on the map. Currently at location "
                                 + this.getLocation());
@@ -748,18 +744,8 @@ public final class RobotControllerImpl implements RobotController {
             if ((occupyingRobot != null) && (occupyingRobot.getID() != this.robot.getID())) {
 
                 if (occupyingRobot.getType().isBabyRatType() && this.getType().isCatType()) {
-                    System.out.println("Cat killed a rat by stepping on it");
                 } else {
-                    System.out.println("DEBUGGING: " + this.robot.getID() + " collision with robot of type "
-                            + occupyingRobot.getType() + " with part locations at ");
                     MapLocation[] partLocs = this.robot.getAllPartLocations();
-                    System.out.print("Part locations: [");
-                    for (int i = 0; i < partLocs.length; i++) {
-                        System.out.print("(" + partLocs[i].x + ", " + partLocs[i].y + ")");
-                        if (i < partLocs.length - 1)
-                            System.out.print(", ");
-                    }
-                    System.out.println("]");
                     throw new GameActionException(CANT_MOVE_THERE,
                             "Cannot move to an occupied location; " + loc + " is occupied by a different robot.");
                 }
@@ -1085,7 +1071,6 @@ public final class RobotControllerImpl implements RobotController {
 
         robot.becomeRatKing(health);
 
-        // System.out.println("IM ALIVE (RATKING)");
 
         for (Direction d : Direction.allDirections()) {
             if (d != Direction.CENTER) {

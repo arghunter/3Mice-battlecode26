@@ -421,7 +421,6 @@ public final class GameMapIO {
                 Team bodyTeam = TeamMapping.team(curSpawnAction.team());
 
                 if (bodyType == UnitType.CAT){ // TODO: this is a temporary fix
-                    System.out.println("DEBUGGING: " + "switching cat from team " + bodyTeam + " to " + Team.NEUTRAL);
                     bodyTeam = Team.NEUTRAL;
                 }
                 
@@ -433,7 +432,6 @@ public final class GameMapIO {
                 RobotInfo carryingRobot = null;
                 initialBodies.add(new RobotInfo(curId, bodyTeam, bodyType, bodyType.health, new MapLocation(bodyX, bodyY), dir, chirality, initialCheese, carryingRobot));
                 
-                System.out.println("DEBUGGING: " + "Unit type " + bodyType + " on team " + bodyTeam + " at location " + bodyX + ", " + bodyY + " with initial angle " + dirOrdinal + " with chirality " + chirality);
             }
         }
 

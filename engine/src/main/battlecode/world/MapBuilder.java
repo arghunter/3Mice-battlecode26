@@ -193,7 +193,6 @@ public class MapBuilder {
         // validate
         LiveMap lm = this.build();
         lm.assertIsValid();
-        System.out.println("Saving " + this.name + ".");
         GameMapIO.writeMap(lm, new File(pathname));
     }
 

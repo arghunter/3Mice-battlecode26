@@ -502,7 +502,6 @@ public class GameWorld {
                         && !this.getWall(new MapLocation(pairedX, pairedY))) {
                     ogSpawnLoc = new MapLocation(cheeseX, cheeseY);
                     pairedSpawnLoc = new MapLocation(pairedX, pairedY);
-                    System.out.println("Found a good cheese loc! " + ogSpawnLoc);
                     break;
                 }
 
@@ -1065,15 +1064,12 @@ public class GameWorld {
     }
 
     public void destroyRobot(int id, boolean fromException, boolean fromDamage) {
-        // System.out.println("A ROBOT DIED!!");
-        // System.out.println(id);
         InternalRobot robot = objectInfo.getRobotByID(id);
         if (robot == null) {
             // robot was already killed
             return;
         }
 
-        // System.out.println(robot);
         Team robotTeam = robot.getTeam();
         MapLocation loc = robot.getLocation();
 
