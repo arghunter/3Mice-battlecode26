@@ -1082,13 +1082,13 @@ public class GameWorld {
                 removeRobot(robotLoc);
             }
             if (robot.isCarryingRobot()) {
-                InternalRobot carryingRobot = robot.getCarryingRobot();
+                InternalRobot carryingRobot = robot.getRobotBeingCarried();
                 carryingRobot.getDropped(loc);
             }
             if (robot.isGrabbedByRobot()) {
                 InternalRobot carrier = robot.getGrabbedByRobot();
                 robot.clearGrabbedByRobot();
-                if (carrier != null && carrier.getCarryingRobot() == robot) {
+                if (carrier != null && carrier.getRobotBeingCarried() == robot) {
                     carrier.clearCarryingRobot();
                 }
             }
