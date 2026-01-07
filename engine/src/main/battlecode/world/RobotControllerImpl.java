@@ -1090,6 +1090,7 @@ public final class RobotControllerImpl implements RobotController {
         }
 
         this.gameWorld.getMatchMaker().addBecomeRatKingAction(this.getID());
+        this.gameWorld.getTeamInfo().addRatKings(1, getTeam());
     }
 
     // ***********************************
