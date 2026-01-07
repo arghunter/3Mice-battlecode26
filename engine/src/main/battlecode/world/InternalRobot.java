@@ -622,7 +622,8 @@ public class InternalRobot implements Comparable<InternalRobot> {
                 }
                 this.gameWorld.getMatchMaker().addBiteAction(this.getID());
 
-                this.gameWorld.isCooperation = false;
+                if (targetRobot.getType() != UnitType.CAT)
+                    this.gameWorld.isCooperation = false;
             }
         }
     }
