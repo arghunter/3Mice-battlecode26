@@ -950,12 +950,14 @@ public final class RobotControllerImpl implements RobotController {
         assertIsActionReady();
         // Attack is limited to vision radius
         assertCanActLocation(loc, this.getType().getVisionRadiusSquared());
+
         if (!this.getLocation().isAdjacentTo(loc)) {
             throw new GameActionException(CANT_DO_THAT, "Rats can only attack adjacent squares!");
         }
 
-        if (!this.gameWorld.isPassable(loc))
+        if (!this.gameWorld.isPassable(loc)) {
             throw new GameActionException(CANT_DO_THAT, "Rats cannot attack squares with walls or dirt on them!");
+        }
         
         if (this.gameWorld.getTeamInfo().getCheese(this.getTeam()) + this.getAllCheese() < cheeseConsumed) {
             throw new GameActionException(CANT_DO_THAT, "Not enough cheese to bite!");
@@ -964,13 +966,23 @@ public final class RobotControllerImpl implements RobotController {
         if (this.getType() == UnitType.CAT) {
             throw new GameActionException(CANT_DO_THAT, "Unit must be a baby rat or rat king to bite!");
         }
+
+        if (cheeseConsumed < 0) {
+            throw new GameActionException(CANT_DO_THAT, "Cheese consumed must be non-negative!");
+        }
+
+        if (this.gameWorld.getRobot(loc) == null) {
+            throw new GameActionException(CANT_DO_THAT, "No robot to attack at the specified location!");
+        }
     }
 
     private void assertCanAttackCat(MapLocation loc) throws GameActionException {
         assertIsActionReady();
         assertCanActLocation(loc, this.getType().getVisionRadiusSquared());
-        if (!this.gameWorld.isPassable(loc))
+
+        if (!this.gameWorld.isPassable(loc)) {
             throw new GameActionException(CANT_DO_THAT, "Cats cannot attack squares with walls or dirt on them!");
+        }
     }
 
     private void assertCanAttack(MapLocation loc, int cheeseConsumed) throws GameActionException {
