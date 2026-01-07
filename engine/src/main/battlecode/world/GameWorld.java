@@ -193,7 +193,6 @@ public class GameWorld {
         }
 
         this.sharedArray = new int[2][GameConstants.SHARED_ARRAY_SIZE];
-        // TODO make persistent array last between matches
 
         RobotInfo[] initialBodies = gm.getInitialBodies();
 
@@ -322,10 +321,9 @@ public class GameWorld {
             }
         } catch (Exception e) {
             ErrorReporter.report(e);
-            // TODO throw out file?
             return GameState.DONE;
         }
-        // todo: should I end the round here or in processEndofRound?
+
         return GameState.RUNNING;
     }
 
