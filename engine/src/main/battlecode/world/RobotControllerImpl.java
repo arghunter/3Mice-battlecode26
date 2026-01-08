@@ -1328,7 +1328,7 @@ public final class RobotControllerImpl implements RobotController {
         }
 
         // adjacency
-        if (!loc.isAdjacentTo(this.getLocation())) {
+        if (!loc.isAdjacentTo(this.getLocation()) && !this.getLocation().equals(loc)) {
             throw new GameActionException(CANT_DO_THAT, "A rat can only grab adjacent robots!");
         }
 

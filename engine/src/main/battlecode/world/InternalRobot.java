@@ -653,9 +653,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.gameWorld.getMatchMaker().addRatNapAction(this.ID); // expand this rat
         this.gameWorld.getMatchMaker().addRatNapAction(grabber.ID); // shrink carrier rat
 
-        if (grabber.getTeam() != this.getTeam()) {
-            grabber.remainingCarriedDuration = GameConstants.MAX_CARRY_DURATION;
-        }
+        grabber.remainingCarriedDuration = GameConstants.MAX_CARRY_DURATION;
     }
 
     private void getGrabbed(InternalRobot grabber) {
@@ -669,9 +667,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
         
         this.setInternalLocationOnly(grabber.getLocation());
 
-        if (grabber.getTeam() != this.getTeam()) {
-            this.remainingCarriedDuration = GameConstants.MAX_CARRY_DURATION;
-        }
+        this.remainingCarriedDuration = GameConstants.MAX_CARRY_DURATION;
 
     }
 
@@ -689,18 +685,11 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.thrownDir = dir;
         this.remainingThrowDuration = 4;
 
-        MapLocation nextLoc = this.getLocation().add(dir);
+        this.setInternalLocationOnly(this.getLocation());
+        this.gameWorld.removeRobot(this.getLocation());
 
-        // Cat feeding!
-        if (this.gameWorld.getRobot(nextLoc) != null) { // there's a cat here
-            this.addHealth(-this.getHealth()); // rat dies :(
-            // put cat to sleep
-            this.gameWorld.getRobot(nextLoc).sleepTimeRemaining = GameConstants.CAT_SLEEP_TIME;
-            this.gameWorld.getMatchMaker().addCatFeedAction(this.getID());
-        } else {
-            this.setInternalLocationOnly(this.getLocation().add(dir));
-            this.gameWorld.removeRobot(this.getLocation());
-        }
+        this.travelFlying(true);
+        this.travelFlying(false);
     }
 
     public void getDropped(MapLocation loc) {
@@ -1059,8 +1048,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.gameWorld.runCheeseMines();
 
         // if rat is being carried
-        if (this.getType() == UnitType.BABY_RAT && this.isGrabbedByRobot()
-                && this.getGrabbedByRobot().getTeam() != this.getTeam()) {
+        if (this.getType() == UnitType.BABY_RAT && this.isGrabbedByRobot()) {
 
             // check if grabber has died
             if (this.getGrabbedByRobot().getHealth() <= 0) {
