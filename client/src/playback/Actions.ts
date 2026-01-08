@@ -109,22 +109,23 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             const random2 = ((src.pos.x * 259 + src.pos.y * 429 + match.currentRound.roundNumber * 224) / 100) % 1
             const interpolationFactor = match.getInterpolationFactor()
 
-            ctx.save()
-            ctx.globalAlpha = 0.5 - 0.5 * interpolationFactor * interpolationFactor
-            ctx.fillStyle = '#000000'
-            ctx.font = '0.4px Arial'
-            // parabolic trajectory.
-            const fontX = coords.x + (4 * random1 - 2) * interpolationFactor - 0.5
-            const fontY =
-                coords.y - (2 + 4 * random2) * interpolationFactor + 8 * interpolationFactor * interpolationFactor - 0.5
-            ctx.fillText('nom', fontX, fontY)
+            // ctx.save()
+            // ctx.globalAlpha = 0.5 - 0.5 * interpolationFactor * interpolationFactor
+            // ctx.fillStyle = '#000000'
+            // ctx.font = '0.4px Arial'
+            // // parabolic trajectory.
+            // const fontX = coords.x + (4 * random1 - 2) * interpolationFactor - 0.5
+            // const fontY =
+            //     coords.y - (2 + 4 * random2) * interpolationFactor + 8 * interpolationFactor * interpolationFactor - 0.5
+            // ctx.fillText('nom', fontX, fontY)
+            src.textureOverride = true
             src.imgPath = `robots/cat/cat_feed_${src.direction}.png`// is reset in `finish`.
-            ctx.restore()
+            // ctx.restore()
         }
 
         finish(round: Round): void {
             const src = round.bodies.getById(this.robotId)
-            src.imgPath = 'robots/cat/cat.png'
+            src.textureOverride = false
         }
     },
     [schema.Action.RatAttack]: class AttackAction extends Action<schema.RatAttack> {
@@ -191,16 +192,20 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             
             if (target.beingCarried) {
                 // drop the target
+                const carrier = round.bodies.getById(target.carrierRobot!)
+                carrier.carriedRobot = undefined
                 target.size = 1
                 target.beingCarried = false
+                target.carrierRobot = undefined
             } else {
                 // pick up the target
                 src.carriedRobot = target.id
+                target.carrierRobot = src.id
                 target.carriedRobot = undefined
                 target.beingCarried = true
 
-                // target.lastPos = { ...target.pos }
-                // target.pos = { x: src.pos.x + RatNapAction.OFFSET.x, y: src.pos.y + RatNapAction.OFFSET.y }
+                target.lastPos = { ...target.pos }
+                target.pos = { x: src.pos.x + RatNapAction.OFFSET.x, y: src.pos.y + RatNapAction.OFFSET.y }
                 target.size = 0.6
             }
         }
@@ -560,6 +565,10 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             // maybe move rat to target loc
             const body = round.bodies.getById(this.robotId)
             const endLoc = round.map.indexToLocation(this.actionData.loc())
+            body.carrierRobot = undefined
+            body.beingCarried = false
+            body.size = 1
+            body.pos = { ...endLoc }
         }
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
             const body = match.currentRound.bodies.getById(this.robotId)
