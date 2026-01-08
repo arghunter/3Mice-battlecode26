@@ -46,8 +46,8 @@ export default class Actions {
                 //this.actions.splice(i, 1)
 
                 // Otherwise, this is faster
-                this.actions[i] = this.actions[this.actions.length - 1]
-                this.actions[i].finish(round)
+                [this.actions[i], this.actions[this.actions.length-1]] = [this.actions[this.actions.length - 1], this.actions[i]]
+                this.actions[this.actions.length-1].finish(round)
                 this.actions.pop()
 
                 i--
@@ -385,10 +385,14 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
     [schema.Action.CatScratch]: class CatScratchAction extends Action<schema.CatScratch> {
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
             // cat scratching animation
-
             const body = match.currentRound.bodies.getById(this.robotId)
             const pos = match.map.indexToLocation(this.actionData.loc())
             const coords = renderUtils.getRenderCoords(pos.x, pos.y, match.map.dimension, true)
+            
+            const dir = body.direction
+            body.textureOverride = true
+            body.imgPath = `robots/cat/cat_scratch_${dir}.png`
+            
             const reflected = body.pos.x < pos.x
 
             const interpolationFactor = match.getInterpolationFactor()
@@ -407,12 +411,11 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             }
             ctx.stroke()
             ctx.globalAlpha = 1
-            body.imgPath = `robots/cat/cat_scratch_${body.direction}.png`
         }
 
         finish(round: Round): void {
             const body = round.bodies.getById(this.robotId)
-            body.imgPath = 'robots/cat/cat.png'
+            body.textureOverride = false
         }
     },
     [schema.Action.CatPounce]: class CatPounceAction extends Action<schema.CatPounce> {
@@ -421,6 +424,7 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             const body = round.bodies.getById(this.robotId)
             const startPos = round.map.indexToLocation(this.actionData.startLoc())
             const endPos = round.map.indexToLocation(this.actionData.endLoc())
+            console.log('pounce from', startPos, 'to', endPos)
         }
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
             // cat pouncing animation
@@ -431,6 +435,7 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             const endCoords = renderUtils.getRenderCoords(endPos.x, endPos.y, match.map.dimension, true)
             const angle = Math.atan2(endPos.y - startPos.y, endPos.x - startPos.x)
 
+            body.textureOverride = true
             let texture: string
             if (angle >= (7 * Math.PI) / 4 || angle <= Math.PI / 4) {
                 texture = 'robots/cat/cat_pounce_5.png'
@@ -454,7 +459,7 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
         }
         finish(round: Round): void {
             const body = round.bodies.getById(this.robotId)
-            body.imgPath = 'robots/cat/cat.png'
+            body.textureOverride = false
         }
     },
     [schema.Action.PlaceTrap]: class PlaceTrapAction extends Action<schema.PlaceTrap> {
@@ -508,7 +513,8 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
             // trap triggering animation
             const body = match.currentRound.bodies.getById(this.robotId)
-            const pos = match.map.indexToLocation(this.actionData.loc())
+            // const pos = match.map.indexToLocation(this.actionData.loc())
+            const pos = body.getInterpolatedCoords(match)
             const coords = renderUtils.getRenderCoords(pos.x, pos.y, match.map.dimension, true)
 
             const size = body.size - 1

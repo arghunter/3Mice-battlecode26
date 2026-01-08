@@ -367,6 +367,7 @@ export class Body {
     public beingCarried: boolean = false
     public bytecodesUsed: number = 0
     public cheese: number = 0
+    public textureOverride: boolean = false
 
     constructor(
         private game: Game,
@@ -793,7 +794,7 @@ export const BODY_DEFINITIONS: Record<schema.RobotType, typeof Body> = {
 
         public draw(match: Match, ctx: CanvasRenderingContext2D): void {
             const dir = this.direction
-            this.imgPath = `robots/${this.team.colorName.toLowerCase()}/rat_${dir}_64x64.png`
+            if (!this.textureOverride) this.imgPath = `robots/${this.team.colorName.toLowerCase()}/rat_${dir}_64x64.png`
             super.draw(match, ctx)
         }
     },
@@ -811,7 +812,7 @@ export const BODY_DEFINITIONS: Record<schema.RobotType, typeof Body> = {
 
         public draw(match: Match, ctx: CanvasRenderingContext2D): void {
             const dir = this.direction
-            this.imgPath = `robots/${this.team.colorName.toLowerCase()}/rat_king_64x64.png`
+            if (!this.textureOverride) this.imgPath = `robots/${this.team.colorName.toLowerCase()}/rat_king_64x64.png`
             super.draw(match, ctx)
         }
     },
@@ -829,7 +830,7 @@ export const BODY_DEFINITIONS: Record<schema.RobotType, typeof Body> = {
 
         public draw(match: Match, ctx: CanvasRenderingContext2D): void {
             const dir = this.direction
-            this.imgPath = `robots/cat/cat_${dir}.png`
+            if (!this.textureOverride) this.imgPath = `robots/cat/cat_${dir}.png`
             super.draw(match, ctx)
         }
     }
