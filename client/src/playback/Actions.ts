@@ -582,7 +582,7 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
 
             const from = pos
             const to = match.currentRound.map.indexToLocation(this.actionData.loc())
-
+            console.log('throw from', from, 'to', to)
             const dx = to.x - from.x
             const dy = to.y - from.y
             const mag = Math.hypot(dx, dy)
@@ -590,7 +590,7 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
 
             const ux = dx / mag
             const uy = dy / mag
-            const px = -uy
+            const px = uy
             const py = ux
 
             // deterministic jitter
@@ -610,10 +610,10 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
                 const offset = i * spacing
                 const jitter = (r - 0.5) * 0.15
 
-                const endX = coords.x - ux * 0.3 + px * offset + px * jitter
+                const endX = coords.x + ux * 0.3 + px * offset + px * jitter
                 const endY = coords.y - uy * 0.3 + py * offset + py * jitter
 
-                const startX = endX - ux * baseLength
+                const startX = endX + ux * baseLength
                 const startY = endY - uy * baseLength
 
                 ctx.beginPath()
