@@ -565,6 +565,10 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             // maybe move rat to target loc
             const body = round.bodies.getById(this.robotId)
             const endLoc = round.map.indexToLocation(this.actionData.loc())
+            if( body.carriedRobot !== undefined ) {
+                const carrier = round.bodies.getById(body.carriedRobot)
+                carrier.carriedRobot = undefined
+            }
             body.carrierRobot = undefined
             body.beingCarried = false
             body.size = 1
