@@ -193,7 +193,6 @@ public class GameWorld {
         }
 
         this.sharedArray = new int[2][GameConstants.SHARED_ARRAY_SIZE];
-        // TODO make persistent array last between matches
 
         RobotInfo[] initialBodies = gm.getInitialBodies();
 
@@ -322,10 +321,9 @@ public class GameWorld {
             }
         } catch (Exception e) {
             ErrorReporter.report(e);
-            // TODO throw out file?
             return GameState.DONE;
         }
-        // todo: should I end the round here or in processEndofRound?
+
         return GameState.RUNNING;
     }
 
@@ -511,14 +509,15 @@ public class GameWorld {
             // corresponding one
 
             if (spawn) {
-                addCheese(ogSpawnLoc, GameConstants.CHEESE_SPAWN_AMOUNT);
-                addCheese(pairedSpawnLoc, GameConstants.CHEESE_SPAWN_AMOUNT);
 
                 mine.setLastRound(this.currentRound);
                 pairedMine.setLastRound(this.currentRound);
 
                 matchMaker.addCheeseSpawnAction(ogSpawnLoc, GameConstants.CHEESE_SPAWN_AMOUNT + this.getCheeseAmount(ogSpawnLoc));
                 matchMaker.addCheeseSpawnAction(pairedSpawnLoc, GameConstants.CHEESE_SPAWN_AMOUNT + this.getCheeseAmount(pairedSpawnLoc));
+
+                addCheese(ogSpawnLoc, GameConstants.CHEESE_SPAWN_AMOUNT);
+                addCheese(pairedSpawnLoc, GameConstants.CHEESE_SPAWN_AMOUNT);
             }
 
         }
@@ -1078,34 +1077,43 @@ public class GameWorld {
             } else if (robot.getType().isCatType()) {
                 this.numCats -= 1;
             }
+
             for (MapLocation robotLoc : robot.getAllPartLocations()) {
                 removeRobot(robotLoc);
             }
+
             if (robot.isCarryingRobot()) {
                 InternalRobot carryingRobot = robot.getRobotBeingCarried();
                 carryingRobot.getDropped(loc);
             }
+
             if (robot.isGrabbedByRobot()) {
                 InternalRobot carrier = robot.getGrabbedByRobot();
                 robot.clearGrabbedByRobot();
+
                 if (carrier != null && carrier.getRobotBeingCarried() == robot) {
                     carrier.clearCarryingRobot();
                 }
             }
+
             if (robot.getCheese() > 0) {
                 addCheese(loc, robot.getCheese());
                 matchMaker.addCheeseSpawnAction(loc, robot.getCheese());
             }
         }
+
         controlProvider.robotKilled(robot);
         objectInfo.destroyRobot(id);
-        if (fromDamage || fromException)
-            matchMaker.addDieAction(id, fromException);
-        else
-            matchMaker.addDied(id);
 
-        if (robot.getType() != UnitType.CAT)
+        if (fromDamage || fromException) {
+            matchMaker.addDieAction(id, fromException);
+        } else {
+            matchMaker.addDied(id);
+        }
+
+        if (robot.getType() != UnitType.CAT) {
             this.currentNumberUnits[robot.getTeam().ordinal()] -= 1;
+        }
 
         // check win
         if (robot.getType() == UnitType.RAT_KING && this.getTeamInfo().getNumRatKings(robot.getTeam()) == 0) {
@@ -1123,6 +1131,7 @@ public class GameWorld {
         if (profilerCollections == null) {
             profilerCollections = new HashMap<>();
         }
+        
         profilerCollections.put(team, profilerCollection);
     }
 }

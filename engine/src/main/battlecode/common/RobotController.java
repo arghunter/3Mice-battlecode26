@@ -587,6 +587,15 @@ public interface RobotController {
     boolean canTurn();
 
     /**
+     * Checks whether this robot can turn to the specified direction.
+     * Effectively just canTurn() with an extra check that d is not null
+     * and not {@link Direction#CENTER}.
+     * 
+     * @param d the direction to turn to
+     */
+    boolean canTurn(Direction d);
+
+    /**
      * Turns to the specified direction 
      * 
      * @param d direction to turn to (cannot be Direction.CENTER)
@@ -1034,5 +1043,3 @@ public interface RobotController {
      */
     void setTimelineMarker(String label, int red, int green, int blue);
 }
-// TODO: update bytecode costs, particularly for new methods + methods that got
-// renamed from last year

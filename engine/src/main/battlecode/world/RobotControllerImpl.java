@@ -426,7 +426,7 @@ public final class RobotControllerImpl implements RobotController {
 
     private void assertCanPickUpCheese(MapLocation loc) throws GameActionException {
         assertIsRobotType(this.robot.getType());
-        assertCanActLocation(loc, GameConstants.BUILD_DISTANCE_SQUARED);
+        assertCanActLocation(loc, GameConstants.CHEESE_PICK_UP_RADIUS_SQUARED);
 
         if (this.gameWorld.getCheeseAmount(loc) <= 0)
             throw new GameActionException(CANT_DO_THAT, "No cheese at this location!");
@@ -829,16 +829,33 @@ public final class RobotControllerImpl implements RobotController {
                 // kill this rat
                 crushedRobot.addHealth(-crushedRobot.getHealth());
             }
-            processTrapsAtLocation(newLoc);
+            // processTrapsAtLocation(newLoc);
         }
 
         this.robot.translateLocation(d.dx, d.dy);
-        this.robot.addMovementCooldownTurns(d);
 
+        for (int i = 0; i < curLocs.length; i++) {
+            MapLocation newLoc = curLocs[i].add(d);
+            processTrapsAtLocation(newLoc);
+        }
+
+        this.robot.addMovementCooldownTurns(d);
     }
 
     private void assertCanTurn() throws GameActionException {
         assertIsTurningReady();
+    }
+
+    private void assertCanTurn(Direction d) throws GameActionException {
+        assertIsTurningReady();
+
+        if (d == null) {
+            throw new GameActionException(CANT_DO_THAT, "Direction to turn to is null!");
+        }
+
+        if (d == Direction.CENTER) {
+            throw new GameActionException(CANT_DO_THAT, "Cannot turn to CENTER direction!");
+        }
     }
 
     @Override
@@ -852,13 +869,21 @@ public final class RobotControllerImpl implements RobotController {
     }
 
     @Override
-    public void turn(Direction d) throws GameActionException {
-        assertCanTurn();
-        if (d != Direction.CENTER) {
-            this.robot.setDirection(d);
-            this.robot.addTurningCooldownTurns();
+    public boolean canTurn(Direction d) {
+        try {
+            assertCanTurn(d);
+            return true;
+        } catch (GameActionException e) {
+            return false;
         }
+    }
 
+    @Override
+    public void turn(Direction d) throws GameActionException {
+        assertCanTurn(d);
+
+        this.robot.setDirection(d);
+        this.robot.addTurningCooldownTurns();
     }
 
     // ***********************************
@@ -944,8 +969,14 @@ public final class RobotControllerImpl implements RobotController {
         assertIsActionReady();
         // Attack is limited to vision radius
         assertCanActLocation(loc, this.getType().getVisionRadiusSquared());
-        if (!this.gameWorld.isPassable(loc))
+
+        if (!this.getLocation().isAdjacentTo(loc)) {
+            throw new GameActionException(CANT_DO_THAT, "Rats can only attack adjacent squares!");
+        }
+
+        if (!this.gameWorld.isPassable(loc)) {
             throw new GameActionException(CANT_DO_THAT, "Rats cannot attack squares with walls or dirt on them!");
+        }
         
         if (this.gameWorld.getTeamInfo().getCheese(this.getTeam()) + this.getAllCheese() < cheeseConsumed) {
             throw new GameActionException(CANT_DO_THAT, "Not enough cheese to bite!");
@@ -954,13 +985,29 @@ public final class RobotControllerImpl implements RobotController {
         if (this.getType() == UnitType.CAT) {
             throw new GameActionException(CANT_DO_THAT, "Unit must be a baby rat or rat king to bite!");
         }
+
+        if (cheeseConsumed < 0) {
+            throw new GameActionException(CANT_DO_THAT, "Cheese consumed must be non-negative!");
+        }
+
+        if (this.gameWorld.getRobot(loc) == null) {
+            throw new GameActionException(CANT_DO_THAT, "No robot to attack at the specified location!");
+        }
     }
 
     private void assertCanAttackCat(MapLocation loc) throws GameActionException {
         assertIsActionReady();
         assertCanActLocation(loc, this.getType().getVisionRadiusSquared());
-        if (!this.gameWorld.isPassable(loc))
+
+        if (!this.gameWorld.isPassable(loc)) {
             throw new GameActionException(CANT_DO_THAT, "Cats cannot attack squares with walls or dirt on them!");
+        }
+        if (this.gameWorld.getRobot(loc) == null) {
+            throw new GameActionException(CANT_DO_THAT, "No robot to attack at the specified location!");
+        }
+        if (this.gameWorld.getRobot(loc) != null && this.gameWorld.getRobot(loc).getID() == this.robot.getID()) {
+            throw new GameActionException(CANT_DO_THAT, "Cannot attack self");
+        }
     }
 
     private void assertCanAttack(MapLocation loc, int cheeseConsumed) throws GameActionException {
@@ -1022,29 +1069,45 @@ public final class RobotControllerImpl implements RobotController {
 
     public void assertCanBecomeRatKing() throws GameActionException {
         assertIsActionReady();
-        if (this.gameWorld.getTeamInfo().getCheese(this.robot.getTeam()) < GameConstants.RAT_KING_UPGRADE_CHEESE_COST) {
+        TeamInfo teamInfo = this.gameWorld.getTeamInfo();
+
+        if (teamInfo.getCheese(this.robot.getTeam()) < GameConstants.RAT_KING_UPGRADE_CHEESE_COST) {
             throw new GameActionException(CANT_DO_THAT, "Not enough cheese to upgrade to a rat king");
         }
-        if (this.gameWorld.getTeamInfo().getNumRatKings(this.robot.getTeam()) >= GameConstants.MAX_NUMBER_OF_RAT_KINGS){
+
+        if (teamInfo.getNumRatKings(this.robot.getTeam()) >= GameConstants.MAX_NUMBER_OF_RAT_KINGS){
             throw new GameActionException(CANT_DO_THAT, "Cannot have more than " +GameConstants.MAX_NUMBER_OF_RAT_KINGS + "rat kings per team!" );
         }
+
         int numAllyRats = 0;
+
         for (Direction d : Direction.allDirections()) {
             MapLocation curLoc = this.adjacentLocation(d);
+
+            if (!onTheMap(curLoc)) {
+                throw new GameActionException(CANT_DO_THAT,
+                        "Can't become a rat king when the 3x3 vicinity goes off the map!");
+            }
+
             InternalRobot curRobot = this.gameWorld.getRobot(curLoc);
+
             if (curRobot != null && curRobot.getTeam() == this.robot.getTeam() && curRobot.getType() == UnitType.BABY_RAT) {
                 numAllyRats += 1;
             }
+
             if (curRobot != null && !curRobot.getType().isBabyRatType()) {
                 throw new GameActionException(CANT_DO_THAT,
                         "Can't become a rat king when there are nearby cats or rat kings!");
             }
+
             MapInfo mapInfo = this.getMapInfo(curLoc);
+
             if (!mapInfo.isPassable()) {
                 throw new GameActionException(CANT_DO_THAT,
                         "Can only upgrade if all squares in the 3x3 vicinity are passable");
             }
         }
+
         if (numAllyRats < 7) {
             throw new GameActionException(CANT_DO_THAT, "Not enough rats in the 3x3 square");
         }
@@ -1161,7 +1224,7 @@ public final class RobotControllerImpl implements RobotController {
 
     private void assertCanTransferCheese(MapLocation loc, int amount) throws GameActionException {
         assertNotNull(loc);
-        assertCanActLocation(loc, GameConstants.CHEESE_DROP_RADIUS_SQUARED);
+        assertCanActLocation(loc, GameConstants.CHEESE_TRANSFER_RADIUS_SQUARED);
         assertIsActionReady();
         InternalRobot robot = this.gameWorld.getRobot(loc);
         if (robot == null)
@@ -1212,6 +1275,7 @@ public final class RobotControllerImpl implements RobotController {
     public void assertCanThrowRat(Direction dir) throws GameActionException {
         assertIsActionReady();
         MapLocation nextLoc = this.getLocation().add(dir);
+
         if (!this.robot.getType().isBabyRatType()) {
             throw new GameActionException(CANT_DO_THAT, "Only rats can throw other rats!");
         }
@@ -1228,6 +1292,7 @@ public final class RobotControllerImpl implements RobotController {
     public void assertCanDropRat(Direction dir) throws GameActionException {
         assertIsActionReady();
         MapLocation nextLoc = this.getLocation().add(dir);
+        
         if (!this.robot.getType().isBabyRatType()) {
             throw new GameActionException(CANT_DO_THAT, "Only rats can drop other rats!");
         }
@@ -1288,7 +1353,7 @@ public final class RobotControllerImpl implements RobotController {
         }
 
         // adjacency
-        if (!loc.isAdjacentTo(this.getLocation())) {
+        if (!loc.isAdjacentTo(this.getLocation()) && !this.getLocation().equals(loc)) {
             throw new GameActionException(CANT_DO_THAT, "A rat can only grab adjacent robots!");
         }
 
@@ -1308,6 +1373,7 @@ public final class RobotControllerImpl implements RobotController {
         }
 
         InternalRobot targetRobot = this.gameWorld.getRobot(loc);
+
         if (targetRobot == null) {
             throw new GameActionException(CANT_DO_THAT, "No robot at target location");
         }
@@ -1321,10 +1387,15 @@ public final class RobotControllerImpl implements RobotController {
             throw new GameActionException(CANT_DO_THAT, "Target robot is currently being thrown");
         }
 
+        if (targetRobot == this.robot) {
+            throw new GameActionException(CANT_DO_THAT, "Robots cannot grab themselves");
+        }
+
         // Allow grabbing if the target is facing away (cannot sense this robot), or
         // the target is allied, or the target is weaker (health comparison w/
         // threshold)
         boolean canGrab = false;
+
         if (!targetRobot.canSenseLocation(this.getLocation())) {
             canGrab = true;
         } else if (this.robot.getTeam() == targetRobot.getTeam()) {
