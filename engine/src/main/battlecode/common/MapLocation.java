@@ -177,7 +177,7 @@ public final class MapLocation implements Serializable, Comparable<MapLocation> 
      * @battlecode.doc.costlymethod
      */
     public final boolean isWithinDistanceSquared(MapLocation location, int distanceSquared, Direction facingDir,
-            double theta, boolean useTopRight) {
+            double theta, boolean useBottomLeft) {
 
         // prevent division by 0 error
         if (this.equals(location)) {
@@ -186,12 +186,12 @@ public final class MapLocation implements Serializable, Comparable<MapLocation> 
 
         double adjustment = 1e-3;
 
-        boolean isValidDistance = useTopRight ? this.bottomLeftDistanceSquaredTo(location) <= distanceSquared
+        boolean isValidDistance = useBottomLeft ? this.bottomLeftDistanceSquaredTo(location) <= distanceSquared
                 : this.distanceSquaredTo(location) <= distanceSquared;
 
         // calculate angle (degrees) between facingDir and direction to location
-        double dx = location.x - (useTopRight ? (this.x + 0.5) : this.x);
-        double dy = location.y - (useTopRight ? (this.y + 0.5) : this.y);
+        double dx = location.x - (useBottomLeft ? (this.x + 0.5) : this.x);
+        double dy = location.y - (useBottomLeft ? (this.y + 0.5) : this.y);
 
         boolean isValidAngle;
         if (facingDir == Direction.CENTER) { //
