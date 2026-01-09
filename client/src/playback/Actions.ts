@@ -195,13 +195,13 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
             if (target.beingCarried) {
                 // drop the target
                 // const carrier = round.bodies.getById(target.carrierRobot!)
-                if(target.carrierRobot !== undefined) {
+                if(target.carrierRobot !== undefined && round.bodies.hasId(target.carrierRobot)) {
                     const carrier = round.bodies.getById(target.carrierRobot)
                     carrier.carriedRobot = undefined
                 }
-                target.size = 1
                 target.beingCarried = false
                 target.carrierRobot = undefined
+                target.size = 1
             } else {
                 // pick up the target
                 src.carriedRobot = target.id
@@ -210,8 +210,8 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
                 target.beingCarried = true
 
                 target.lastPos = { ...target.pos }
-                // target.pos = { x: src.pos.x + RatNapAction.OFFSET.x, y: src.pos.y + RatNapAction.OFFSET.y }
                 target.size = 0.6
+                // target.pos = { x: src.pos.x + RatNapAction.OFFSET.x, y: src.pos.y + RatNapAction.OFFSET.y }  
             }
         }
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
@@ -569,19 +569,19 @@ export const ACTION_DEFINITIONS: Record<schema.Action, typeof Action<ActionUnion
     [schema.Action.ThrowRat]: class ThrowRatAction extends Action<schema.ThrowRat> {
         apply(round: Round): void {
             // maybe move rat to target loc
-            const body = round.bodies.getById(this.robotId)
+            const body = round.bodies.getById(this.actionData.id())
             const endLoc = round.map.indexToLocation(this.actionData.loc())
-            if( body.carriedRobot !== undefined ) {
-                const carrier = round.bodies.getById(body.carriedRobot)
+            if( body.carrierRobot !== undefined && round.bodies.hasId(body.carrierRobot)) {
+                const carrier = round.bodies.getById(body.carrierRobot)
                 carrier.carriedRobot = undefined
             }
             body.carrierRobot = undefined
-            body.beingCarried = false
             body.size = 1
             // body.pos = { ...endLoc }
         }
         draw(match: Match, ctx: CanvasRenderingContext2D): void {
-            const body = match.currentRound.bodies.getById(this.robotId)
+            if( !match.currentRound.bodies.hasId(this.actionData.id()) ) return
+            const body = match.currentRound.bodies.getById(this.actionData.id())
             const pos = body.getInterpolatedCoords(match)
             const coords = renderUtils.getRenderCoords(pos.x, pos.y, match.map.dimension, true)
             const interp = match.getInterpolationFactor()
