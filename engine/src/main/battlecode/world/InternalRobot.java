@@ -687,7 +687,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
         this.remainingThrowDuration = 4;
 
         this.setInternalLocationOnly(this.getLocation());
-        this.gameWorld.removeRobot(this.getLocation());
 
         this.travelFlying(true);
         this.travelFlying(false);
