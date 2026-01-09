@@ -948,14 +948,14 @@ public class GameWorld {
 
         throw new InternalError("Reporting incorrect win");
     }
-
+    // public static int lastCheese
     public void processEndOfRound() {
         // clear hasRunCheeseMinesThisRound for next round
         this.hasRunCheeseMinesThisRound =  false;
 
         Team[] teams = {Team.A, Team.B};
         for (Team t : teams){
-            this.matchMaker.addTeamInfo(t, this.teamInfo.getCheeseTransferred(t), this.teamInfo.getDamageToCats(t), this.teamInfo.getNumRatKings(t), this.teamInfo.getNumBabyRats(t), this.teamInfo.getDirt(t), this.getTrapCount(TrapType.RAT_TRAP, t), this.getTrapCount(TrapType.CAT_TRAP, t));
+            this.matchMaker.addTeamInfo(t, this.teamInfo.getCheese(t), this.teamInfo.getDamageToCats(t), this.teamInfo.getNumRatKings(t), this.teamInfo.getNumBabyRats(t), this.teamInfo.getDirt(t), this.getTrapCount(TrapType.RAT_TRAP, t), this.getTrapCount(TrapType.CAT_TRAP, t));
         }
         this.teamInfo.processEndOfRound();
 

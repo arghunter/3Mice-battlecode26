@@ -25,8 +25,6 @@ export class TeamRoundStat {
 
     copy(): TeamRoundStat {
         const newStat: TeamRoundStat = Object.assign(Object.create(Object.getPrototypeOf(this)), this)
-
-        // Copy any internal objects here
         return newStat
     }
 }
@@ -54,41 +52,45 @@ export default class RoundStat {
         return copy
     }
 
-    /**
-     * Mutates this stat to reflect the current round. Uses information from the delta
-     * when possible, and recomputes otherwise.
-     */
     applyRoundDelta(round: Round, delta: schema.Round | null): void {
-        // We want to apply the stat to round i + 1 so when we are visualizing
-        // round i, we see the state at the end of round i - 1
         assert(
             !delta || round.roundNumber === delta.roundId() + 1,
             `Wrong round ID: is ${delta?.roundId()}, should be ${round.roundNumber + 1}`
         )
 
-        // Do not recompute if this stat is already completed
         if (this.completed) return
 
-        // Compute team stats for this round
         const time = Date.now()
+        
         if (delta) {
             let totalCheese = 0
             let totalCatDamage = 0
             let totalRatKings = 0
+            
             for (let i = 0; i < delta.teamIdsLength(); i++) {
-                totalCheese += delta.teamCheeseTransferred(i)!
-                totalCatDamage += delta.teamCatDamage(i)!
-                totalRatKings += delta.teamAliveRatKings(i)!
+                totalCheese = delta.teamCheeseTransferred(i)!
+                totalCatDamage = 1
+                totalRatKings += 0
             }
-
+            
+            // Get the previous round's stat to calculate delta
+            const prevRoundNumber = round.roundNumber - 1
+            const prevRoundStat = prevRoundNumber >= 0 ? round.match.stats[prevRoundNumber] : null
+            
             for (let i = 0; i < delta.teamIdsLength(); i++) {
                 const team = this.game.teams[(delta.teamIds(i) ?? assert.fail('teamID not found in round')) - 1]
                 assert(team != undefined, `team ${i} not found in game.teams in round`)
                 const teamStat = this.teams.get(team) ?? assert.fail(`team ${i} not found in team stats in round`)
-
-                teamStat.cheeseAmount = delta.teamCheeseTransferred(i) ?? assert.fail('missing cheese amount')
-                teamStat.cheesePercent = totalCheese ? teamStat.cheeseAmount / totalCheese : 0
-                teamStat.catDamageAmount = delta.teamCatDamage(i) ?? assert.fail('missing cat damage amount')
+                
+                const currentCheese = delta.teamCheeseTransferred(i) ?? assert.fail('missing cheese amount')
+                
+                // Get previous cheese from previous round's stat
+                const previousCheese = prevRoundStat ? prevRoundStat.getTeamStat(team).cheeseAmount : currentCheese
+                const cheeseDelta = currentCheese - previousCheese
+                
+                teamStat.cheeseAmount = currentCheese
+                teamStat.cheesePercent = cheeseDelta
+                teamStat.catDamageAmount = teamStat.catDamageAmount
                 teamStat.catDamagePercent = totalCatDamage ? teamStat.catDamageAmount / totalCatDamage : 0
                 teamStat.ratKingCount = delta.teamAliveRatKings(i) ?? assert.fail('missing rat king count')
                 teamStat.ratKingPercent = totalRatKings ? teamStat.ratKingCount / totalRatKings : 0
@@ -97,8 +99,6 @@ export default class RoundStat {
                 teamStat.catTrapAmount = delta.teamCatTrapCount(i) ?? assert.fail('missing cat trap amount')
                 teamStat.babyRatCount = delta.teamAliveBabyRats(i) ?? assert.fail('missing baby rat count')
 
-                // Use the engine-emitted cooperation flag (per-turn) when available.
-                // If any turn in this delta indicates cooperation, consider gameMode active.
                 let isCoop = false
                 for (let ti = 0; ti < delta.turnsLength(); ti++) {
                     const t = delta.turns(ti)
@@ -118,12 +118,9 @@ export default class RoundStat {
 
         // Compute total robot counts
         for (const body of round.bodies.bodies.values()) {
-            if (body.team.id === 0) continue // skip neutral bodies
+            if (body.team.id === 0) continue
             const teamStat = round.stat.getTeamStat(body.team)
-
-            // Count number of alive robots
             if (body.dead) continue
-
             if (body.robotType == schema.RobotType.RAT) teamStat.babyRatCount++
         }
 

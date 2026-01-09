@@ -146,13 +146,13 @@ export const GamePage: React.FC<Props> = React.memo((props) => {
                         <ResourceGraph
                             active={showStats}
                             property="cheeseAmount"
-                            propertyDisplayName="Cheese Amount "
+                            propertyDisplayName="Cuurent Cheese Amount "
                         />
                         <br />
                         <ResourceGraph
                             active={showStats}
                             property="cheesePercent"
-                            propertyDisplayName="Cheese Percent "
+                            propertyDisplayName="Cheese Delta "
                         />
                         <br />
                         <ResourceGraph active={showStats} property="catDamageAmount" propertyDisplayName="Cat Damage" />

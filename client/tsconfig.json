@@ -7,12 +7,14 @@
         "sourceMap": true,
         "outDir": "./dist",
         "strict": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "skipLibCheck": true
     },
     "exclude": [
         "node_modules",
         "packaged-client",
         "src-tauri",
     ]
+    
 }
 
