@@ -542,9 +542,15 @@ public final class RobotControllerImpl implements RobotController {
             // check if this robot
             if (sensedRobot.equals(this.robot))
                 continue;
-            // check if can sense
-            if (!canSenseLocation(sensedRobot.getLocation()))
+            // check if can sense in vision cone (restricted radius)
+            boolean canSensePartOfRobot = false;
+            for (MapLocation robotpart : sensedRobot.getAllPartLocations()){
+                canSensePartOfRobot = canSensePartOfRobot || (canSenseLocation(robotpart) && center.isWithinDistanceSquared(robotpart, actualRadiusSquared));
+            }
+
+            if (!canSensePartOfRobot)
                 continue;
+            
             // check if right team
             if (team != null && sensedRobot.getTeam() != team)
                 continue;
