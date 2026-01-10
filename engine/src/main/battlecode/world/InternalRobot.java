@@ -673,7 +673,12 @@ public class InternalRobot implements Comparable<InternalRobot> {
     }
 
     public void throwRobot() {
+        this.gameWorld.getMatchMaker().endTurn(this.ID, this.health, this.cheeseAmount, this.movementCooldownTurns,
+                this.actionCooldownTurns, this.turningCooldownTurns, this.bytecodesUsed, this.location, this.dir, this.gameWorld.isCooperation);
         this.robotBeingCarried.getThrown(this.dir);
+        this.gameWorld.getMatchMaker().endTurn(this.robotBeingCarried.ID, this.robotBeingCarried.health, this.robotBeingCarried.cheeseAmount, this.robotBeingCarried.movementCooldownTurns,
+                this.robotBeingCarried.actionCooldownTurns, this.robotBeingCarried.turningCooldownTurns, this.robotBeingCarried.bytecodesUsed, this.robotBeingCarried.location, this.robotBeingCarried.dir, this.gameWorld.isCooperation);
+        this.gameWorld.addHasTraveledRobot(this.robotBeingCarried.getID());
         this.gameWorld.getMatchMaker().addThrowAction(this.robotBeingCarried.getID(),
                 this.getLocation().add(this.dir));
         this.robotBeingCarried = null;
@@ -786,7 +791,6 @@ public class InternalRobot implements Comparable<InternalRobot> {
             this.addHealth(-this.getHealth()); // rat dies :(
             // put cat to sleep
             this.gameWorld.getRobot(newLoc).sleepTimeRemaining = GameConstants.CAT_SLEEP_TIME;
-            this.gameWorld.getMatchMaker().addCatFeedAction(this.getID());
             return;
         } else if (this.gameWorld.getRobot(newLoc) != null || !this.gameWorld.isPassable(newLoc)) {
             this.hitTarget(isSecondMove);
@@ -1093,8 +1097,10 @@ public class InternalRobot implements Comparable<InternalRobot> {
             if (this.remainingThrowDuration == 0) { // max throw time reached
                 this.hitGround();
             } else {
-                this.travelFlying(false);
-                this.travelFlying(true); // This will call hitTarget or hitGround if we hit something
+                if (!this.gameWorld.getHasTraveledRobot(this.ID)){
+                    this.travelFlying(false);
+                    this.travelFlying(true); // This will call hitTarget or hitGround if we hit something
+                }
             }
         }
 
@@ -1126,6 +1132,7 @@ public class InternalRobot implements Comparable<InternalRobot> {
 
         if (this.type == UnitType.CAT) {
             if (this.sleepTimeRemaining > 0) {
+                this.gameWorld.getMatchMaker().addCatFeedAction(this.getID());
                 this.sleepTimeRemaining -= 1;
                 return;
             }
