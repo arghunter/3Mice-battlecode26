@@ -1146,7 +1146,9 @@ public final class RobotControllerImpl implements RobotController {
         this.gameWorld.getTeamInfo().addCheese(this.getTeam(), -GameConstants.RAT_KING_UPGRADE_CHEESE_COST);
         health = Math.min(health, UnitType.RAT_KING.health);
 
-        robot.becomeRatKing(health);
+        this.gameWorld.getTeamInfo().addCheese(this.getTeam(), robot.getCheese());
+        this.robot.addCheese(-this.robot.getCheese());
+        this.robot.becomeRatKing(health);
 
 
         for (Direction d : Direction.allDirections()) {
