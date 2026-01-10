@@ -1129,14 +1129,11 @@ public class InternalRobot implements Comparable<InternalRobot> {
         }
 
         // cat algo
-
-        if (this.type == UnitType.CAT) {
-            if (this.sleepTimeRemaining > 0) {
-                this.gameWorld.getMatchMaker().addCatFeedAction(this.getID());
-                this.sleepTimeRemaining -= 1;
-                return;
-            }
-
+        if (this.type == UnitType.CAT && this.sleepTimeRemaining > 0){
+            this.gameWorld.getMatchMaker().addCatFeedAction(this.getID());
+            this.sleepTimeRemaining -= 1;
+        }
+        else if (this.type == UnitType.CAT) {
             int[] pounceTraj = null;
 
             switch (this.catState) {
